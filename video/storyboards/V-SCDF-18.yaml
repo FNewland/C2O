@@ -1,0 +1,232 @@
+# Week 2 — Northern Fire and Ice walkthrough: budgets that every seat agrees
+# (DESIGN_SCRIPT_V2 scenes 2.4, 3.2, 3.3, 2.9, 2.8, 4.10): the spacecraft allocation and the
+# margin hold, the allocation ledger proposed from the roll-up and agreed seat by seat, the mass
+# envelope negotiation (N7), the priced project, the risk register and the bill of materials.
+# Recording seed S4 (ledger, negotiations and pricing left to the team). Proposed ids: this
+# video is not in the VIDEO_REVIEW plan (budgets were V-SCDF-02, which stays as revised there).
+id: V-SCDF-18
+week: 2
+audience: all
+title:
+  en: "Allocations every seat agrees: budgets, cost and risk"
+  fr: "Des allocations acceptées par chaque poste : bilans, coût et risques"
+summary:
+  en: "The Northern Fire and Ice budgets as a team decision: the six-kilogram allocation and the twenty percent margin hold, the allocation ledger agreed line by line, the mass-envelope negotiation signed by every subsystem seat, the project priced before the cost criterion is judged, the risk register and the bill of materials."
+  fr: "Les bilans de Northern Fire and Ice comme décision d’équipe : l’allocation de six kilogrammes et la marge de vingt pour cent, le registre des allocations accepté ligne par ligne, la négociation des enveloppes de masse signée par chaque poste de sous-système, le projet chiffré avant de juger le critère de coût, le registre des risques et la nomenclature."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: [D-2.4-MASS, D-2.4-POWER]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 2.4, 2.8, 2.9, 3.2, 3.3, 4.10)
+  - design/tests/fixtures/nfi/budgets.yaml
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: allocation
+    title: {en: "The spacecraft allocation and the margin", fr: "L’allocation du satellite et la marge"}
+    say:
+      en: >-
+        Systems opens the budget of the spacecraft. The allocation is the full six kilograms, the
+        limit of a 3U CubeSat in the deployer. The current best estimate is a little over four
+        kilograms with the maturity margins, and the study holds a system margin of twenty percent
+        on top until the preliminary design review, the PDR. The ladder of the European standards,
+        twenty, then fifteen, then ten percent, is quoted beside it, but the team keeps the twenty
+        percent through the PDR.
+      fr: >-
+        L’ingénierie système ouvre le bilan du satellite. L’allocation est de six kilogrammes, la
+        limite d’un CubeSat 3U dans le déployeur. La meilleure estimation actuelle dépasse un peu
+        quatre kilogrammes avec les marges de maturité, et l’étude garde une marge système de vingt
+        pour cent en plus jusqu’à la revue de conception préliminaire, la PDR. L’échelle des normes
+        européennes, vingt, puis quinze, puis dix pour cent, est citée à côté, mais l’équipe garde
+        les vingt pour cent jusqu’à la PDR.
+    do:
+      - js: {en: "__lt('Scene 2.4 · Systems', 'We allocate the full six kilograms and hold a 20 % system margin until the PDR.')", fr: "__lt('Scène 2.4 · Systèmes', 'On alloue les six kilogrammes et l’on garde une marge système de 20 % jusqu’à la PDR.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
+      - wait: 1.5
+      - click: {role: tab, name: Budget, exact: true}
+      - wait: 1.5
+      - click: {target: {text: "set", exact: true}}
+      - type: {target: {css: "main input:focus"}, text: "6", press: Enter}
+      - wait: 1.5
+      - highlight: {target: {css: "main :text-matches('System margin at|Marge système à')"}, seconds: 4}
+
+  - id: ledger
+    title: {en: "The allocation ledger", fr: "Le registre des allocations"}
+    say:
+      en: >-
+        Systems now hands each subsystem a mass envelope. Propose from the roll-up writes one
+        ledger line per subsystem, from the current estimate, and keeps the rest as the system
+        reserve held by Systems. A line does not count until the seat that must live with it agrees.
+        The Power seat takes its seat and agrees the line of the electrical power subsystem. The
+        other seats agree theirs the same way, or dispute a line with a reason, and agree once it
+        is edited.
+      fr: >-
+        L’ingénierie système donne maintenant à chaque sous-système une enveloppe de masse.
+        Proposer à partir du cumul écrit une ligne du registre par sous-système, à partir de
+        l’estimation actuelle, et garde le reste comme réserve système tenue par l’ingénierie
+        système. Une ligne ne compte pas tant que le poste qui devra la tenir ne l’a pas acceptée.
+        Le poste Puissance prend son poste et accepte la ligne du sous-système d’alimentation. Les
+        autres postes acceptent la leur de la même manière, ou contestent une ligne avec une raison,
+        et l’acceptent une fois modifiée.
+    do:
+      - js: {en: "__lt('Scene 3.3 · Systems proposes, each seat agrees', 'An allocation counts only once the seat that must live with it has agreed.')", fr: "__lt('Scène 3.3 · Systèmes propose, chaque poste accepte', 'Une allocation ne compte qu’une fois acceptée par le poste qui devra la tenir.')"}
+      - scroll: {target: {role: button, name: "Propose from the roll-up"}}
+      - click: {role: button, name: "Propose from the roll-up"}
+      - wait: 2.5
+      - highlight: {target: {css: "[data-testid=ledger-closure-mass]"}, seconds: 3}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: power_engineer}
+      - wait: 2
+      - click: {target: {css: "main tr:has(td:has-text('EPS')) button >> nth=0"}}
+      - wait: 2
+      - highlight: {target: {css: "main tr:has(td:has-text('EPS'))"}, seconds: 2.5}
+      - python: {call: "video/c2ovideo/nfi_seed.py:after", app: spacecdf, args: [client, "${study}"], kwargs: {steps: "ledger-agree"}}
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 0.5
+      - click: {role: tab, name: Budget, exact: true}
+      - wait: 2
+      - scroll: {target: {css: "[data-testid=ledger-closure-mass]"}}
+      - highlight: {target: {css: "main table:has(td:has-text('EPS'))"}, seconds: 3.5, point: false}
+
+  - id: n7
+    title: {en: "The mass envelopes: negotiation N7", fr: "Les enveloppes de masse : la négociation N7"}
+    say:
+      en: >-
+        The margin itself is a negotiation, because every subsystem lives inside it. The N7 record
+        computes two options: hold the twenty percent system margin through the PDR, or use the
+        fifteen percent of the ladder and give the difference to the subsystems. The team holds the
+        twenty percent. Systems signs, and so does every subsystem seat, from Payload to
+        Propulsion. The reserve to the six-kilogram limit stays with Systems, and the record reopens
+        if the margin to the limit falls below three hundred grams.
+      fr: >-
+        La marge elle-même est une négociation, car chaque sous-système vit à l’intérieur. La fiche
+        N7 calcule deux options : tenir la marge système de vingt pour cent jusqu’à la PDR, ou
+        prendre les quinze pour cent de l’échelle et donner la différence aux sous-systèmes.
+        L’équipe garde les vingt pour cent. L’ingénierie système signe, ainsi que chaque poste de
+        sous-système, de la charge utile à la propulsion. La réserve jusqu’à la limite de six
+        kilogrammes reste à l’ingénierie système, et la fiche se rouvre si la marge à la limite
+        descend sous trois cents grammes.
+    do:
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N7')"}}
+      - click: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N7')"}
+      - wait: 3
+      - scroll: {target: {css: "[data-testid=negotiation-N7] table >> nth=1"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N7] table >> nth=1"}, seconds: 4, point: false}
+      - click: {target: {css: "[data-testid=negotiation-N7] tr:has-text('20 %') button"}}
+      - wait: 1.5
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=0"}}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=1"}}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=2"}, instant: true}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=3"}, instant: true}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=4"}, instant: true}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=5"}, instant: true}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=6"}, instant: true}
+      - wait: 0.8
+      - click: {target: {css: "[data-testid=negotiation-N7] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=7"}, instant: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=negotiation-N7]"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N7] > div >> nth=0"}, seconds: 3}
+
+  - id: price
+    title: {en: "Price the project first", fr: "Chiffrer d’abord le projet"}
+    say:
+      en: >-
+        Cost and risk takes its seat. Until now the cost was the parametric estimate of the
+        hardware. Before the cost criterion of the mission definition review can mean anything, the
+        project is priced: labour per work package, the external test campaigns, spares, and a
+        twenty percent management reserve, with the launch at zero because it is provided. The
+        priced total is then compared with the target of zero point eight million euros. The
+        criterion passed before and passes now, but only now is it measured.
+      fr: >-
+        Le poste coût et risques prend son poste. Jusqu’ici, le coût était l’estimation
+        paramétrique du matériel. Pour que le critère de coût de la revue de définition de mission
+        ait un sens, le projet est chiffré : la main-d’œuvre par lot de travaux, les campagnes
+        d’essais externes, les rechanges, et une réserve de gestion de vingt pour cent, avec le
+        lancement à zéro car il est fourni. Le total chiffré est ensuite comparé à l’objectif de
+        zéro virgule huit million d’euros. Le critère passait avant et passe maintenant, mais ce
+        n’est que maintenant qu’il est mesuré.
+    do:
+      - js: {en: "__lt('Scene 2.9 · Cost & risk', 'The cost criterion can only be judged once the project is priced: labour, tests and reserve.')", fr: "__lt('Scène 2.9 · Coût et risques', 'Le critère de coût ne se juge qu’une fois le projet chiffré : main-d’œuvre, essais et réserve.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: cost_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Budget, exact: true}
+      - wait: 1
+      - click: {role: tab, name: Cost, exact: true}
+      - wait: 1.5
+      - scroll: {target: {role: button, name: "Price the cost model"}}
+      - click: {role: button, name: "Price the cost model"}
+      - wait: 3
+      - highlight: {target: {css: "main :text-matches('Priced cost model|Modèle de coût chiffré') >> xpath=ancestor::*[self::section or contains(@class,'c2o-panel')][1]"}, seconds: 5, point: false}
+
+  - id: risks
+    title: {en: "The risk register", fr: "Le registre des risques"}
+    say:
+      en: >-
+        The risk register holds thirty-seven risks, each with an owner seat, a likelihood, a
+        consequence and a mitigation. The five by five matrix shows where to act first. One entry
+        shows the form: the risk that the change proposal on the second camera stays open, owned by
+        Payload.
+      fr: >-
+        Le registre des risques compte trente-sept risques, chacun avec un poste responsable, une
+        probabilité, une conséquence et une mesure de réduction. La matrice cinq par cinq montre où
+        agir d’abord. Une entrée montre le formulaire : le risque que la proposition de
+        modification sur la deuxième caméra reste ouverte, tenu par la charge utile.
+    do:
+      - js: {en: "__lt('Scene 2.8 · Cost & risk', 'Each risk has an owner and a mitigation, and the matrix shows where to act first.')", fr: "__lt('Scène 2.8 · Coût et risques', 'Chaque risque a un responsable et une mesure de réduction ; la matrice montre où agir d’abord.')"}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Risk Register", exact: true}
+      - wait: 2
+      - highlight: {target: {css: ".c2o-riskmx"}, seconds: 3.5}
+      - scroll: {target: {css: "main tr:has-text('RSK-035')"}}
+      - highlight: {target: {css: "main tr:has-text('RSK-035')"}, seconds: 3}
+
+  - id: bom
+    title: {en: "The bill of materials", fr: "La nomenclature"}
+    say:
+      en: >-
+        The bill of materials lists every unit with its quantity and its researched list price, and
+        exports as a spreadsheet. It is one input to the cost; the priced project, with labour, tests and reserve, is the
+        other.
+      fr: >-
+        La nomenclature liste chaque équipement avec sa quantité et son prix catalogue relevé, et
+        s’exporte en tableur. C’est une entrée du coût ; le projet chiffré, avec la main-d’œuvre, les essais et la réserve, en
+        est une autre.
+    do:
+      - js: {en: "__lt('Scene 4.10 · Cost & risk', 'The bill of materials is one input to the cost; the priced project is the other.')", fr: "__lt('Scène 4.10 · Coût et risques', 'La nomenclature est une entrée du coût ; le projet chiffré en est une autre.')"}
+      - click: {role: tab, name: BOM, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 4, point: false}
+      - highlight: {target: {role: button, name: "Export CSV"}, seconds: 2}

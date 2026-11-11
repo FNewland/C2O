@@ -1,0 +1,142 @@
+# Week 3 — Northern Fire and Ice walkthrough: the Licensing tab filled by the team
+# (DESIGN_SCRIPT_V2 scene 5.10, PI ruling: filled on camera). The applicant and the first
+# protection-plan entries are typed on camera; the other seats' entries (the baseline values of
+# seed.licensing_record) are saved mid-video; then the documents. Proposed id (not in the plan).
+id: V-SCDF-21
+week: 3
+audience: all
+title:
+  en: "Licensing from the design"
+  fr: "Les licences à partir de la conception"
+summary:
+  en: "The Northern Fire and Ice team fills the Licensing tab: the applicant, the command and data protection plan, the data policy, the frequencies and the disposal; the progress counter shows what the regulator still needs, and the licence documents are written from the design."
+  fr: "L’équipe de Northern Fire and Ice remplit l’onglet Licences : le demandeur, le plan de protection des commandes et des données, la politique de données, les fréquences et le retrait de service ; le compteur montre ce que l’autorité attend encore, et les documents de licence sont rédigés à partir de la conception."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: []
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scene 5.10)
+  - design/tests/fixtures/nfi/seed.py (licensing_record)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: applicant
+    title: {en: "The applicant", fr: "Le demandeur"}
+    say:
+      en: >-
+        A Canadian remote-sensing satellite needs a licence under the Remote Sensing Space Systems
+        Act, the RSSSA, a radio licence from Innovation, Science and Economic Development Canada,
+        ISED, and an advance publication at the International Telecommunication Union, the ITU. The
+        Licensing tab collects what the tool cannot derive from the design. The team leader enters
+        the applicant, here a placeholder for the teaching example, with a contact, a security
+        officer and the satellite network name. The counter at the top shows how many of the
+        inputs the act asks for are filled.
+      fr: >-
+        Un satellite canadien de télédétection a besoin d’une licence au titre de la Loi sur les
+        systèmes de télédétection spatiale, la LSTS, d’une licence radio d’Innovation, Sciences et
+        Développement économique Canada, ISDE, et d’une publication anticipée auprès de l’Union
+        internationale des télécommunications, l’UIT. L’onglet Licences rassemble ce que l’outil ne
+        peut pas déduire de la conception. Le chef d’équipe saisit le demandeur, ici un nom fictif
+        pour l’exemple pédagogique, avec un contact, un responsable de la sécurité et le nom du
+        réseau satellitaire. Le compteur en haut montre combien d’entrées demandées par la loi sont
+        remplies.
+    do:
+      - js: {en: "__lt('Scene 5.10 · Team leader', 'The licences are written from the design: what the tool cannot derive, the team enters once.')", fr: "__lt('Scène 5.10 · Chef d’équipe', 'Les licences sont rédigées à partir de la conception : ce que l’outil ne peut pas déduire, l’équipe le saisit une fois.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Licensing, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "[data-testid=licensing-progress]"}, seconds: 2.5}
+      - fill: {target: {label: "Legal name"}, text: "Example university (applicant placeholder)"}
+      - fill: {target: {label: "Address"}, text: "Example address, Ottawa, Ontario, Canada"}
+      - fill: {target: {label: "Contact person"}, text: "Mission manager (placeholder)"}
+      - fill: {target: {label: "E-mail"}, text: "licensing@example.org"}
+      - fill: {target: {label: "Telephone"}, text: "+1 555 0100"}
+      - fill: {target: {label: "Security officer"}, text: "Security officer (placeholder)"}
+      - type: {target: {label: "ITU satellite network name"}, text: "NFI-1", delay_ms: 60}
+      - click: {role: button, name: Save, exact: true, within: main}
+      - wait: 2
+      - highlight: {target: {css: "[data-testid=licensing-progress]"}, seconds: 2.5}
+
+  - id: protection
+    title: {en: "Command and data protection", fr: "Protection des commandes et des données"}
+    say:
+      en: >-
+        The command and data protection plan says how the spacecraft knows a command is genuine and
+        how the data are protected. Commands are encrypted and authenticated in the on-board
+        computer's software, independently of the radio. Keys are held under two-person control in
+        mission control, which reaches the four stations only over its virtual private network.
+        Comms and data handling enters the frequencies, mission analysis and Propulsion the
+        disposal, and Payload the export-control data. The counter rises as each seat saves. What
+        only the applicant can supply, such as personnel security or a backup facility, stays open,
+        and the documents print it as an applicant input.
+      fr: >-
+        Le plan de protection des commandes et des données dit comment le satellite sait qu’une
+        commande est authentique et comment les données sont protégées. Les commandes sont chiffrées
+        et authentifiées dans le logiciel de l’ordinateur de bord, indépendamment de la radio. Les
+        clés sont gardées sous double contrôle au centre de contrôle, qui ne joint les quatre
+        stations que par son réseau privé virtuel. Les télécoms et le traitement de données
+        saisissent les fréquences, l’analyse de mission et la propulsion le retrait de service, et la
+        charge utile les données de contrôle des exportations. Le compteur monte à mesure que chaque
+        poste enregistre. Ce que seul le demandeur peut fournir, comme la sécurité du personnel ou
+        une installation de secours, reste ouvert, et les documents l’impriment comme une entrée du
+        demandeur.
+    do:
+      - click: {role: tab, name: "Command and data protection"}
+      - wait: 1.5
+      - fill: {target: {label: "Command encryption"}, text: "CCSDS SDLS authenticated encryption, AES-256, in the on-board computer software, independent of the radio (REG-RSS-03)."}
+      - fill: {target: {label: "Command authentication"}, text: "Every accepted telecommand authenticated (SDLS); irreversible commands need ARM + FIRE, a second certified operator and a GO from the Team leader."}
+      - fill: {target: {label: "Key custody"}, text: "Mission control centre, two-person control (SEG-GS-10)."}
+      - click: {role: button, name: Save, exact: true, within: main}
+      - wait: 2
+      - python: {call: "video/c2ovideo/nfi_seed.py:after", app: spacecdf, args: [client, "${study}"], kwargs: {steps: "licensing"}}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 0.5
+      - click: {role: tab, name: Licensing, exact: true}
+      - wait: 2
+      - click: {role: tab, name: "Command and data protection"}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-testid=licensing-progress]"}, seconds: 3}
+      - click: {role: tab, name: Disposal, exact: true}
+      - wait: 2
+      - highlight: {target: {label: "Independent release circuits"}, seconds: 2.5}
+
+  - id: documents
+    title: {en: "The licence documents", fr: "Les documents de licence"}
+    say:
+      en: >-
+        The Documents tab writes the filings from the study: the licence application under the
+        act, the ISED technical brief for the space station and the briefs for the earth stations,
+        the ITU advance publication, the debris assessment, the United Nations registration, the
+        export-control summary, and the status and timeline of every licence. The space station brief
+        takes the transmit power and the antenna from the design, and computes the equivalent
+        isotropically radiated power and the flux density at the ground at five degrees of
+        elevation.
+      fr: >-
+        L’onglet Documents rédige les dossiers à partir de l’étude : la demande de licence au titre
+        de la loi, la note technique d’ISDE pour la station spatiale et les notes pour les stations
+        terriennes, la publication anticipée de l’UIT, l’évaluation des débris, l’immatriculation
+        auprès des Nations unies, le résumé du contrôle des exportations, et l’état et le calendrier
+        de chaque licence. La note de la station spatiale reprend la puissance d’émission et
+        l’antenne de la conception, et calcule la puissance isotrope rayonnée équivalente et la
+        densité de flux au sol à cinq degrés d’élévation.
+    do:
+      - click: {role: tab, name: Documents, exact: true}
+      - wait: 2
+      - highlight: {target: {text: "ISED space station technical brief", exact: true}, seconds: 4}
+      - highlight: {target: {text: "Licensing status and timeline", exact: true}, seconds: 3}

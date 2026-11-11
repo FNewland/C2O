@@ -14,6 +14,7 @@ prints ``{"study": "<id>", ...}`` on its last line. ``--after`` takes, in order:
 ==============  ===========================================================================
 licensing       the Licensing tab filled from the baseline (scene 5.10)
 ledger          the allocation ledger proposed and every line agreed by its owner (3.3)
+ledger-agree    every line still open agreed by its owner (the ledger was proposed on camera)
 negotiations    GS4, N1, N3 and N7 opened, the baseline option chosen, every seat signed
 neg:<CODE>      one negotiation only (GS4, N1, N3, N7)
 price           the project priced (2.9)
@@ -72,12 +73,13 @@ async def after(c, seed, step: str) -> None:
     sid = seed.study_id
     if step == "licensing":
         await _s4_licensing(_Api(c, seed), seed)
-    elif step == "ledger":
-        await _ok(await c.post(f"/api/studies/{sid}/allocation-ledger/propose"))
+    elif step in ("ledger", "ledger-agree"):
+        if step == "ledger":
+            await _ok(await c.post(f"/api/studies/{sid}/allocation-ledger/propose"))
         for ln in (await _ok(await c.get(f"/api/studies/{sid}/allocation-ledger")))["items"]:
             if ln["status"] != "agreed":
                 await _ok(await c.post(f"/api/studies/{sid}/allocation-ledger/{ln['id']}/agree",
-                                       json={"seat": ln["owner_seat"]}))
+                                       json={"seat": ln["owner_seat"]}, headers={"X-C2O-Seat": ln["owner_seat"]}))
     elif step == "negotiations":
         for code, opt in NEGOTIATIONS:
             await _negotiation(c, sid, code, opt)
@@ -134,10 +136,19 @@ async def team(c, sid: str, client_id: str, name: str, claim: bool = True) -> No
         await _ok(await c.post(f"/api/studies/{sid}/team/active", headers=h, json={"seat": "team_leader"}))
 
 
-async def run(url: str, stage: str, steps: list[str], client_id: str, name: str, claim: bool) -> dict:
+async def run(url: str, stage: str, steps: list[str], client_id: str, name: str, claim: bool,
+              study: str = "") -> dict:
     import httpx
 
-    async with httpx.AsyncClient(base_url=url.rstrip("/"), timeout=900) as c:
+    # mid-video steps act on a team study: as the presenter's browser, for the owning seat
+    headers = {"X-C2O-Client": client_id, "X-C2O-Name": name} if (study and client_id) else {}
+    async with httpx.AsyncClient(base_url=url.rstrip("/"), timeout=900, headers=headers) as c:
+        if study:      # mid-video: what the other seats do off camera, on the filmed study
+            from tests.fixtures.nfi.seed import NfiSeed
+            seed = NfiSeed(study_id=study, recording=True)
+            for s in steps:
+                await after(c, seed, s)
+            return {"study": study, "after": steps}
         seed = await seed_nfi(c, stage, recording=True)
         for s in steps:
             await after(c, seed, s)
@@ -154,9 +165,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--client", default="", help="browser client id that claims every seat (empty: solo study)")
     ap.add_argument("--name", default="NFI Team")
     ap.add_argument("--no-claim", action="store_true", help="set the team preset but claim no seat")
+    ap.add_argument("--study", default="", help="apply --after to this existing study (no seed, no team)")
     a = ap.parse_args(argv)
     steps = [s for s in a.after.replace("+", " ").split() if s]
-    out = asyncio.run(run(a.url, a.stage, steps, a.client, a.name, not a.no_claim))
+    out = asyncio.run(run(a.url, a.stage, steps, a.client, a.name, not a.no_claim, a.study))
     print(json.dumps(out))
     return 0
 

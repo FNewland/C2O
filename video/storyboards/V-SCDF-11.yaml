@@ -68,7 +68,7 @@ steps:
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
       - wait: 2
       - highlight: {target: {css: ".react-flow__node:has-text('Disposal')"}, seconds: 3}
-      - click: {role: button, name: "Northern Fire and Ice", exact: true}
+      - click: {role: button, name: {en: "Northern Fire and Ice", fr: "Northern Fire and Ice"}, exact: true}
       - wait: 1.5
       - dblclick: {css: ".react-flow__node:has-text('Ground Segment')"}
       - wait: 2
@@ -143,20 +143,20 @@ steps:
         à approuvée.
     do:
       - js: {en: "__lt('Scene 2.3 · Mission analysis & ops proposes', 'One station decision moves numbers owned by four other seats; each one agrees before it stands.')", fr: "__lt('Scène 2.3 · L’analyse de mission propose', 'Une décision sur une station fait bouger des valeurs tenues par quatre autres postes ; chacun donne son accord avant qu’elle tienne.')"}
-      - scroll: {target: {role: button, name: "New GS4"}}
-      - click: {role: button, name: "New GS4"}
+      - scroll: {target: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('GS4')"}}
+      - click: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('GS4')"}
       - wait: 3
       - scroll: {target: {css: "[data-testid=negotiation-GS4] table >> nth=1"}}
       - highlight: {target: {css: "[data-testid=negotiation-GS4] table >> nth=1"}, seconds: 5, point: false}
-      - click: {target: {css: "[data-testid=negotiation-GS4] tr:has-text('Inuvik') button:has-text('Choose'), [data-testid=negotiation-GS4] tr:has-text('four') button:has-text('Choose'), [data-testid=negotiation-GS4] tr:has-text('4') button:has-text('Choose')"}}
+      - click: {target: {css: "[data-testid=negotiation-GS4] tr:has-text('4 sites') button"}}
       - wait: 1.5
-      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Mission analysis'), [data-testid=negotiation-GS4] button:has-text('Analyse de mission')"}}
+      - click: {target: {css: "[data-testid=negotiation-GS4] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=0"}}
       - wait: 1
-      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Comms')"}}
+      - click: {target: {css: "[data-testid=negotiation-GS4] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=1"}}
       - wait: 1
-      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Power'), [data-testid=negotiation-GS4] button:has-text('Puissance')"}}
+      - click: {target: {css: "[data-testid=negotiation-GS4] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=2"}}
       - wait: 1
-      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Systems'), [data-testid=negotiation-GS4] button:has-text('Systèmes')"}}
+      - click: {target: {css: "[data-testid=negotiation-GS4] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=3"}}
       - wait: 1.5
       - scroll: {target: {css: "[data-testid=negotiation-GS4]"}}
       - highlight: {target: {css: "[data-testid=negotiation-GS4] > div >> nth=0"}, seconds: 3}

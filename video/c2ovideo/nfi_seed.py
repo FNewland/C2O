@@ -41,3 +41,21 @@ def seed(client, stage: str = "S4", after: str = "", team: bool = True, claim: b
     if r.returncode != 0:
         raise RuntimeError(f"nfi seed failed ({r.returncode}): {r.stderr[-1500:]}")
     return json.loads(r.stdout.strip().splitlines()[-1])["study"]
+
+
+def after(client, study: str, steps: str) -> str:
+    """Mid-video: apply ``recording.py`` steps to the filmed study (what the other seats do off
+    camera, e.g. ``ledger-agree`` once one seat has agreed its line on camera)."""
+    if str(REPO / "video") not in sys.path:
+        sys.path.insert(0, str(REPO / "video"))
+    from c2ovideo import stack
+
+    design = REPO / "design"
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(
+        [str(design / "packages" / p / "src") for p in stack.DESIGN_PACKAGES] + [str(design)]))
+    r = subprocess.run([stack.design_python(), "-m", "tests.fixtures.nfi.recording", "--url", client.base,
+                        "--study", study, "--after", steps, "--client", CLIENT], cwd=str(design), env=env,
+                       capture_output=True, text=True, timeout=900)
+    if r.returncode != 0:
+        raise RuntimeError(f"nfi after-steps failed ({r.returncode}): {r.stderr[-1500:]}")
+    return study
