@@ -45,9 +45,11 @@ def main() -> None:
 
     torch.set_num_threads(max(1, torch.get_num_threads()))
     model = None
+    used = "cpu"
     for device in _devices(torch):
         try:
             model = Model.from_pretrained(device=device)
+            used = device
             break
         except Exception as e:  # e.g. an MPS op missing on an older macOS: fall back
             print(f"chatterbox: {device} unavailable ({type(e).__name__}: {e})", file=sys.stderr, flush=True)
@@ -67,8 +69,14 @@ def main() -> None:
                     kw["language_id"] = r["lang"]
                 wav = model.generate(r["text"], **kw)
             ta.save(r["out"], wav, model.sr, encoding="PCM_S", bits_per_sample=16)
+            seconds = wav.shape[-1] / model.sr
+            del wav
             gc.collect()
-            print(json.dumps({"ok": True, "seconds": wav.shape[-1] / model.sr, "sr": model.sr}), flush=True)
+            if used == "mps":        # hand the GPU cache back to macOS after every sentence
+                torch.mps.empty_cache()
+            elif used == "cuda":
+                torch.cuda.empty_cache()
+            print(json.dumps({"ok": True, "seconds": seconds, "sr": model.sr}), flush=True)
         except Exception as e:  # report and keep serving
             print(json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}"}), flush=True)
 

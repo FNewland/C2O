@@ -108,12 +108,27 @@ def _ref_path(engine: dict) -> Path:
     return p if p.is_absolute() else VOICES_DIR / p
 
 
+def _stop(w) -> None:
+    """Close a Chatterbox worker and wait for it, so its memory is returned before the next loads."""
+    try:
+        w.stdin.close()
+        w.wait(timeout=30)
+    except Exception:  # noqa: BLE001
+        w.kill()
+
+
 def _cbx(engine: dict):
     """Start (once per Python and model) the Chatterbox worker under the voice's own Python."""
     py = str(Path(engine.get("python", "python3")).expanduser())
     model = engine.get("model", "multilingual")
     w = _CBX.get((py, model))
     if w is None or w.poll() is not None:
+        # One voice model in memory at a time: English and French use different Chatterbox models,
+        # and keeping both loaded roughly doubles the memory the narration needs.
+        for key, other in list(_CBX.items()):
+            if key != (py, model):
+                _stop(other)
+                _CBX.pop(key, None)
         CACHE.mkdir(parents=True, exist_ok=True)
         errlog = open(CBX_LOG, "a", encoding="utf-8")
         w = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
