@@ -44,11 +44,11 @@ does not name (budgets and negotiations, licensing, the reviews). V-SCDF-01 … 
 
 | Video | Title | Scenes | Starts from | Length EN / FR (silent) |
 |---|---|---|---|---|
-| V-SCDF-08 | Defining the mission from a proposal | 1.1–1.6 (wizard, seats claimed) | empty server (live wizard) | 6:03 / 6:12 |
+| V-SCDF-08 | Defining the mission from a proposal | 1.1–1.6 (wizard, seats claimed) | empty server (live wizard) | 6:05 / 6:14 |
 | V-SCDF-17 | The V in SpaceCDF: phases, deliverables and reviews | 1.7, 5.8, 5.11, 5.12 | S4 + licensing, ledger, negotiations, price | 3:36 / 3:49 |
 | V-SCDF-11 | Ground stations and contact time | 2.1, 2.2, 2.3 (GS4 signed), 2.7, 4.9 | S4 + Inuvik RF chain | 3:23 / 3:30 |
-| V-SCDF-12 | The requirements tree | 2.6, 3.1 | S4 | 2:00 / — |
-| V-SCDF-18 | Allocations every seat agrees: budgets, cost and risk | 2.4, 3.3 (ledger, N7 signed), 2.9, 2.8, 4.10 (3.2 inside 3.3) | S4 + licensing | 3:16 / — |
+| V-SCDF-12 | The requirements tree | 2.6, 3.1 | S4 | 2:00 / 2:04 |
+| V-SCDF-18 | Allocations every seat agrees: budgets, cost and risk | 2.4, 3.3 (ledger, N7 signed), 2.9, 2.8, 4.10 (3.2 inside 3.3) | S4 + licensing | 3:16 / 3:21 |
 | V-SCDF-10 | Weighting criteria and the Pugh matrix | 3.4, 3.4b, 3.6 | S4 + licensing, ledger, negotiations, price | 2:19 / 2:29 |
 | V-SCDF-09 | Choosing equipment from the catalogue | 4.1, 4.2, 4.3, 4.5, 4.6, 4.7, 4.8 | S4 + licensing, ledger, negotiations, price | 3:09 / 3:28 |
 | V-SCDF-19 | Modes, power and the downlink: two negotiations | 2.5, 4.11, 4.4, 4.12 (N1 signed), 4.13 (N3 signed) | S4 + licensing, ledger, GS4, N7, price | 3:13 / 3:36 |
@@ -56,12 +56,12 @@ does not name (budgets and negotiations, licensing, the reviews). V-SCDF-01 … 
 | V-SCDF-13 | Designing housekeeping telemetry | 5.5 | S4 + licensing, ledger, negotiations, price | 1:38 / 1:47 |
 | V-SCDF-21 | Licensing from the design | 5.10 (filled on camera) | S4 + ledger, negotiations, price | 2:13 / 2:24 |
 | V-SCDF-15 | Building the review package | 5.13 | everything to the PDR passed | 1:04 / 1:09 |
-| V-SCDF-22 | Passing the MDR, PRR and SRR | 6.1, 6.2, 6.3, 6.4, 6.5 (ECP-02), SRR pass of 6.6 | S4 + licensing, ledger, negotiations, price | 4:26 / 4:21 |
+| V-SCDF-22 | Passing the MDR, PRR and SRR | 6.1, 6.2, 6.3, 6.4, 6.5 (ECP-02), SRR pass of 6.6 | S4 + licensing, ledger, negotiations, price | 5:22 / 5:12 |
 | V-SCDF-23 | PDR evidence: interfaces, reliability and the thermal model | 6.6 (ICDs), 6.7, 6.8 | + SEMP, debris, ECP-02, MDR/PRR/SRR passed | 2:47 / 2:47 |
-| V-SCDF-24 | When you disagree with the score, check the logic | 6.9 (ECP-01), 6.10 (PDR passed) | + ICDs, reliability, thermal | 4:09 / 4:23 |
+| V-SCDF-24 | When you disagree with the score, check the logic | 6.9 (ECP-01), 6.10 (PDR passed) | + ICDs, reliability, thermal | 4:31 / 4:44 |
 | V-SCDF-14 | Saving, sharing and reopening a study | chapter 8 | everything to the PDR passed | 1:28 / 1:28 |
 
-Total: 48 min in English, 45 min in French (silent backend: about 150 words a minute; the cloned voice will change each length a little).
+Total: 50 min in English, 52 min in French (silent backend: about 150 words a minute; the cloned voice will change each length a little).
 
 Order of the walkthrough: 08 → 17 (1.7) → 11 → 12 → 18 → 10 → 09 → 19 → 20 → 13 → 21 → 17 (5.8,
 5.11, 5.12) → 15 → 22 → 23 → 24 → 14. V-SCDF-17 gathers the protocol scenes (1.7, 5.8, 5.11,
