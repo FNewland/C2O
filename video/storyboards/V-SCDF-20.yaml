@@ -1,0 +1,233 @@
+# Week 3 — Northern Fire and Ice walkthrough: integration (DESIGN_SCRIPT_V2 scenes 3.5, 3.7,
+# 3.8, 5.1, 5.2, 5.3, 5.4, 5.6, 5.7, 5.9): interfaces and the N² chart, the stack and its faces,
+# the design loop, electrical and data, the ICD items, FDIR, AOCS modes, flight rules, and the
+# analyses run again. Recording seed S4 with chapters 2–4 done. Proposed id (not in the plan).
+id: V-SCDF-20
+week: 3
+audience: all
+title:
+  en: "Integration: interfaces, stack, power lines, FDIR and operations"
+  fr: "Intégration : interfaces, empilement, lignes d’alimentation, FDIR et opérations"
+summary:
+  en: "How the Northern Fire and Ice subsystems fit together: the proposed and added interfaces, the N² chart, the stack in the 3U envelope, the design loop, the protected power lines, the data buses, the interface items, the load-shed stages, the AOCS modes, the flight rules, and the analyses run again on the same design."
+  fr: "Comment les sous-systèmes de Northern Fire and Ice s’assemblent : les interfaces proposées et ajoutées, la matrice N², l’empilement dans l’enveloppe 3U, la boucle de conception, les lignes d’alimentation protégées, les bus de données, les éléments d’interface, les étapes de délestage, les modes du SCAO, les règles de vol, et les analyses relancées sur la même conception."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: []
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 3.5, 3.7, 3.8, 5.1–5.4, 5.6, 5.7, 5.9)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: interfaces
+    title: {en: "Interfaces and the N² chart", fr: "Les interfaces et la matrice N²"}
+    say:
+      en: >-
+        At system level, Systems opens the interfaces. Propose links finds the obvious ones from the
+        equipment: the power rails from the power subsystem to each load, the data links to the
+        on-board computer. The team adds the links only it knows: the pulse-per-second timing line,
+        the camera links to the payload controller, the two independent sail release circuits, the
+        radio link and the network to the stations. The N² chart then shows every subsystem pair.
+      fr: >-
+        Au niveau système, l’ingénierie système ouvre les interfaces. Proposer des liens trouve les
+        liens évidents à partir de l’équipement : les rails d’alimentation du sous-système de
+        puissance vers chaque charge, les liaisons de données vers l’ordinateur de bord. L’équipe
+        ajoute les liens qu’elle seule connaît : la ligne de synchronisation à une impulsion par
+        seconde, les liaisons des caméras vers le contrôleur de charge utile, les deux circuits
+        indépendants de libération de la voile, la liaison radio et le réseau vers les stations. La
+        matrice N² montre ensuite chaque paire de sous-systèmes.
+    do:
+      - js: {en: "__lt('Scene 3.5 · Systems', 'The proposer finds the obvious links; the team adds the ones only it knows.')", fr: "__lt('Scène 3.5 · Systèmes', 'Le proposeur trouve les liens évidents ; l’équipe ajoute ceux qu’elle seule connaît.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
+      - wait: 1.5
+      - click: {role: tab, name: Interfaces, exact: true}
+      - wait: 2
+      - highlight: {target: {role: button, name: "Propose links"}, seconds: 2}
+      - highlight: {target: {role: button, name: "+ Add Interface"}, seconds: 2}
+      - click: {role: tab, name: Diagrams}
+      - wait: 1.5
+      - click: {role: button, name: "N² chart"}
+      - wait: 4
+
+  - id: stack
+    title: {en: "The stack and its faces", fr: "L’empilement et ses faces"}
+    say:
+      en: >-
+        Structures and configuration places the units in the 3U envelope. Auto-place builds the
+        stack and assigns the faces, and the views show it in three dimensions, as a face map, and
+        as a side elevation. The end face is kept for the drag sail, so the star tracker goes to a
+        long face. The checks below the views list what still needs attention before the layout is
+        approved, such as the height of the column and the position of the centre of gravity.
+      fr: >-
+        Le poste structures et configuration place les équipements dans l’enveloppe 3U. Le
+        placement automatique construit l’empilement et attribue les faces, et les vues le montrent
+        en trois dimensions, en carte des faces et en élévation latérale. La face d’extrémité est
+        gardée pour la voile de traînée, si bien que le viseur d’étoiles va sur une face longue. Les
+        vérifications sous les vues listent ce qui demande encore de l’attention avant d’approuver
+        l’agencement, comme la hauteur de la colonne et la position du centre de gravité.
+    do:
+      - js: {en: "__lt('Scene 3.7 · Structures & config', 'The stack fits with a tenth of its height to spare; the end face is kept for the sail.')", fr: "__lt('Scène 3.7 · Structures et configuration', 'L’empilement tient avec un dixième de hauteur en réserve ; la face d’extrémité est gardée pour la voile.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: structures_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: Spacecraft, exact: true}
+      - wait: 3
+      - click: {role: button, name: "Face map"}
+      - wait: 2.5
+      - click: {role: button, name: "Side elevation"}
+      - wait: 3
+
+  - id: loop
+    title: {en: "The design loop", fr: "La boucle de conception"}
+    say:
+      en: >-
+        Once every custom element has its mass, Systems runs the design loop from the context bar.
+        It checks that mass, power, data and cost close together: about five kilograms with the
+        twenty percent margin against the six-kilogram limit, the power with its margin below the
+        end-of-life generation, the data within the downlink, and the cost within the target.
+      fr: >-
+        Une fois que chaque élément sur mesure a sa masse, l’ingénierie système lance la boucle de
+        conception depuis la barre de contexte. Elle vérifie que masse, puissance, données et coût
+        bouclent ensemble : environ cinq kilogrammes avec la marge de vingt pour cent face à la
+        limite de six kilogrammes, la puissance avec sa marge sous la production en fin de vie, les
+        données dans la capacité de la liaison, et le coût dans l’objectif.
+    do:
+      - js: {en: "__lt('Scene 3.8 · Systems', 'The loop checks that mass, power, data and cost close together.')", fr: "__lt('Scène 3.8 · Systèmes', 'La boucle vérifie que masse, puissance, données et coût bouclent ensemble.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: button, name: "Run Analysis"}
+      - wait: 6
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 2
+      - click: {role: button, name: "Design loop"}
+      - wait: 2
+      - highlight: {target: {css: "main :text-matches('converged|convergé') >> nth=0"}, seconds: 3}
+
+  - id: electrical
+    title: {en: "Power lines and data buses", fr: "Lignes d’alimentation et bus de données"}
+    say:
+      en: >-
+        Power, with Systems, proposes the power lines from the links: each load has its protected,
+        switchable line, with its rail, its trip current, and whether it is on at boot and at
+        separation. The second sail release, from the independent timer, stays off the power
+        subsystem on purpose. Comms and data handling does the same for the data: one CAN bus
+        carries the platform, while the cameras talk directly to their controller.
+      fr: >-
+        Le poste puissance, avec l’ingénierie système, propose les lignes d’alimentation à partir
+        des liens : chaque charge a sa ligne protégée et commutable, avec son rail, son courant de
+        déclenchement, et son état au démarrage et à la séparation. Le second déclenchement de la
+        voile, depuis la minuterie indépendante, reste volontairement hors du sous-système de
+        puissance. Les télécoms et le traitement de données font de même pour les données : un bus
+        CAN porte la plateforme, tandis que les caméras parlent directement à leur contrôleur.
+    do:
+      - js: {en: "__lt('Scene 5.1 · Power with Systems', 'Each load has its protected, switchable line; the second sail release stays off the EPS.')", fr: "__lt('Scène 5.1 · Puissance avec Systèmes', 'Chaque charge a sa ligne protégée et commutable ; le second déclenchement de la voile reste hors de l’alimentation.')"}
+      - click: {role: tab, name: Electrical, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "main table >> nth=1"}, seconds: 4, point: false}
+      - js: {en: "__lt('Scene 5.2 · Comms & OBDH', 'One CAN bus carries the platform; the cameras talk to their controller directly.')", fr: "__lt('Scène 5.2 · Télécoms et OBDH', 'Un bus CAN porte la plateforme ; les caméras parlent directement à leur contrôleur.')"}
+      - click: {role: tab, name: Data, exact: true}
+      - wait: 2
+      - click: {role: tab, name: Diagram, exact: true}
+      - wait: 3
+
+  - id: icd
+    title: {en: "The interface items", fr: "Les éléments d’interface"}
+    say:
+      en: >-
+        In the ICD tab, Systems lists the exchange items of each interface with their properties.
+        The interface control documents the reviews need are under issue control from the start,
+        as drafts; they are issued at the PDR.
+      fr: >-
+        Dans l’onglet ICD, l’ingénierie système liste les éléments échangés par chaque interface
+        avec leurs propriétés. Les documents de contrôle d’interface dont les revues ont besoin sont
+        sous contrôle d’édition dès le départ, en brouillon ; ils sont émis à la PDR.
+    do:
+      - js: {en: "__lt('Scene 5.3 · Systems', 'The interface control documents start as drafts and are issued at the PDR.')", fr: "__lt('Scène 5.3 · Systèmes', 'Les documents de contrôle d’interface partent en brouillon et sont émis à la PDR.')"}
+      - click: {role: tab, name: ICD, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "section.card:has(table) table"}, seconds: 4, point: false}
+
+  - id: fdir
+    title: {en: "FDIR, AOCS modes and flight rules", fr: "FDIR, modes du SCAO et règles de vol"}
+    say:
+      en: >-
+        Fault detection, isolation and recovery, the FDIR, is proposed from the design: the
+        monitors and their limits, and the load shedding, in three stages, before the spacecraft
+        reaches survival. The attitude and orbit control system, the AOCS, has its modes, from
+        detumbling to target pointing, which rolls up to thirty degrees and settles for a minute
+        before each acquisition. Mission analysis enters the flight rules. Flight rule one pauses
+        the transmitter for every acquisition, and the data budget allows for it.
+      fr: >-
+        La détection, l’isolation et la reprise des pannes, la FDIR, est proposée à partir de la
+        conception : les surveillances et leurs limites, et le délestage, en trois étapes, avant que
+        le satellite n’atteigne la survie. Le système de contrôle d’attitude et d’orbite, le SCAO, a
+        ses modes, de l’amortissement au pointage de cible, qui s’incline jusqu’à trente degrés et
+        se stabilise une minute avant chaque acquisition. L’analyse de mission saisit les règles de
+        vol. La règle de vol numéro un coupe l’émetteur pendant chaque acquisition, et le bilan de
+        données en tient compte.
+    do:
+      - js: {en: "__lt('Scene 5.4 · Systems', 'The spacecraft sheds load in three stages before it reaches survival.')", fr: "__lt('Scène 5.4 · Systèmes', 'Le satellite déleste en trois étapes avant d’atteindre la survie.')"}
+      - click: {role: tab, name: FDIR, exact: true}
+      - wait: 2
+      - click: {role: tab, name: "Load shed and safe mode"}
+      - wait: 2
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 3, point: false}
+      - js: {en: "__lt('Scene 5.6 · AOCS', 'Imaging rolls up to thirty degrees and settles for a minute before each acquisition.')", fr: "__lt('Scène 5.6 · SCAO', 'L’imagerie s’incline jusqu’à trente degrés et se stabilise une minute avant chaque acquisition.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: aocs_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: "AOCS modes", exact: true}
+      - wait: 2.5
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 3, point: false}
+      - js: {en: "__lt('Scene 5.7 · Mission analysis & ops', 'Flight rule one pauses the transmitter for every acquisition; the budget allows for it.')", fr: "__lt('Scène 5.7 · Analyse de mission et opérations', 'La règle de vol numéro un coupe l’émetteur pendant chaque acquisition ; le bilan en tient compte.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: mission_analyst}
+      - wait: 1.5
+      - click: {role: tab, name: Operations, exact: true}
+      - wait: 2.5
+      - scroll: {target: {css: "main tr:has-text('FR-01')"}}
+      - highlight: {target: {css: "main tr:has-text('FR-01')"}, seconds: 3}
+
+  - id: rerun
+    title: {en: "The analyses run again", fr: "Les analyses relancées"}
+    say:
+      en: >-
+        After every change, the analyses run again on the same design: the design loop, the mission
+        simulation, the ground segment, the physics, the verification and validation run and the
+        FMECA. Each conflict they raise is either resolved or accepted with a reason, so that no run
+        is left stale before a review.
+      fr: >-
+        Après chaque changement, les analyses repartent sur la même conception : la boucle de
+        conception, la simulation de mission, le segment sol, la physique, la vérification et
+        validation, et l’AMDEC. Chaque conflit qu’elles soulèvent est résolu ou accepté avec une
+        raison, afin qu’aucune analyse ne reste périmée avant une revue.
+    do:
+      - js: {en: "__lt('Scene 5.9 · Systems', 'After every change, the analyses run again on the same design.')", fr: "__lt('Scène 5.9 · Systèmes', 'Après chaque changement, les analyses repartent sur la même conception.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 2
+      - click: {target: {css: "button:has-text('Re-run') >> nth=4"}}
+      - wait: 4
+      - click: {target: {css: "button:has-text('Re-run') >> nth=5"}}
+      - wait: 4
+      - highlight: {target: {css: "main :text-matches('FMECA|AMDEC') >> nth=0"}, seconds: 3}

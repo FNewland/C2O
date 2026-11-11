@@ -1,0 +1,106 @@
+# Week 2 — Northern Fire and Ice walkthrough: housekeeping telemetry (DESIGN_SCRIPT_V2 scenes
+# 5.5 and 5.2): the TM/TC database proposed from the design, the twelve housekeeping SIDs with
+# their real-time and stored intervals, the FULL and LEAN profiles, and the downlink closure.
+# Recording seed S4. Cross-reference: V-CON-05 (packets, services and housekeeping on EOSAT-1).
+id: V-SCDF-13
+week: 2
+audience: all
+title:
+  en: "Designing housekeeping telemetry"
+  fr: "Concevoir la télémesure de servitude"
+summary:
+  en: "The Northern Fire and Ice housekeeping telemetry: one packet per subsystem, each at its own rate, a separate diagnostic packet for the attitude system, the real-time budget against its allocation, the stored housekeeping, the per-pass profiles, and the daily closure of the downlink."
+  fr: "La télémesure de servitude de Northern Fire and Ice : un paquet par sous-système, chacun à son rythme, un paquet de diagnostic séparé pour le système d’attitude, le budget temps réel face à son allocation, la télémesure stockée, les profils par passage, et la fermeture quotidienne de la liaison descendante."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-3.3/D]
+  decisions: [D-CDR-TMTCDB, D-3.3-DATA]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scene 5.5)
+  - design/tests/fixtures/nfi/hk_sids.yaml
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: database
+    title: {en: "The TM/TC database", fr: "La base TM/TC"}
+    say:
+      en: >-
+        Comms and data handling owns the telemetry and telecommand database, the TM/TC database. It
+        is proposed from the design: every unit's parameters, the telecommands, the events and the
+        rate ladder of the radio. The uplink settings and a command-loss timer of seventy-two hours
+        are part of it. Each parameter is owned by the seat of its subsystem.
+      fr: >-
+        Les télécoms et le traitement de données sont responsables de la base de télémesure et de
+        télécommande, la base TM/TC. Elle est proposée à partir de la conception : les paramètres de
+        chaque équipement, les télécommandes, les événements et l’échelle des débits de la radio. Les
+        réglages de la liaison montante et une minuterie de perte de commande de soixante-douze
+        heures en font partie. Chaque paramètre est tenu par le poste de son sous-système.
+    do:
+      - js: {en: "__lt('Scene 5.5 · Comms & OBDH', 'Housekeeping is organised the way operators use it: one packet per subsystem, each at its own rate.')", fr: "__lt('Scène 5.5 · Télécoms et OBDH', 'La télémesure de servitude suit l’usage des opérateurs : un paquet par sous-système, chacun à son rythme.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: comms_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: "TM/TC", exact: true}
+      - wait: 2
+      - highlight: {target: {role: button, name: "Propose from design"}, seconds: 2}
+      - click: {role: tab, name: "Rate ladder"}
+      - wait: 2
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 3, point: false}
+
+  - id: sids
+    title: {en: "The housekeeping SIDs", fr: "Les SID de servitude"}
+    say:
+      en: >-
+        Housekeeping is organised the way operators use it: one structure, or SID, per subsystem,
+        each with its own interval in each mode. The thermal SID goes once a minute; the attitude
+        system sends its outputs routinely, and its diagnostic SID is off at boot and enabled only
+        when needed. In real time the full set needs about three point seven five kilobits per
+        second against an allocation of four point eight. The stored copies fill the housekeeping
+        store and go down as delayed telemetry.
+      fr: >-
+        La télémesure de servitude suit l’usage des opérateurs : une structure, ou SID, par
+        sous-système, chacune avec son intervalle dans chaque mode. Le SID thermique part une fois par
+        minute ; le système d’attitude envoie ses sorties en routine, et son SID de diagnostic est
+        désactivé au démarrage et activé seulement en cas de besoin. En temps réel, l’ensemble complet
+        demande environ trois virgule sept cinq kilobits par seconde, pour une allocation de quatre
+        virgule huit. Les copies stockées remplissent la mémoire de servitude et descendent en
+        télémesure différée.
+    do:
+      - click: {role: tab, name: "Housekeeping"}
+      - wait: 2
+      - highlight: {target: {css: "main :text-matches('Real time FULL|Temps réel FULL') >> nth=0"}, seconds: 3.5}
+      - scroll: {target: {css: "main tr:has-text('THERMAL') >> nth=0"}}
+      - highlight: {target: {css: "main tr:has-text('THERMAL') >> nth=0"}, seconds: 3}
+      - highlight: {target: {css: "main tr:has-text('ADCS_DIAG') >> nth=0"}, seconds: 3}
+
+  - id: passes
+    title: {en: "Profiles and the daily closure", fr: "Profils et fermeture quotidienne"}
+    say:
+      en: >-
+        Two profiles cover the passes: FULL on the operations passes and LEAN on the others, and for
+        each pass the operators choose between delayed housekeeping and payload data. The daily
+        closure checks that everything fits in the capacity of the four stations: with the
+        per-pass profiles, the baseline keeps about thirty-nine percent of margin.
+      fr: >-
+        Deux profils couvrent les passages : FULL sur les passages d’opérations et LEAN sur les
+        autres, et à chaque passage les opérateurs choisissent entre la télémesure différée et les
+        données de la charge utile. La fermeture quotidienne vérifie que tout tient dans la capacité
+        des quatre stations : avec les profils par passage, la référence garde environ trente-neuf
+        pour cent de marge.
+    do:
+      - click: {role: tab, name: Profiles, exact: true}
+      - wait: 2
+      - scroll: {target: {css: "main :text-matches('Daily closure|Fermeture quotidienne') >> nth=0"}}
+      - highlight: {target: {css: "main :text-matches('Daily closure|Fermeture quotidienne') >> nth=0"}, seconds: 3.5}

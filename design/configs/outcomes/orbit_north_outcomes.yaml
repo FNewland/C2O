@@ -241,6 +241,22 @@ videos:
   V-SCDF-05: {los: [LO2, LO4], clos: ["1.2", "2.4"]}
   V-SCDF-06: {los: [LO5], clos: ["3.4"]}
   V-SCDF-07: {los: [LO5, LOG2], clos: ["3.3", "1.4"]}
+  V-SCDF-08: {los: [LO2], clos: ["1.1", "1.2"]}
+  V-SCDF-09: {los: [LO4, LO3], clos: ["2.4", "3.1", "5.4"]}
+  V-SCDF-10: {los: [LO4, LOG1], clos: ["3.2", "1.4"]}
+  V-SCDF-11: {los: [LO2, LO4], clos: ["3.2", "2.4"]}
+  V-SCDF-12: {los: [LO2], clos: ["1.2", "1.3"]}
+  V-SCDF-13: {los: [LO4], clos: ["3.1", "1.2"]}
+  V-SCDF-14: {los: [LO5], clos: ["6.3"]}
+  V-SCDF-15: {los: [LO5, LO7], clos: ["4.4", "3.3"]}
+  V-SCDF-17: {los: [LO2, LO5], clos: ["1.2", "3.3"]}
+  V-SCDF-18: {los: [LO4, LO7], clos: ["3.1", "4.2"]}
+  V-SCDF-19: {los: [LO4, LO7], clos: ["3.1", "4.2"]}
+  V-SCDF-20: {los: [LO4], clos: ["2.4", "3.1"]}
+  V-SCDF-21: {los: [LO5], clos: ["4.3", "5.4"]}
+  V-SCDF-22: {los: [LO5, LOG2], clos: ["3.3", "1.4"]}
+  V-SCDF-23: {los: [LO4, LO5], clos: ["3.3", "3.4"]}
+  V-SCDF-24: {los: [LOG1, LO5], clos: ["1.4", "3.3"]}
   V-CON-02: {los: [LO6], clos: ["3.1", "2.3"]}
   V-CON-04: {los: [LO6], clos: ["1.4"]}
   V-CON-05: {los: [LO6], clos: ["6.1"]}

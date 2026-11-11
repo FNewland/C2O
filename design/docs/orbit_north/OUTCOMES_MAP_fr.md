@@ -203,6 +203,22 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | V-SCDF-05 Les interfaces et la matrice N² dans SpaceCDF | LO 2, LO 4 | 1.2 Exigences et architecture, 2.4 Participation à la conception concourante | n2 (multichoice) → 1.2, 2.4 ; icd (reflect) → 1.2, 2.4, 6.2† |
 | V-SCDF-06 Registre des risques et AMDEC dans SpaceCDF | LO 5 | 3.4† Gestion des risques | mitigate (multichoice) → 3.4† ; redundancy (reflect) → 3.4†, 6.2† |
 | V-SCDF-07 Les jalons de revue dans SpaceCDF | LO 5, LO G2 | 3.3† Leadership des décisions techniques, 1.4 Décision en situation d’incertitude | close (multichoice) → 3.3†, 1.4 |
+| V-SCDF-08 Définir la mission à partir d’une proposition | LO 2 | 1.1 Cadrage du problème et analyse des besoins, 1.2 Exigences et architecture |  |
+| V-SCDF-09 Choisir l’équipement dans le catalogue | LO 4, LO 3 | 2.4 Participation à la conception concourante, 3.1 Gestion des marges et des bilans, 5.4† Pratique contrôlée ou habilitée |  |
+| V-SCDF-10 Pondérer les critères et la matrice de Pugh | LO 4, LO G1 | 3.2 Conduite d’études de compromis, 1.4 Décision en situation d’incertitude |  |
+| V-SCDF-11 Stations sol et temps de contact | LO 2, LO 4 | 3.2 Conduite d’études de compromis, 2.4 Participation à la conception concourante |  |
+| V-SCDF-12 L’arbre des exigences | LO 2 | 1.2 Exigences et architecture, 1.3† Intégration et vérification |  |
+| V-SCDF-13 Concevoir la télémesure de servitude | LO 4 | 3.1 Gestion des marges et des bilans, 1.2 Exigences et architecture |  |
+| V-SCDF-14 Enregistrer, partager et rouvrir une étude | LO 5 | 6.3 Constitution du portfolio |  |
+| V-SCDF-15 Constituer le dossier de revue | LO 5, LO 7 | 4.4† Communication et animation, 3.3† Leadership des décisions techniques |  |
+| V-SCDF-17 Le V dans SpaceCDF : phases, livrables et revues | LO 2, LO 5 | 1.2 Exigences et architecture, 3.3† Leadership des décisions techniques |  |
+| V-SCDF-18 Des allocations acceptées par chaque poste : bilans, coût et risques | LO 4, LO 7 | 3.1 Gestion des marges et des bilans, 4.2 Collaboration multidisciplinaire |  |
+| V-SCDF-19 Modes, puissance et liaison descendante : deux négociations | LO 4, LO 7 | 3.1 Gestion des marges et des bilans, 4.2 Collaboration multidisciplinaire |  |
+| V-SCDF-20 Intégration : interfaces, empilement, lignes d’alimentation, FDIR et opérations | LO 4 | 2.4 Participation à la conception concourante, 3.1 Gestion des marges et des bilans |  |
+| V-SCDF-21 Les licences à partir de la conception | LO 5 | 4.3† Éthique et gouvernance, 5.4† Pratique contrôlée ou habilitée |  |
+| V-SCDF-22 Franchir la MDR, la PRR et la SRR | LO 5, LO G2 | 3.3† Leadership des décisions techniques, 1.4 Décision en situation d’incertitude |  |
+| V-SCDF-23 Les preuves de la PDR : interfaces, fiabilité et modèle thermique | LO 4, LO 5 | 3.3† Leadership des décisions techniques, 3.4† Gestion des risques |  |
+| V-SCDF-24 Quand on n’est pas d’accord avec la note, vérifier le raisonnement | LO G1, LO 5 | 1.4 Décision en situation d’incertitude, 3.3† Leadership des décisions techniques |  |
 | V-CON-02 Le bilan énergétique sur une orbite | LO 6 | 3.1 Gestion des marges et des bilans, 2.3† Jumeau numérique et simulation | instant (multichoice) → 3.1, 2.3† ; levers (reflect) → 3.1, 2.3†, 6.2† |
 | V-CON-04 Détection, isolation et reprise des pannes à bord | LO 6 | 1.4 Décision en situation d’incertitude | onerule (truefalse) → 1.4 ; ground (reflect) → 1.4, 6.2† |
 | V-CON-05 Paquets, services et données de servitude | LO 6 | 6.1 Agilité d’apprentissage d’un domaine | primary (multichoice) → 6.1 ; power (truefalse) → 6.1 |
@@ -229,14 +245,14 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | Résultat du cours | Pratiqué dans (fiches · vidéos) | Évalué dans |
 |---|---|---|
 | LO 1 | 2 · 1 | A1, A2 |
-| LO 2 | 7 · 9 | A1, A2, A3, A4 |
-| LO 3 | 2 · 1 | A4 |
-| LO 4 | 10 · 11 | A3, A4, A8 |
-| LO 5 | 2 · 4 | A3, A4 |
+| LO 2 | 7 · 13 | A1, A2, A3, A4 |
+| LO 3 | 2 · 2 | A4 |
+| LO 4 | 10 · 19 | A3, A4, A8 |
+| LO 5 | 2 · 11 | A3, A4 |
 | LO 6 | 49 · 18 | A5, A6, A7, A8 |
-| LO 7 | 11 · 0 | A2, A6, A7 |
+| LO 7 | 11 · 3 | A2, A6, A7 |
 | LO 8 | 7 · 0 | A9 |
-| LO G1 | 1 · 0 | A4 |
-| LO G2 | 3 · 2 | A4, A6, A8 |
+| LO G1 | 1 · 2 | A4 |
+| LO G2 | 3 · 3 | A4, A6, A8 |
 | LO G3 | 1 · 0 | A7, A9 |
 | LO G4 | 0 · 0 | A9 |

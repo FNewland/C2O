@@ -48,7 +48,7 @@ export function MarginBar({ label, nominal, withMargin, allocation, unit, scaleM
   let summary: string
   if (!hasValue) summary = t('no data')
   else if (allocation == null) summary = t('{{value}} {{unit}}, no allocation', { value: fmtNum(wm!, digits), unit })
-  else summary = t('{{value}} of {{alloc}} {{unit}}, margin {{pct}} %', { value: fmtNum(wm!, digits), alloc: fmtNum(allocation, digits), unit, pct: pct!.toFixed(0) })
+  else summary = t('{{value}} of {{alloc}} {{unit}}, margin {{pct}} %', { value: fmtNum(wm!, digits), alloc: fmtNum(allocation, digits), unit, pct: pct == null ? '–' : pct.toFixed(0) })
 
   return (
     <div className={cx('c2o-mbar', lead && 'c2o-mbar--lead', tone)} role="group" aria-label={typeof label === 'string' ? `${label}: ${summary}` : summary} title={title}>

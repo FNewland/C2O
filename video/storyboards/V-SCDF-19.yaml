@@ -1,0 +1,207 @@
+# Week 2 — Northern Fire and Ice walkthrough: modes, power, the link and two negotiations
+# (DESIGN_SCRIPT_V2 scenes 2.5, 4.11, 4.4, 4.12 N1, 4.13 N3). Recording seed S4 with the ledger
+# and the licensing done; N1 and N3 are opened and signed on camera. Proposed id (not in the plan).
+id: V-SCDF-19
+week: 2
+audience: all
+title:
+  en: "Modes, power and the downlink: two negotiations"
+  fr: "Modes, puissance et liaison descendante : deux négociations"
+summary:
+  en: "The Northern Fire and Ice modes and their power, the energy per orbit, the downlink cases at a northern site and in the city, and two negotiations that every involved seat signs: the science volume against the downlink, and the payload peak power against the battery."
+  fr: "Les modes de Northern Fire and Ice et leur puissance, l’énergie par orbite, les cas de liaison descendante sur un site du Nord et en ville, et deux négociations signées par chaque poste concerné : le volume scientifique face à la liaison, et la crête de puissance de la charge utile face à la batterie."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-3.3/D]
+  decisions: [D-3.3-DATA]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 2.5, 4.4, 4.11, 4.12, 4.13)
+  - design/tests/fixtures/nfi/modes.yaml
+  - design/tests/fixtures/nfi/NUMBERS.yaml (links)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger neg:GS4 neg:N7 price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: modes
+    title: {en: "The modes", fr: "Les modes"}
+    say:
+      en: >-
+        Mission analysis builds the concept of operations from the modes. Most of the orbit is
+        nadir standby, about eighty-five percent. Imaging takes about five percent, downlink about
+        nine, and night short-wave infrared imaging one percent, in its season. Safe, survival and
+        the sail deployment at the end of life complete the set, with the transitions between them.
+      fr: >-
+        L’analyse de mission construit le concept d’opérations à partir des modes. L’essentiel de
+        l’orbite se passe en attente au nadir, environ quatre-vingt-cinq pour cent. L’imagerie prend
+        environ cinq pour cent, la transmission environ neuf, et l’imagerie de nuit en infrarouge à
+        ondes courtes un pour cent, en saison. Les modes sûr, de survie et de déploiement de la
+        voile en fin de vie complètent l’ensemble, avec les transitions entre eux.
+    do:
+      - js: {en: "__lt('Scene 2.5 · Mission analysis & ops', 'Most of the orbit is nadir standby, with a few minutes of imaging and about nine of downlink.')", fr: "__lt('Scène 2.5 · Analyse de mission et opérations', 'L’essentiel de l’orbite se passe en attente au nadir, avec quelques minutes d’imagerie et environ neuf de transmission.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: mission_analyst}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Modes, exact: true}
+      - wait: 2.5
+      - highlight: {target: {css: "main svg >> nth=0"}, seconds: 4, point: false}
+
+  - id: matrix
+    title: {en: "Power by mode and energy per orbit", fr: "Puissance par mode et énergie par orbite"}
+    say:
+      en: >-
+        Power fills the matrix of each unit's power in each mode, with every subsystem seat. The
+        rules propose a value from the equipment, and the team types the measured ones where they
+        differ: the drag sail, the attitude system during detumble, the payload controller and the
+        radio. With every unit's power per mode, the orbit average is just over four watts, against
+        about twelve watts generated by the wings at the end of life. Imaging draws almost sixteen
+        watts and downlink about nine, for a few minutes each.
+      fr: >-
+        Le poste Puissance remplit la matrice de la puissance de chaque équipement dans chaque mode,
+        avec chaque poste de sous-système. Les règles proposent une valeur tirée de l’équipement, et
+        l’équipe saisit les valeurs mesurées là où elles diffèrent : la voile de traînée, le
+        système d’attitude pendant l’amortissement, le contrôleur de charge utile et la radio. Avec
+        la puissance de chaque équipement par mode, la moyenne orbitale dépasse à peine quatre
+        watts, face à environ douze watts produits par les ailes en fin de vie. L’imagerie tire
+        presque seize watts et la transmission environ neuf, pendant quelques minutes chacune.
+    do:
+      - js: {en: "__lt('Scene 4.11 · Power, with every subsystem seat', 'With every unit’s power per mode, the orbit average is just over four watts.')", fr: "__lt('Scène 4.11 · Puissance, avec chaque poste de sous-système', 'Avec la puissance de chaque équipement par mode, la moyenne orbitale dépasse à peine quatre watts.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: power_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Modes, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: "Power by mode"}
+      - wait: 2
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 4, point: false}
+      - click: {role: tab, name: "Energy per orbit"}
+      - wait: 2
+      - highlight: {target: {css: "main :text-matches('Orbit average|Moyenne orbitale') >> nth=0"}, seconds: 4}
+
+  - id: link
+    title: {en: "The link cases", fr: "Les cas de liaison"}
+    say:
+      en: >-
+        Comms and data handling keeps the link budget as named cases stored with the study: each
+        station, at ten degrees of elevation, with its own noise temperature. At a quiet northern
+        site the downlink closes with about four decibels of margin; at the Ottawa station, in the
+        city noise, almost nothing. The design case is the one every analysis uses.
+      fr: >-
+        Les télécoms et le traitement de données gardent le bilan de liaison sous forme de cas
+        nommés, enregistrés avec l’étude : chaque station, à dix degrés d’élévation, avec sa propre
+        température de bruit. Sur un site nordique calme, la liaison descendante boucle avec environ
+        quatre décibels de marge ; à la station d’Ottawa, dans le bruit de la ville, presque rien.
+        Le cas de conception est celui qu’utilisent toutes les analyses.
+    do:
+      - js: {en: "__lt('Scene 4.4 · Comms & OBDH', 'The downlink closes with four decibels at a quiet northern site and almost nothing in a city.')", fr: "__lt('Scène 4.4 · Télécoms et OBDH', 'La liaison descendante boucle avec quatre décibels sur un site nordique calme et presque rien en ville.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: comms_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Link budget"}
+      - wait: 2.5
+      - scroll: {target: {text: "Link cases", exact: true}}
+      - highlight: {target: {css: "main tr:has-text('Inuvik') >> nth=0"}, seconds: 3}
+      - highlight: {target: {css: "main tr:has-text('Ottawa'):has-text('urban') >> nth=0"}, seconds: 3}
+
+  - id: n1
+    title: {en: "Science volume against the downlink: N1", fr: "Volume scientifique face à la liaison : N1"}
+    say:
+      en: >-
+        Payload opens the N1 negotiation: how much science per day the downlink can carry. The tool
+        computes three options from the study: keep thirteen megabytes a day, raise to the largest
+        volume that keeps ten percent margin, or lower to what closes at the nineteen point two
+        kilobit fallback rate. Each comes with its margin and the compression it needs. The
+        sensitivity strip below shows the margin against the science target, the compression ratio
+        and the rate tier. The team keeps thirteen megabytes a day: the margin is about
+        thirty-eight percent with four stations, and still about eighteen percent if the worst
+        site is lost. It reopens if the compression measured on simulated scenes is below one
+        point three to one. Payload, comms, mission analysis and the Customer sign.
+      fr: >-
+        La charge utile ouvre la négociation N1 : combien de science par jour la liaison peut
+        porter. L’outil calcule trois options à partir de l’étude : garder treize mégaoctets par
+        jour, monter au plus grand volume qui garde dix pour cent de marge, ou descendre à ce qui
+        boucle au débit de repli de dix-neuf virgule deux kilobits. Chacune vient avec sa marge et
+        la compression qu’elle demande. La bande de sensibilité en dessous montre la marge en
+        fonction de l’objectif scientifique, du taux de compression et du palier de débit. L’équipe
+        garde treize mégaoctets par jour : la marge est d’environ trente-huit pour cent avec quatre
+        stations, et encore d’environ dix-huit pour cent si le pire site est perdu. La fiche se
+        rouvre si la compression mesurée sur des scènes simulées est inférieure à un virgule trois
+        pour un. La charge utile, les télécoms, l’analyse de mission et le client signent.
+    do:
+      - js: {en: "__lt('Scene 4.12 · Payload proposes', 'We keep thirteen megabytes a day because it still closes if a station is lost.')", fr: "__lt('Scène 4.12 · La charge utile propose', 'On garde treize mégaoctets par jour, car le bilan boucle encore si une station est perdue.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: payload_lead}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N1')"}}
+      - click: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N1')"}
+      - wait: 3
+      - scroll: {target: {css: "[data-testid=negotiation-N1] table >> nth=1"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N1] table >> nth=1"}, seconds: 5, point: false}
+      - click: {target: {css: "[data-testid=negotiation-N1] tr:has-text('13 M') button"}}
+      - wait: 1.5
+      - click: {target: {css: "[data-testid=negotiation-N1] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=0"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N1] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=1"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N1] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=2"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N1] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=3"}, instant: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=negotiation-N1]"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N1] > div >> nth=0"}, seconds: 3}
+
+  - id: n3
+    title: {en: "Payload peak power: N3", fr: "Crête de puissance de la charge utile : N3"}
+    say:
+      en: >-
+        The payload's peak power is the second negotiation, N3, between Payload and Power, with
+        mission analysis, Thermal and Systems. The options are imaging for five percent of the orbit
+        under two flight rules, no transmission during an acquisition and imaging only above forty
+        percent state of charge, or a larger imaging share. The team keeps five percent: the imaging
+        mode draws about sixteen watts and the worst eclipse discharges the battery by less than
+        nine percent. The five seats sign. The two flight rules are entered by operations later.
+      fr: >-
+        La crête de puissance de la charge utile est la deuxième négociation, N3, entre la charge
+        utile et la puissance, avec l’analyse de mission, la thermique et l’ingénierie système. Les
+        options sont une imagerie sur cinq pour cent de l’orbite sous deux règles de vol, pas
+        d’émission pendant une acquisition et une imagerie seulement au-dessus de quarante pour cent
+        de charge, ou une part d’imagerie plus grande. L’équipe garde cinq pour cent : le mode
+        d’imagerie tire environ seize watts et la pire éclipse décharge la batterie de moins de neuf
+        pour cent. Les cinq postes signent. Les deux règles de vol sont saisies plus tard par les
+        opérations.
+    do:
+      - js: {en: "__lt('Scene 4.13 · Payload and Power', 'The payload may draw its peak, under two flight rules that protect the battery and the link.')", fr: "__lt('Scène 4.13 · Charge utile et puissance', 'La charge utile peut tirer sa crête, sous deux règles de vol qui protègent la batterie et la liaison.')"}
+      - scroll: {target: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N3')"}}
+      - click: {css: ":is([aria-label='New negotiation'],[aria-label='Nouvelle négociation']) button:has-text('N3')"}
+      - wait: 3
+      - scroll: {target: {css: "[data-testid=negotiation-N3] table >> nth=1"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N3] table >> nth=1"}, seconds: 4, point: false}
+      - click: {target: {css: "[data-testid=negotiation-N3] tr:has-text('40 %') button"}}
+      - wait: 1.5
+      - click: {target: {css: "[data-testid=negotiation-N3] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=0"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N3] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=1"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N3] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=2"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N3] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=3"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-N3] :is([aria-label='Sign for a seat'],[aria-label='Signer pour un poste']) button >> nth=4"}, instant: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=negotiation-N3]"}}
+      - highlight: {target: {css: "[data-testid=negotiation-N3] > div >> nth=0"}, seconds: 3}

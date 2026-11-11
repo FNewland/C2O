@@ -1,0 +1,101 @@
+# Week 1 — Northern Fire and Ice walkthrough: saving, sharing and reopening a study
+# (DESIGN_SCRIPT_V2 chapter 8): the project file saved, the study closed and loaded back as a new
+# study, and the example project opened from the home screen. Recording seed S4 with chapters
+# 2–6 done.
+id: V-SCDF-14
+week: 1
+audience: all
+title:
+  en: "Saving, sharing and reopening a study"
+  fr: "Enregistrer, partager et rouvrir une étude"
+summary:
+  en: "The Northern Fire and Ice study saved as one project file, closed, and loaded back as a new study with every table intact, and the finished study opened as the example mission from the home screen."
+  fr: "L’étude Northern Fire and Ice enregistrée en un seul fichier de projet, fermée, puis rechargée comme nouvelle étude avec toutes ses tables intactes, et l’étude terminée ouverte comme mission d’exemple depuis l’écran d’accueil."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: []
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (chapter 8)
+  - design/frontend/src/workbench/projectFile.ts
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price semp debris ecp02 pass:mdr,prr,srr icds reliability thermal ecp01 pass:pdr"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: save
+    title: {en: "Save the project file", fr: "Enregistrer le fichier de projet"}
+    say:
+      en: >-
+        Systems saves the whole study as one project file: every table, the layout, the seats, the
+        gates and their history, the analysis results, the licensing record, and the logbook
+        entries of the person who exports it. The logbook is personal, so each seat downloads its
+        own if the others are needed. The file can be shared with another team or kept as a
+        baseline.
+      fr: >-
+        L’ingénierie système enregistre toute l’étude en un seul fichier de projet : chaque table,
+        l’agencement, les postes, les jalons et leur historique, les résultats des analyses,
+        l’enregistrement des licences, et les entrées du journal de bord de la personne qui exporte.
+        Le journal de bord est personnel : chaque poste télécharge le sien si les autres sont
+        nécessaires. Le fichier peut être partagé avec une autre équipe ou gardé comme référence.
+    do:
+      - js: {en: "__lt('Chapter 8 · Systems', 'One project file holds the whole study.')", fr: "__lt('Chapitre 8 · Systèmes', 'Un seul fichier de projet contient toute l’étude.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - highlight: {target: {role: button, name: Save, exact: true}, seconds: 2}
+      - click: {role: button, name: Save, exact: true}
+      - wait: 2
+
+  - id: reload
+    title: {en: "Close, and load it back", fr: "Fermer, puis recharger"}
+    say:
+      en: >-
+        Close study returns to the home screen; the study stays on the server. Load opens the
+        project file as a new study: every row gets a new identifier and nothing is duplicated. The
+        round trip is checked by a test on the finished study: every table and every row comes back
+        identical after the identifiers are mapped.
+      fr: >-
+        Fermer l’étude ramène à l’écran d’accueil ; l’étude reste sur le serveur. Charger ouvre le
+        fichier de projet comme une nouvelle étude : chaque ligne reçoit un nouvel identifiant et
+        rien n’est dupliqué. L’aller-retour est vérifié par un test sur l’étude terminée : chaque
+        table et chaque ligne reviennent identiques une fois les identifiants mis en correspondance.
+    do:
+      - js: "(() => { const sid = new URLSearchParams(location.search).get('study'); const orig = HTMLInputElement.prototype.click; HTMLInputElement.prototype.click = function () { if (this.type !== 'file') return orig.call(this); const inp = this; fetch('/api/studies/' + sid + '/export').then(r => r.blob()).then(b => { const dt = new DataTransfer(); dt.items.add(new File([b], 'northern-fire-and-ice.json', {type: 'application/json'})); inp.files = dt.files; inp.dispatchEvent(new Event('change', {bubbles: true})); if (inp.onchange) inp.onchange(new Event('change')); }); }; })()"
+      - click: {role: button, name: Load, exact: true}
+      - wait: 8
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(OK|Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 2
+      - highlight: {target: {css: ".c2o-appbar__levels"}, seconds: 2.5, point: false}
+
+  - id: example
+    title: {en: "The example mission", fr: "La mission d’exemple"}
+    say:
+      en: >-
+        From the home screen, Load Example Mission lists the worked missions. Northern Fire and Ice
+        opens the study as this walkthrough leaves it, with the PDR passed, so that a team can study
+        any step of it. In week three, the course moves from design to flight, with EOSAT-1, the
+        spacecraft the class will operate.
+      fr: >-
+        Depuis l’écran d’accueil, Charger une mission d’exemple liste les missions travaillées.
+        Northern Fire and Ice ouvre l’étude telle que la laisse ce parcours, avec la PDR franchie,
+        afin qu’une équipe puisse en étudier n’importe quelle étape. En semaine trois, le cours
+        passe de la conception au vol, avec EOSAT-1, le satellite que la classe va exploiter.
+    do:
+      - js: "__lt('', '')"
+      - click: {role: button, name: Close study, exact: true}
+      - wait: 2
+      - click: {role: button, name: Load Example Mission}
+      - wait: 2
+      - highlight: {target: {css: "[data-example-card=nfi]"}, seconds: 3}
+      - click: {css: "[data-example-card=nfi]"}
+      - wait: 6

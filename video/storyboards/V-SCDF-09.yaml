@@ -1,0 +1,266 @@
+# Week 2 — Northern Fire and Ice walkthrough: equipment, one seat per subsystem
+# (DESIGN_SCRIPT_V2 scenes 4.1–4.8, with 4.4 the link cases in V-SCDF-19). Recording seed S4
+# (the equipment of equipment.yaml is seeded; each seat shows its selection and the catalogue).
+id: V-SCDF-09
+week: 2
+audience: all
+title:
+  en: "Choosing equipment from the catalogue"
+  fr: "Choisir l’équipement dans le catalogue"
+summary:
+  en: "Each Northern Fire and Ice subsystem seat chooses its equipment at level three: the cameras and the custom payload items, the power unit and wings, the attitude unit with its star tracker, the radio and the computer, the thermal hardware, the frame, and the drag sail with its independent timer."
+  fr: "Chaque poste de sous-système de Northern Fire and Ice choisit son équipement au niveau trois : les caméras et les éléments sur mesure de la charge utile, l’unité d’alimentation et les ailes, l’unité d’attitude avec son viseur d’étoiles, la radio et l’ordinateur, le matériel thermique, la structure, et la voile de traînée avec sa minuterie indépendante."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-3.4/D, LW-4.1/A, LW-4.1/D]
+  decisions: [D-3.4-EQUIPMENT, D-4.1-EXPORT]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 4.1–4.8)
+  - design/tests/fixtures/nfi/equipment.yaml
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: payload
+    title: {en: "Payload", fr: "Charge utile"}
+    say:
+      en: >-
+        Each subsystem seat now chooses its equipment, at level three. Payload takes its seat and
+        opens its subsystem: the two Alvium cameras, the short-wave infrared camera with its new
+        sixteen-ten nanometre filter and the near-infrared camera, the Raspberry Pi compute module
+        as payload controller, the lenses and filters, and three custom items: the infrared filter,
+        the optical bench with its baffles, and the payload harness, each with its technology
+        readiness level. The equipment catalogue below is searched by domain and name; what it does
+        not hold is added as a custom component. At five hundred and ninety kilometres the camera
+        gives about fifty-eight metres per pixel over a swath of about one hundred and fifty
+        kilometres.
+      fr: >-
+        Chaque poste de sous-système choisit maintenant son équipement, au niveau trois. La charge
+        utile prend son poste et ouvre son sous-système : les deux caméras Alvium, la caméra
+        infrarouge à ondes courtes avec son nouveau filtre à seize cent dix nanomètres et la caméra
+        proche infrarouge, le module de calcul Raspberry Pi comme contrôleur de charge utile, les
+        objectifs et les filtres, et trois éléments sur mesure : le filtre infrarouge, le banc
+        optique avec ses baffles, et le harnais de la charge utile, chacun avec son niveau de
+        maturité technologique. Le catalogue des équipements, en dessous, se consulte par domaine et
+        par nom ; ce qu’il ne contient pas est ajouté comme composant sur mesure. À cinq cent
+        quatre-vingt-dix kilomètres, la caméra donne environ cinquante-huit mètres par pixel sur une
+        fauchée d’environ cent cinquante kilomètres.
+    do:
+      - js: {en: "__lt('Scene 4.1 · Payload', 'The SWIR filter moves to 1610 nm to match Sentinel-2 band 11.')", fr: "__lt('Scène 4.1 · Charge utile', 'Le filtre SWIR passe à 1610 nm pour correspondre à la bande 11 de Sentinel-2.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: payload_lead}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Northern Fire and Ice')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Space Segment')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Northern Fire and Ice spacecraft')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Payload')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main [role=button][aria-label*='SWIR filter 1610/90'], main :text('SWIR filter 1610/90 nm') >> nth=0"}, seconds: 3}
+      - scroll: {target: {css: "[data-where=equipment-catalog]"}}
+      - type: {target: {css: "[data-where=equipment-catalog] input >> nth=0"}, text: "Alvium", delay_ms: 70}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-where=equipment-catalog]"}, seconds: 3.5}
+
+  - id: eps
+    title: {en: "EPS", fr: "Alimentation"}
+    say:
+      en: >-
+        Power selects the P60 power unit, the BP4 battery, two deployable wings, four body panels
+        and the power harness, on a fourteen point four volt battery bus. The arrays give about
+        twelve watts on average over the orbit at the end of life, about three times the orbit-
+        average load; the body panels alone would give about four.
+      fr: >-
+        Le poste puissance choisit l’unité d’alimentation P60, la batterie BP4, deux ailes
+        déployables, quatre panneaux de structure et le harnais d’alimentation, sur un bus batterie
+        de quatorze virgule quatre volts. Les panneaux donnent environ douze watts en moyenne sur
+        l’orbite en fin de vie, environ trois fois la charge moyenne orbitale ; les panneaux de
+        structure seuls en donneraient environ quatre.
+    do:
+      - js: {en: "__lt('Scene 4.2 · Power', 'The wings give three times the orbit-average load at end of life.')", fr: "__lt('Scène 4.2 · Puissance', 'Les ailes donnent trois fois la charge moyenne orbitale en fin de vie.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: power_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'EPS')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+
+  - id: aocs
+    title: {en: "AOCS", fr: "SCAO"}
+    say:
+      en: >-
+        The attitude seat chooses an integrated attitude unit with a star tracker, a fine sun sensor
+        and a satellite navigation receiver. Pointing to one degree with a tenth of a degree of
+        knowledge needs the star tracker, the most expensive unit on board.
+      fr: >-
+        Le poste attitude choisit une unité d’attitude intégrée avec un viseur d’étoiles, un capteur
+        solaire fin et un récepteur de navigation par satellite. Un pointage à un degré avec un
+        dixième de degré de connaissance demande le viseur d’étoiles, l’équipement le plus cher à
+        bord.
+    do:
+      - js: {en: "__lt('Scene 4.3 · AOCS', 'A tenth of a degree of knowledge needs a star tracker, the most expensive unit on board.')", fr: "__lt('Scène 4.3 · SCAO', 'Un dixième de degré de connaissance d’attitude demande un viseur d’étoiles, l’équipement le plus cher à bord.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: aocs_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'AOCS')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+
+  - id: comms
+    title: {en: "Communications and the computer", fr: "Télécoms et ordinateur de bord"}
+    say:
+      en: >-
+        Comms and data handling selects the UHF transceiver, transmitting at one watt and thirty-
+        eight point four kilobits per second, the deployable antennas and the radio cables; the
+        radio choice stays conditional on the receive band being confirmed. The on-board computer is
+        the NanoMind. Encryption of commands and data sits in the computer's software, independent
+        of the radio.
+      fr: >-
+        Les télécoms et le traitement de données choisissent l’émetteur-récepteur UHF, qui émet à un
+        watt et trente-huit virgule quatre kilobits par seconde, les antennes déployables et les
+        câbles radio ; le choix de la radio reste conditionnel à la confirmation de la bande de
+        réception. L’ordinateur de bord est le NanoMind. Le chiffrement des commandes et des données
+        est dans le logiciel de l’ordinateur, indépendamment de la radio.
+    do:
+      - js: {en: "__lt('Scene 4.5 · Comms & OBDH', 'Encryption sits in the computer’s software, independent of the radio.')", fr: "__lt('Scène 4.5 · Télécoms et OBDH', 'Le chiffrement est dans le logiciel de l’ordinateur de bord, indépendant de la radio.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: comms_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Communications')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'On-Board Computer')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - wait: 2
+
+  - id: thermal
+    title: {en: "Thermal", fr: "Thermique"}
+    say:
+      en: >-
+        Thermal chooses straps, a white coating, a two-watt Kapton heater on the payload bench and
+        multi-layer insulation. The short-wave infrared camera must image between zero and twenty-
+        five degrees, and the thermal design keeps it there; the nodal model that proves it is built
+        for the PDR.
+      fr: >-
+        Le poste thermique choisit des tresses, un revêtement blanc, un réchauffeur Kapton de deux
+        watts sur le banc de la charge utile et une isolation multicouche. La caméra infrarouge à
+        ondes courtes doit imager entre zéro et vingt-cinq degrés, et la conception thermique l’y
+        maintient ; le modèle nodal qui le prouve est construit pour la PDR.
+    do:
+      - js: {en: "__lt('Scene 4.6 · Thermal', 'The SWIR camera must image between 0 and 25 °C; the thermal design keeps it there.')", fr: "__lt('Scène 4.6 · Thermique', 'La caméra SWIR doit imager entre 0 et 25 °C ; la conception thermique l’y maintient.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: thermal_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Thermal')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+
+  - id: structure
+    title: {en: "Structure", fr: "Structure"}
+    say:
+      en: >-
+        Structures takes an off-the-shelf 3U frame with flight heritage, with its stand-offs,
+        fasteners and the stack harness. Because the frame has flown, it carries only a five percent
+        maturity margin.
+      fr: >-
+        Le poste structures retient une structure 3U du commerce avec un héritage de vol, avec ses
+        entretoises, sa visserie et le harnais de l’empilement. Comme la structure a déjà volé, elle
+        ne porte qu’une marge de maturité de cinq pour cent.
+    do:
+      - js: {en: "__lt('Scene 4.7 · Structures & config', 'An off-the-shelf frame with flight heritage carries a 5 % maturity margin.')", fr: "__lt('Scène 4.7 · Structures et configuration', 'Une structure du commerce avec un héritage de vol porte une marge de maturité de 5 %.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: structures_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Structure')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+
+  - id: disposal
+    title: {en: "Disposal: the drag sail", fr: "Retrait : la voile de traînée"}
+    say:
+      en: >-
+        The Propulsion seat owns disposal. It selects a commercial drag sail of two point one square
+        metres, which draws no power except in the end-of-life mode. The team adds its own
+        independent timer and battery, a custom item at a low readiness level, so that the sail
+        deploys even if the computer has failed.
+      fr: >-
+        Le poste propulsion est responsable du retrait de service. Il choisit une voile de traînée
+        du commerce de deux virgule un mètres carrés, qui ne consomme aucune puissance sauf dans le
+        mode de fin de vie. L’équipe ajoute sa propre minuterie indépendante et sa batterie, un
+        élément sur mesure de faible maturité, afin que la voile se déploie même si l’ordinateur est
+        en panne.
+    do:
+      - js: {en: "__lt('Scene 4.8 · Propulsion', 'The team adds its own timer and battery so the sail deploys even if the computer has failed.')", fr: "__lt('Scène 4.8 · Propulsion', 'L’équipe ajoute sa propre minuterie et sa batterie : la voile se déploie même si l’ordinateur est en panne.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: propulsion_engineer}
+      - wait: 1.5
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - wait: 1
+      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Disposal (drag sail)')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - wait: 2
+      - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
+

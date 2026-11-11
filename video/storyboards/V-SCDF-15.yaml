@@ -1,0 +1,80 @@
+# Week 2 — Northern Fire and Ice walkthrough: documents and the review package
+# (DESIGN_SCRIPT_V2 scene 5.13): the export drawer, every document generated from the one
+# shared study, the review data packs, and the model exchange formats. Recording seed S4 with
+# chapters 2–6 done (the PDR passed).
+id: V-SCDF-15
+week: 2
+audience: all
+title:
+  en: "Building the review package"
+  fr: "Constituer le dossier de revue"
+summary:
+  en: "Every Northern Fire and Ice document comes from the one shared study: the review data packs for each gate, the mission requirements, the concept of operations, the management plan, the interface documents, the verification matrix, the bill of materials, the licensing documents, and the model exchange formats."
+  fr: "Chaque document de Northern Fire and Ice vient de la même étude partagée : les dossiers de données de chaque revue, les exigences de mission, le concept d’opérations, le plan de management, les documents d’interface, la matrice de vérification, la nomenclature, les documents de licence, et les formats d’échange de modèles."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-4.4/E, LW-4.4/F]
+  decisions: [D-GATE-PDR]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scene 5.13)
+  - design/frontend/src/workbench/ExportPanel.tsx
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price semp debris ecp02 pass:mdr,prr,srr icds reliability thermal ecp01 pass:pdr"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: drawer
+    title: {en: "The export drawer", fr: "Le tiroir d’export"}
+    say:
+      en: >-
+        Every document is generated from the one shared study, so nothing is copied by hand and
+        nothing goes out of date. The Export drawer opens with the model exchange formats: Capella,
+        the ECSS engineering-model format, ReqIF for requirements tools, and SysML version two.
+      fr: >-
+        Chaque document est produit à partir de la même étude partagée : rien n’est recopié à la
+        main, et rien ne devient périmé. Le tiroir Exporter s’ouvre sur les formats d’échange de
+        modèles : Capella, le format de modèle d’ingénierie de l’ECSS, ReqIF pour les outils
+        d’exigences, et SysML version deux.
+    do:
+      - js: {en: "__lt('Scene 5.13 · each document by its owner', 'Every document is generated from the one shared study.')", fr: "__lt('Scène 5.13 · chaque document par son responsable', 'Chaque document est produit à partir de la même étude partagée.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: button, name: Export, exact: true}
+      - wait: 2
+      - highlight: {target: {text: "Model exchange (Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2)"}, seconds: 3}
+
+  - id: packs
+    title: {en: "Review packs and documents", fr: "Dossiers de revue et documents"}
+    say:
+      en: >-
+        For each review there is a data pack, a zip of every document the gate asks for, and a
+        review report. Then come the documents themselves: the mission requirements document, the
+        concept of operations, the systems engineering management plan, the interface documents,
+        the verification matrix and plan, the bill of materials, the margin report, the launch
+        interface control document, the thermal report and the licensing documents. Each one is
+        produced by its owner seat from the same model.
+      fr: >-
+        Pour chaque revue, il existe un dossier de données, une archive de tous les documents que
+        demande le jalon, et un rapport de revue. Viennent ensuite les documents eux-mêmes : le
+        document des exigences de mission, le concept d’opérations, le plan de management de
+        l’ingénierie système, les documents d’interface, la matrice et le plan de vérification, la
+        nomenclature, le rapport de marges, le document de contrôle de l’interface lanceur, le
+        rapport thermique et les documents de licence. Chacun est produit par son poste
+        responsable à partir du même modèle.
+    do:
+      - scroll: {target: {css: "[role=dialog] button:has-text('PDR') >> nth=0"}}
+      - highlight: {target: {css: "[role=dialog] button:has-text('PDR') >> nth=0"}, seconds: 3}
+      - scroll: {target: {css: "[role=dialog] button:has-text('SEMP') >> nth=0"}}
+      - highlight: {target: {css: "[role=dialog] button:has-text('SEMP') >> nth=0"}, seconds: 2.5}
+      - scroll: {target: {css: "[role=dialog] button:has-text('RSSSA') >> nth=0"}}
+      - highlight: {target: {css: "[role=dialog] button:has-text('RSSSA') >> nth=0"}, seconds: 2.5}

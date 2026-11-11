@@ -203,6 +203,22 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | V-SCDF-05 Interfaces and the N² chart in SpaceCDF | LO 2, LO 4 | 1.2 Requirements & architecture, 2.4 Concurrent design participation | n2 (multichoice) → 1.2, 2.4; icd (reflect) → 1.2, 2.4, 6.2† |
 | V-SCDF-06 Risk register and FMECA in SpaceCDF | LO 5 | 3.4† Risk management | mitigate (multichoice) → 3.4†; redundancy (reflect) → 3.4†, 6.2† |
 | V-SCDF-07 Review gates in SpaceCDF | LO 5, LO G2 | 3.3† Technical decision leadership, 1.4 Decision under uncertainty | close (multichoice) → 3.3†, 1.4 |
+| V-SCDF-08 Defining the mission from a proposal | LO 2 | 1.1 Problem framing & need analysis, 1.2 Requirements & architecture |  |
+| V-SCDF-09 Choosing equipment from the catalogue | LO 4, LO 3 | 2.4 Concurrent design participation, 3.1 Margin & budget management, 5.4† Controlled / cleared practice |  |
+| V-SCDF-10 Weighting criteria and the Pugh matrix | LO 4, LO G1 | 3.2 Trade study execution, 1.4 Decision under uncertainty |  |
+| V-SCDF-11 Ground stations and contact time | LO 2, LO 4 | 3.2 Trade study execution, 2.4 Concurrent design participation |  |
+| V-SCDF-12 The requirements tree | LO 2 | 1.2 Requirements & architecture, 1.3† Integration & verification |  |
+| V-SCDF-13 Designing housekeeping telemetry | LO 4 | 3.1 Margin & budget management, 1.2 Requirements & architecture |  |
+| V-SCDF-14 Saving, sharing and reopening a study | LO 5 | 6.3 Portfolio curation |  |
+| V-SCDF-15 Building the review package | LO 5, LO 7 | 4.4† Communication & facilitation, 3.3† Technical decision leadership |  |
+| V-SCDF-17 The V in SpaceCDF: phases, deliverables and reviews | LO 2, LO 5 | 1.2 Requirements & architecture, 3.3† Technical decision leadership |  |
+| V-SCDF-18 Allocations every seat agrees: budgets, cost and risk | LO 4, LO 7 | 3.1 Margin & budget management, 4.2 Multidisciplinary collaboration |  |
+| V-SCDF-19 Modes, power and the downlink: two negotiations | LO 4, LO 7 | 3.1 Margin & budget management, 4.2 Multidisciplinary collaboration |  |
+| V-SCDF-20 Integration: interfaces, stack, power lines, FDIR and operations | LO 4 | 2.4 Concurrent design participation, 3.1 Margin & budget management |  |
+| V-SCDF-21 Licensing from the design | LO 5 | 4.3† Ethics & governance, 5.4† Controlled / cleared practice |  |
+| V-SCDF-22 Passing the MDR, PRR and SRR | LO 5, LO G2 | 3.3† Technical decision leadership, 1.4 Decision under uncertainty |  |
+| V-SCDF-23 PDR evidence: interfaces, reliability and the thermal model | LO 4, LO 5 | 3.3† Technical decision leadership, 3.4† Risk management |  |
+| V-SCDF-24 When you disagree with the score, check the logic | LO G1, LO 5 | 1.4 Decision under uncertainty, 3.3† Technical decision leadership |  |
 | V-CON-02 Energy balance through an orbit | LO 6 | 3.1 Margin & budget management, 2.3† Digital twin & simulation | instant (multichoice) → 3.1, 2.3†; levers (reflect) → 3.1, 2.3†, 6.2† |
 | V-CON-04 On-board fault detection, isolation and recovery | LO 6 | 1.4 Decision under uncertainty | onerule (truefalse) → 1.4; ground (reflect) → 1.4, 6.2† |
 | V-CON-05 Packets, services and housekeeping | LO 6 | 6.1 Domain learning agility | primary (multichoice) → 6.1; power (truefalse) → 6.1 |
@@ -229,14 +245,14 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | Course outcome | Practised in (worksheets · videos) | Assessed in |
 |---|---|---|
 | LO 1 | 2 · 1 | A1, A2 |
-| LO 2 | 7 · 9 | A1, A2, A3, A4 |
-| LO 3 | 2 · 1 | A4 |
-| LO 4 | 10 · 11 | A3, A4, A8 |
-| LO 5 | 2 · 4 | A3, A4 |
+| LO 2 | 7 · 13 | A1, A2, A3, A4 |
+| LO 3 | 2 · 2 | A4 |
+| LO 4 | 10 · 19 | A3, A4, A8 |
+| LO 5 | 2 · 11 | A3, A4 |
 | LO 6 | 49 · 18 | A5, A6, A7, A8 |
-| LO 7 | 11 · 0 | A2, A6, A7 |
+| LO 7 | 11 · 3 | A2, A6, A7 |
 | LO 8 | 7 · 0 | A9 |
-| LO G1 | 1 · 0 | A4 |
-| LO G2 | 3 · 2 | A4, A6, A8 |
+| LO G1 | 1 · 2 | A4 |
+| LO G2 | 3 · 3 | A4, A6, A8 |
 | LO G3 | 1 · 0 | A7, A9 |
 | LO G4 | 0 · 0 | A9 |

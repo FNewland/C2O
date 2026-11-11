@@ -1,0 +1,160 @@
+# Week 2 — Northern Fire and Ice walkthrough: trades (DESIGN_SCRIPT_V2 scenes 3.4, 3.4b, 3.6):
+# the subsystem trades of the Power seat (T-04 solar array, T-05 battery) in a weighted Pugh
+# matrix with pairwise weights, the system-level data-architecture trade of the SRR (T-S01) on
+# the absolute scale, and options compared. Recording seed S4.
+id: V-SCDF-10
+week: 2
+audience: all
+title:
+  en: "Weighting criteria and the Pugh matrix"
+  fr: "Pondérer les critères et la matrice de Pugh"
+summary:
+  en: "The Northern Fire and Ice trades: the solar array and the battery in a weighted Pugh matrix with pairwise weights, the data-architecture trade that the system requirements review needs, scored on an absolute scale with its sources and a ±20 % sensitivity check, and design options compared."
+  fr: "Les compromis de Northern Fire and Ice : le générateur solaire et la batterie dans une matrice de Pugh pondérée avec des poids par paires, le compromis d’architecture des données dont a besoin la revue des exigences système, noté sur une échelle absolue avec ses sources et une vérification de sensibilité à ±20 %, et des options de conception comparées."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-1.4/E]
+  decisions: [D-3.4-TRADE]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 3.4, 3.4b, 3.6)
+  - design/tests/fixtures/nfi/trades.yaml
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}#nfi-lt.nfi-dim{opacity:.12!important}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);new MutationObserver(function(){var c=d.getBoundingClientRect(),hit=false;document.querySelectorAll('.c2o-vring').forEach(function(r){var b=r.getBoundingClientRect();if(b.bottom>c.top-4&&b.top<c.bottom&&b.left<c.right&&b.right>c.left)hit=true;});d.classList.toggle('nfi-dim',hit);}).observe(document.body,{childList:true});}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: array
+    title: {en: "The solar array trade", fr: "Le compromis du générateur solaire"}
+    say:
+      en: >-
+        Power runs its trades in the Decide tab. The criteria are weighted by pairwise comparison
+        first, one pair at a time, and the weights are fixed before any option is scored. Then the
+        Pugh matrix scores each option against a datum, from minus two to plus two on every
+        criterion. For the solar array, the deployable wings score plus zero point six five over the
+        body-mounted cells. Body-mounted cells give about four watts at the end of life, less than
+        the mission needs; the wings give about twelve.
+      fr: >-
+        Le poste puissance mène ses compromis dans l’onglet Décider. Les critères sont d’abord
+        pondérés par comparaison par paires, une paire à la fois, et les poids sont fixés avant de
+        noter la moindre option. Puis la matrice de Pugh note chaque option par rapport à une
+        référence, de moins deux à plus deux sur chaque critère. Pour le générateur solaire, les
+        ailes déployables obtiennent plus zéro virgule six cinq par rapport aux cellules sur la
+        structure. Les cellules sur la structure donnent environ quatre watts en fin de vie, moins
+        que le besoin de la mission ; les ailes en donnent environ douze.
+    do:
+      - js: {en: "__lt('Scene 3.4 · Power', 'Body-mounted cells give four watts at end of life, less than we need; the wings give twelve.')", fr: "__lt('Scène 3.4 · Puissance', 'Les cellules sur la structure donnent quatre watts en fin de vie, moins que le besoin ; les ailes en donnent douze.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: power_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Trade studies"}
+      - select: {target: {css: "select:has(option[value='T-04'])"}, value: T-04}
+      - wait: 1.5
+      - click: {role: button, name: "Pairwise Comparison Weighting"}
+      - wait: 1.5
+      - highlight: {target: {role: button, name: "Pairwise Comparison Weighting"}, seconds: 3}
+      - click: {role: button, name: "Pugh Matrix (Weighted)"}
+      - wait: 1.5
+      - js: "(() => { const r = [...document.querySelectorAll('main tr')].find(x => /^(Weighted Total|Total pondéré)/.test(x.innerText.trim())); if (r) r.scrollIntoView({block: 'center'}); })()"
+      - wait: 0.6
+      - highlight: {target: {css: "main tr:has-text('Weighted Total'), main tr:has-text('Total pondéré') >> nth=0"}, seconds: 4}
+
+  - id: battery
+    title: {en: "The battery trade", fr: "Le compromis de la batterie"}
+    say:
+      en: >-
+        The battery trade works the same way: the BP4 pack scores plus zero point nine five. Each
+        trade is kept with the study, and Record decision writes its decision record, with the
+        winner, the runner-up and the reasons, so that the power design decision can be traced back
+        to the two trades.
+      fr: >-
+        Le compromis de la batterie fonctionne de la même façon : le bloc BP4 obtient plus zéro
+        virgule neuf cinq. Chaque compromis est conservé avec l’étude, et Consigner la décision
+        rédige sa fiche de décision, avec le gagnant, le second et les raisons, afin que la décision
+        de conception de la puissance puisse être retracée jusqu’aux deux compromis.
+    do:
+      - scroll: {target: {css: "select:has(option[value='T-05'])"}}
+      - select: {target: {css: "select:has(option[value='T-05'])"}, value: T-05}
+      - wait: 2
+      - js: "(() => { const r = [...document.querySelectorAll('main tr')].find(x => /^(Weighted Total|Total pondéré)/.test(x.innerText.trim())); if (r) r.scrollIntoView({block: 'center'}); })()"
+      - wait: 0.6
+      - highlight: {target: {css: "main tr:has-text('Weighted Total'), main tr:has-text('Total pondéré') >> nth=0"}, seconds: 4}
+
+  - id: datatrade
+    title: {en: "A system-level trade for the SRR", fr: "Un compromis de niveau système pour la SRR"}
+    say:
+      en: >-
+        At the system requirements review, the system-level trade is the end-to-end data
+        architecture, from the camera to the user, owned by Comms and data handling. It is scored on
+        the absolute scale: each option from one to five on each criterion against a written scale,
+        and each criterion names its source, a measure of effectiveness or a requirement. The line
+        of sensitivity to twenty percent on each weight shows whether the winner changes. The
+        summary by review shows the SRR trade decided, and that is the only thing the SRR criterion
+        on trades reads.
+      fr: >-
+        À la revue des exigences système, le compromis de niveau système porte sur l’architecture
+        des données de bout en bout, de la caméra à l’utilisateur, tenue par les télécoms et le
+        traitement de données. Il est noté sur l’échelle absolue : chaque option de un à cinq sur
+        chaque critère par rapport à une échelle écrite, et chaque critère nomme sa source, une
+        mesure d’efficacité ou une exigence. La ligne de sensibilité à vingt pour cent sur chaque
+        poids montre si le gagnant change. Le résumé par revue montre le compromis de la SRR
+        tranché, et c’est tout ce que lit le critère de la SRR sur les compromis.
+    do:
+      - js: {en: "__lt('Scene 3.4b · Comms & OBDH', 'At the SRR the system-level trade is the data architecture, from the camera to the user.')", fr: "__lt('Scène 3.4b · Télécoms et OBDH', 'À la SRR, le compromis de niveau système porte sur l’architecture des données, de la caméra à l’utilisateur.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: comms_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Trade studies"}
+      - select: {target: {css: "select:has(option[value='T-S01'])"}, value: T-S01}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-testid=trade-gate-summary]"}, seconds: 3}
+      - click: {role: button, name: "Absolute-scale matrix"}
+      - wait: 1
+      - scroll: {target: {css: "[data-testid=absolute-matrix]"}}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] table"}, seconds: 4, point: false}
+      - click: {role: button, name: "Sensitivity to ±20 % on each weight"}
+      - wait: 1
+      - highlight: {target: {css: "[data-testid=trade-pm20]"}, seconds: 3}
+
+  - id: options
+    title: {en: "Comparing options", fr: "Comparer des options"}
+    say:
+      en: >-
+        A design option is a branch of the whole study. Systems branches an option B, for
+        body-mounted cells with the P31u power unit and the BP4 battery, and compares the options in
+        the Analyses tab. From the trades, option B would be lighter by about a third of a kilogram,
+        but it would not close the power budget, so option A stays the baseline.
+      fr: >-
+        Une option de conception est une branche de toute l’étude. L’ingénierie système crée une
+        option B, pour des cellules sur la structure avec l’unité P31u et la batterie BP4, et compare
+        les options dans l’onglet Analyses. D’après les compromis, l’option B serait plus légère
+        d’environ un tiers de kilogramme, mais elle ne bouclerait pas le bilan de puissance, si bien
+        que l’option A reste la référence.
+    do:
+      - js: {en: "__lt('Scene 3.6 · Systems', 'Option B saves mass but does not close the power budget, so A stays the baseline.')", fr: "__lt('Scène 3.6 · Systèmes', 'L’option B gagne de la masse mais ne boucle pas le bilan de puissance ; A reste la référence.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: button, name: branch, exact: true}
+      - wait: 1
+      - fill: {target: {css: "[role=dialog] input"}, text: "B: body-mounted + P31u + BP4"}
+      - click: {target: {css: "[role=dialog] button.c2o-btn--primary"}}
+      - wait: 2
+      - highlight: {target: {css: "select:has(option:checked)", within: "header, .c2o-appbar"}, seconds: 2}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Compare options"}
+      - wait: 3
