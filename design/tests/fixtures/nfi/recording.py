@@ -68,7 +68,7 @@ async def _negotiation(c, sid: str, code: str, opt: str) -> None:
 
 
 async def after(c, seed, step: str) -> None:
-    from tests.fixtures.nfi.test_w3_integration import ecp01_scene
+    from tests.fixtures.nfi.walkthrough import ecp01_scene
 
     sid = seed.study_id
     if step == "licensing":

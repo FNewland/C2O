@@ -35,7 +35,7 @@ async def finished_study(client, *, recording: bool = False) -> str:
     """Build the study the dry run ends with; returns its id. ``recording=True`` starts from the
     walkthrough's seed and does the on-camera scenes too (Licensing, ledger, negotiations)."""
     from tests.fixtures.nfi import seed_nfi
-    from tests.fixtures.nfi.test_w3_integration import (fill_recording_scenes, mdr_actions, negotiation_scenes,
+    from tests.fixtures.nfi.walkthrough import (fill_recording_scenes, mdr_actions, negotiation_scenes,
                                                         pdr_actions, srr_actions)
     seed = await seed_nfi(client, "S4", recording=recording)
     sid = seed.study_id
