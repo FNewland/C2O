@@ -28,7 +28,7 @@ from ..services.class_advisor import advise_mission_class
 from ..services.traceability import trace_budget_to_need
 from ..services.session_guidance import recommend_next_session
 from ..services.mission_trade import compute_mission_trade
-from ..services.example_missions import list_example_missions, get_example_mission
+from ..services.example_missions import get_example_mission, list_example_missions, load_project_example
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +113,11 @@ _DOMAIN_NAME = {"payload": "Payload", "power": "EPS", "aocs": "AOCS", "ttc": "Co
 
 
 @router.post("/example-missions/{mission_id}/load")
-async def load_example(mission_id: str) -> dict:
+async def load_example(mission_id: str, include_id_map: bool = Query(False)) -> dict:
     """Create a study from an example WITH its element tree (WP0).
+
+    A project example (``kind: "project"``, e.g. ``nfi``) is a complete project file: it is
+    imported as a new study through the project import (``?include_id_map=1`` adds old → new ids).
 
     Before, the frontend POSTed only ``requirements`` and ``mission_need``, so the "worked
     CubeSat mission" opened with no elements. Now: mission root → segments → Spacecraft →
@@ -128,6 +131,13 @@ async def load_example(mission_id: str) -> dict:
     mission = get_example_mission(mission_id)
     if not mission:
         raise HTTPException(404, f"Example mission '{mission_id}' not found")
+    if mission.get("kind") == "project":
+        from ..services import project_file as pf
+        try:
+            res = await pf.import_study(load_project_example(mission_id), include_id_map=include_id_map)
+        except pf.ProjectFileError as e:
+            raise HTTPException(e.status, e.message) from e
+        return {**res, "example": mission_id, "kind": "project"}
     req = MissionRequirements(**(mission.get("requirements") or {"name": mission.get("name", mission_id)}))
     created = await create_study(CreateStudyRequest(requirements=req, mission_need=mission.get("mission_need") or {}), None)
     sid = created["id"]

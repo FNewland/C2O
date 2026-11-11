@@ -6,6 +6,8 @@ and the frontend "Load Example" button.
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
 
 
@@ -245,13 +247,14 @@ EXAMPLE_MISSIONS: dict[str, dict[str, Any]] = {
             "conflicts": [],
         },
     },
-    "superdove_3u_eo": {
-        "name": "SuperDove-X (3U EO)",
+    # Relabelled for the NFI closing step (3.F2): it was named after a commercial product line.
+    "generic_3u_eo": {
+        "name": "EO-3U (3U multispectral imager)",
         "description": (
             "3U Earth observation CubeSat — multispectral imagery at 3-5m GSD"
         ),
         "requirements": {
-            "name": "SuperDove-X",
+            "name": "EO-3U",
             "mission_type": "earth_observation",
             "spacecraft_class": "nano",
             "orbit": {
@@ -470,14 +473,53 @@ EXAMPLE_MISSIONS: dict[str, dict[str, Any]] = {
 }
 
 
+#: Examples shipped as a complete project file (``services/project_file.py``, format v2) under
+#: ``configs/examples/<id>/project.json``. Loading one imports the file as a new study, so the example
+#: opens with everything the team built (requirements, trades, gates, licensing …), not a sketch.
+PROJECT_EXAMPLES: dict[str, dict[str, str]] = {
+    "nfi": {
+        "name": "Northern Fire and Ice (3U EO, full study to PDR)",
+        "description": (
+            "Teaching mission: 3U CubeSat mapping burn scars and river ice for northern communities. "
+            "The complete study through the PDR: requirements, trades, budgets, negotiations, change "
+            "control, licensing documents and passed reviews."
+        ),
+        "file": "examples/nfi/project.json",
+    },
+}
+
+
+def project_example_path(mission_id: str) -> Path | None:
+    """The project file of a project example, or None (not a project example, or not shipped)."""
+    ex = PROJECT_EXAMPLES.get(mission_id)
+    if not ex:
+        return None
+    from .rule_config import _find_configs_dir
+    p = _find_configs_dir() / ex["file"]
+    return p if p.is_file() else None
+
+
+def load_project_example(mission_id: str) -> dict | None:
+    """The parsed project document of a project example, or None."""
+    p = project_example_path(mission_id)
+    return json.loads(p.read_text(encoding="utf-8")) if p else None
+
+
 def get_example_mission(mission_id: str) -> dict | None:
-    """Return a single example mission by ID, or None if not found."""
-    return EXAMPLE_MISSIONS.get(mission_id)
+    """Return a single example mission by ID, or None if not found. A project example returns its
+    summary with ``kind: "project"`` (the document itself is large; ``load_project_example``)."""
+    if mission_id in EXAMPLE_MISSIONS:
+        return EXAMPLE_MISSIONS[mission_id]
+    ex = PROJECT_EXAMPLES.get(mission_id)
+    if ex and project_example_path(mission_id):
+        return {"name": ex["name"], "description": ex["description"], "kind": "project"}
+    return None
 
 
 def list_example_missions() -> list[dict]:
-    """Return a summary list of all available example missions."""
-    return [
+    """Return a summary list of all available example missions (the sketches first, then the
+    project examples whose file is shipped)."""
+    out = [
         {
             "id": mid,
             "name": m["name"],
@@ -485,3 +527,6 @@ def list_example_missions() -> list[dict]:
         }
         for mid, m in EXAMPLE_MISSIONS.items()
     ]
+    out += [{"id": mid, "name": ex["name"], "description": ex["description"], "kind": "project"}
+            for mid, ex in PROJECT_EXAMPLES.items() if project_example_path(mid)]
+    return out
