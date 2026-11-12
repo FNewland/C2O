@@ -319,6 +319,8 @@ excluded:
   - {source: design/docs/pdf/SpaceCDF_API_Documentation.pdf, reason: "DRAFT developer API export (May 2026)"}
   - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_EN.pdf, reason: "recruitment flyer, not course material"}
   - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_FR.pdf, reason: "recruitment flyer, not course material"}
+  - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_12wk_EN.pdf, reason: "recruitment flyer (12-week term), not course material"}
+  - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_12wk_FR.pdf, reason: "recruitment flyer (12-week term), not course material"}
   - {source: design/docs/pdf/ORBIT_NORTH_W3_Breakpoints.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Breakpoint_Spec.pdf"}
   - {source: design/docs/pdf/ORBIT_NORTH_W3_Peer_Review.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Peer_Review_Worksheets.pdf"}
   - {source: design/docs/pdf/ORBIT_NORTH_W3_Procedures.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Student_Procedure_Quickref.pdf"}

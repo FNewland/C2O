@@ -39,32 +39,31 @@ T = {
         "weeks_h": "Your 12 weeks",
         "weeks_h2": "Your 12 weeks (continued)",
         "parts": [
-            ("Weeks 1 – 4", "Context", "The Canadian space landscape and your mission concept",
-             "Start with how real missions are built: the Canadian space sector, the concurrent design method and "
-             "the SpaceCDF platform. Move from a mission need to a first concept of operations, present it at an "
-             "informal Mission Concept Review in Week 2, and lock the concept in Week 3. Week 4 covers Canadian "
-             "regulation in depth — the Remote Sensing Space Systems Act, ISED spectrum licensing, export controls "
-             "and debris mitigation — and ends with your team’s regulatory brief.",
-             ["Canadian sector", "SpaceCDF", "ConOps", "MCR", "RSSSA · ISED"]),
-            ("Weeks 5 – 9", "Design", "Concurrent Design Facility",
-             "One design stage per week on the SpaceCDF platform. In interdisciplinary teams, take a discipline "
-             "role and build a complete preliminary CubeSat mission: the requirements baseline; orbit, power, "
+            ("Weeks 1 – 2", "Introduction", "The Canadian space landscape and your mission concept",
+             "Start with how real missions are built: the Canadian space sector, systems engineering, the "
+             "concurrent design method and the SpaceCDF platform. Move from a mission need to a problem statement; "
+             "in the Week 2 studio the design facility opens, and your first concept of operations goes to an "
+             "informal Mission Concept Review at the end of the week.",
+             ["Canadian sector", "SpaceCDF", "ConOps", "MCR"]),
+            ("Weeks 3 – 7", "Design", "Concurrent Design Facility",
+             "Lock the concept and meet Canadian regulation in Week 3 — the Remote Sensing Space Systems Act, ISED "
+             "spectrum licensing, export controls and debris mitigation. Then one design stage per week on the "
+             "SpaceCDF platform, each of you in a discipline role: the requirements baseline; orbit, power, "
              "attitude and thermal; communications, structure and propulsion, with two formal trade studies; then "
-             "integration, verification, cost and risk. The weekly rhythm leaves time for real analysis between "
-             "studios. Week 9 is a Preliminary Design Review.",
-             ["Requirements", "Subsystem design", "Trade studies", "Risk register", "PDR"]),
-            ("Weeks 10 – 12", "Operations", "Live mission operations simulation",
-             "Operations training in a mission control room: positions, the voice loop, pass planning, "
-             "anomaly response and dry runs. Then two six-hour simulation blocks flying the EOSAT-1 Earth-observation "
-             "satellite — launch, early operations and commissioning, then nominal operations with contingencies "
-             "injected in real time. One team operates while another observes and documents, then the teams swap. "
-             "The course closes with a structured debrief and a final mission review.",
-             ["Mission control", "LEOP", "Anomaly response", "Mission debrief"]),
+             "integration, verification, cost and risk, ending with a Preliminary Design Review in Week 7.",
+             ["RSSSA · ISED", "Requirements", "Subsystem design", "Trade studies", "PDR"]),
+            ("Weeks 8 – 12", "Operations", "Live mission operations simulation",
+             "Two weeks of operations training in a mission control room (Weeks 8–9): positions, the voice loop, "
+             "pass planning, anomaly response and dry runs. Then two six-hour simulation blocks flying the EOSAT-1 "
+             "Earth-observation satellite (Weeks 10–11) — launch, early operations and commissioning, then nominal "
+             "operations with contingencies injected in real time. One team operates while another observes, then "
+             "the teams swap. Week 12 reviews the whole mission, from the need to the last pass.",
+             ["Mission control", "LEOP", "Anomaly response", "Mission review"]),
         ],
         "rhythm_h": "How the term works",
         "rhythm": [("1.5 h", "Lecture and seminar", "Each week, a short lecture on the week’s topic, then discussion."),
-                   ("3 h", "Studio", "Team work in the design facility (Weeks 1–9) or the mission control room (Week 10)."),
-                   ("6 h", "Simulation blocks", "Weeks 11 and 12: a full operations shift, run without a break.")],
+                   ("3 h", "Studio", "Team work in the design facility (Weeks 1–7) or the mission control room (Weeks 8, 9 and 12)."),
+                   ("6 h", "Simulation blocks", "Weeks 10 and 11: a full operations shift, run without a break.")],
         "rhythm_note": "In person, with a reading break after Week 6. Nothing to buy: the open textbook "
                        "<i>Concurrent Spacecraft Design</i>, the course videos, SpaceCDF and the simulator are all provided.",
         "outcomes_h": "What you’ll be able to do",
@@ -103,35 +102,34 @@ T = {
         "weeks_h": "Vos 12 semaines",
         "weeks_h2": "Vos 12 semaines (suite)",
         "parts": [
-            ("Semaines 1 à 4", "Contexte", "Le paysage spatial canadien et votre concept de mission",
-             "Découvrez comment se construisent les vraies missions : le secteur spatial canadien, la méthode de "
-             "conception concourante et la plateforme SpaceCDF. Passez d’un besoin de mission à un premier concept "
-             "d’opérations, présentez-le à une revue de concept de mission informelle à la semaine 2, puis figez le "
-             "concept à la semaine 3. La semaine 4 approfondit la réglementation canadienne — la Loi sur les "
-             "systèmes de télédétection spatiale, les licences de spectre d’ISDE, le contrôle des exportations et "
-             "l’atténuation des débris — et se termine par la note réglementaire de votre équipe.",
-             ["Secteur canadien", "SpaceCDF", "ConOps", "MCR", "LSTS · ISDE"]),
-            ("Semaines 5 à 9", "Conception", "Centre de conception concourante",
-             "Une étape de conception par semaine sur la plateforme SpaceCDF. En équipes interdisciplinaires, "
-             "assumez un rôle disciplinaire et construisez la conception préliminaire complète d’une mission "
-             "CubeSat : la base d’exigences ; l’orbite, l’énergie, l’attitude et le thermique ; les "
-             "télécommunications, la structure et la propulsion, avec deux études de compromis formelles ; puis "
-             "l’intégration, la vérification, les coûts et les risques. Le rythme hebdomadaire laisse du temps pour "
-             "une véritable analyse entre les ateliers. La semaine 9 est une revue de conception préliminaire.",
-             ["Exigences", "Sous-systèmes", "Études de compromis", "Registre des risques", "PDR"]),
-            ("Semaines 10 à 12", "Exploitation", "Simulation d’opérations de mission en direct",
-             "Formation aux opérations en salle de contrôle de mission : postes, boucle vocale, "
-             "planification des passages, réponse aux anomalies et répétitions. Puis deux blocs de simulation de "
-             "six heures aux commandes du satellite d’observation de la Terre EOSAT-1 — lancement, premières "
-             "opérations et mise en service, puis opérations nominales avec des contingences injectées en temps "
-             "réel. Une équipe opère pendant qu’une autre observe et documente, puis les équipes échangent leurs "
-             "rôles. Le cours se termine par un débriefing structuré et une revue finale de mission.",
-             ["Contrôle de mission", "LEOP", "Réponse aux anomalies", "Débriefing"]),
+            ("Semaines 1 et 2", "Introduction", "Le paysage spatial canadien et votre concept de mission",
+             "Découvrez comment se construisent les vraies missions : le secteur spatial canadien, l’ingénierie "
+             "système, la méthode de conception concourante et la plateforme SpaceCDF. Passez d’un besoin de "
+             "mission à un énoncé du problème ; à l’atelier de la semaine 2, le centre de conception s’ouvre et "
+             "votre premier concept d’opérations passe une revue de concept de mission informelle en fin de semaine.",
+             ["Secteur canadien", "SpaceCDF", "ConOps", "MCR"]),
+            ("Semaines 3 à 7", "Conception", "Centre de conception concourante",
+             "Figez le concept et découvrez la réglementation canadienne à la semaine 3 — la Loi sur les systèmes "
+             "de télédétection spatiale, les licences de spectre d’ISDE, le contrôle des exportations et "
+             "l’atténuation des débris. Puis une étape de conception par semaine sur la plateforme SpaceCDF, chacun "
+             "dans un rôle disciplinaire : la base d’exigences ; l’orbite, l’énergie, l’attitude et le thermique ; "
+             "les télécommunications, la structure et la propulsion, avec deux études de compromis formelles ; puis "
+             "l’intégration, la vérification, les coûts et les risques, jusqu’à une revue de conception "
+             "préliminaire à la semaine 7.",
+             ["LSTS · ISDE", "Exigences", "Sous-systèmes", "Études de compromis", "PDR"]),
+            ("Semaines 8 à 12", "Exploitation", "Simulation d’opérations de mission en direct",
+             "Deux semaines de formation aux opérations en salle de contrôle de mission (semaines 8 et 9) : postes, "
+             "boucle vocale, planification des passages, réponse aux anomalies et répétitions. Puis deux blocs de "
+             "simulation de six heures aux commandes du satellite d’observation de la Terre EOSAT-1 (semaines 10 "
+             "et 11) — lancement, premières opérations et mise en service, puis opérations nominales avec des "
+             "contingences injectées en temps réel. Une équipe opère pendant qu’une autre observe, puis les équipes "
+             "échangent leurs rôles. La semaine 12 revoit toute la mission, du besoin au dernier passage.",
+             ["Contrôle de mission", "LEOP", "Réponse aux anomalies", "Revue de mission"]),
         ],
         "rhythm_h": "Le déroulement de la session",
         "rhythm": [("1,5 h", "Cours et séminaire", "Chaque semaine, un court exposé sur le thème de la semaine, puis une discussion."),
-                   ("3 h", "Atelier", "Travail d’équipe au centre de conception (semaines 1 à 9) ou en salle de contrôle (semaine 10)."),
-                   ("6 h", "Blocs de simulation", "Semaines 11 et 12 : un quart d’exploitation complet, sans interruption.")],
+                   ("3 h", "Atelier", "Travail d’équipe au centre de conception (semaines 1 à 7) ou en salle de contrôle (semaines 8, 9 et 12)."),
+                   ("6 h", "Blocs de simulation", "Semaines 10 et 11 : un quart d’exploitation complet, sans interruption.")],
         "rhythm_note": "En présentiel, avec une semaine de lecture après la semaine 6. Rien à acheter : le manuel libre "
                        "<i>Concurrent Spacecraft Design</i>, les vidéos du cours, SpaceCDF et le simulateur sont fournis.",
         "outcomes_h": "Ce que vous saurez faire",
