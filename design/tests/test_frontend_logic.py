@@ -133,7 +133,8 @@ def test_spacecraft_is_offered_under_the_space_segment_only():
     }})()""")
     assert out["add"] == [False, True, False, False]
     assert out["seg"] == ["space", "ground", "space"]
-    assert out["qs"] == [True, False, True]          # spacecraft without subsystems; ground segment without station
+    # spacecraft without subsystems only: the quick start offers spacecraft subsystems, so never on the ground segment
+    assert out["qs"] == [True, False, False]
     assert out["child"] == {"parentId": "s", "childType": "system"}
 
 
