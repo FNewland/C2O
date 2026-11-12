@@ -187,7 +187,7 @@ SECTIONS = [
              ("Afternoon: regulatory teaser; concurrent design method; teams open a mission file",
               "Après-midi : survol réglementaire ; méthode de conception concurrente ; les équipes ouvrent un dossier de mission")],
             oer("chapters 1 and 2 (2.1–2.4)", "chapitres 1 et 2 (2.1 à 2.4)")),
-        "items": ["DECK:L01", "DECK:L02", "V-DES-01", "V-DES-02", "V-SCDF-01"],
+        "items": ["DECK:L01", "DECK:L02", "V-DES-01", "V-DES-02", "V-SCDF-01", "V-SCDF-14"],
     },
     {
         "name": ml("Week 1 · Day 2 — Mission architecture, concept and the informal MCR",
@@ -200,7 +200,7 @@ SECTIONS = [
              ("Afternoon: concept refinement; risk register opened; informal MCR",
               "Après-midi : affinage du concept ; ouverture du registre des risques ; MCR informelle")],
             oer("chapter 4", "chapitre 4")),
-        "items": ["DECK:L03", "V-DES-03", "V-SCDF-06", "V-SCDF-07"],
+        "items": ["DECK:L03", "V-DES-03", "V-SCDF-08", "V-SCDF-17", "V-SCDF-06", "V-SCDF-07"],
     },
     {
         "name": ml("Week 2 · Day 1 — Concept lock and the Canadian regulatory landscape",
@@ -213,7 +213,7 @@ SECTIONS = [
              ("Afternoon: remote sensing licences, spectrum, export control, debris; the two-page regulatory brief",
               "Après-midi : licences de télédétection, spectre, contrôle des exportations, débris ; la note réglementaire de deux pages")],
             oer("chapter 2 (2.5 onward) and chapter 3", "chapitre 2 (à partir de 2.5) et chapitre 3")),
-        "items": ["DECK:L04", "DECK:L05"],
+        "items": ["DECK:L04", "V-SCDF-11", "DECK:L05", "V-SCDF-21"],
     },
     {
         "name": ml("Week 2 · Day 2 — CDF Day 1: System-V, requirements and first budgets",
@@ -225,7 +225,8 @@ SECTIONS = [
              ("SMART requirements; functional decomposition; first parametric budgets",
               "Exigences SMART ; décomposition fonctionnelle ; premiers bilans paramétriques")],
             oer("chapters 5, 6 and 8", "chapitres 5, 6 et 8")),
-        "items": ["DECK:L06", "V-DES-04", "V-SCDF-04", "V-DES-06", "V-SCDF-02"],
+        "items": ["DECK:L06", "V-DES-04", "V-SCDF-04", "V-SCDF-12", "V-DES-06", "V-SCDF-02", "V-SCDF-18",
+                  "V-SCDF-22"],
     },
     {
         "name": ml("Week 2 · Day 3 — CDF Day 2: orbit, power, AOCS and thermal",
@@ -237,7 +238,7 @@ SECTIONS = [
              ("Power, AOCS and thermal subsystem decisions, logged in the CDF",
               "Décisions des sous-systèmes énergie, SCAO et thermique, consignées dans la CDF")],
             oer("chapters 7, 9 and 10", "chapitres 7, 9 et 10")),
-        "items": ["DECK:L07", "V-DES-05", "V-DES-07", "V-CON-02", "V-DES-09", "V-DES-08"],
+        "items": ["DECK:L07", "V-DES-05", "V-DES-07", "V-CON-02", "V-SCDF-19", "V-DES-09", "V-DES-08"],
     },
     {
         "name": ml("Week 2 · Day 4 — CDF Day 3: comms, structure, propulsion and trade studies",
@@ -250,7 +251,7 @@ SECTIONS = [
              ("Structure, propulsion; link-band and propulsion trade studies; equipment selection",
               "Structure, propulsion ; études de compromis de bande et de propulsion ; sélection d'équipement")],
             oer("chapters 11, 12 and 13", "chapitres 11, 12 et 13")),
-        "items": ["DECK:L08", "V-DES-10", "V-SCDF-03", "V-DES-14"],
+        "items": ["DECK:L08", "V-DES-10", "V-SCDF-03", "V-DES-14", "V-SCDF-13", "V-SCDF-09", "V-SCDF-10"],
     },
     {
         "name": ml("Week 2 · Day 5 — CDF Day 4: integration, V&V, cost, risk and the PDR",
@@ -263,7 +264,8 @@ SECTIONS = [
              ("Afternoon: SpaceCDF optimiser; document export; PDR-style review",
               "Après-midi : optimiseur SpaceCDF ; export des documents ; revue de type PDR")],
             oer("chapters 14, 15 and 16", "chapitres 14, 15 et 16")),
-        "items": ["DECK:L09", "V-SCDF-05", "V-DES-12", "V-DES-13", "V-DES-11"],
+        "items": ["DECK:L09", "V-SCDF-05", "V-SCDF-20", "V-DES-12", "V-DES-13", "V-DES-11", "V-SCDF-23",
+                  "V-SCDF-15", "V-SCDF-24"],
     },
     {
         "name": ml("Week 3 · Day 1 — Operations concept: ground segment and mission control",

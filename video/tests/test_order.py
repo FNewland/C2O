@@ -19,3 +19,11 @@ def test_operations_come_after_the_design_videos():
     last_design = max(order.place(sb.id)[0] for sb in storyboard.all_storyboards() if sb.id.startswith(("V-DES", "V-SCDF")))
     first_ops = min(order.place(sb.id)[0] for sb in storyboard.all_storyboards() if sb.id.startswith("V-OPS"))
     assert first_ops >= last_design
+
+
+def test_moodle_course_lists_the_videos_in_the_same_order():
+    import re
+    from c2ovideo.storyboard import REPO
+    ids = re.findall(r'"(V-[A-Z]+-\d+)"', (REPO / "design/moodle/course/manifest.py").read_text(encoding="utf-8"))
+    term = sorted(order._load()["place"], key=lambda v: order.place(v)[1])
+    assert ids == term
