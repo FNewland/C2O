@@ -1,6 +1,6 @@
 <?php
 // Build the ORBIT NORTH course from manifest.json, then back it up (no users) to an .mbz.
-//   php build_course.php [--category=1] [--out=/path/orbit_north.mbz]
+//   php build_course.php [--category=1] [--out=/path/orbit_north.mbz] [--nobackup] [--shortname=ORBIT-NORTH-NEW]
 // Run with the target Moodle's config: MOODLE_CONFIG=/path/to/moodle/config.php
 define('CLI_SCRIPT', true);
 require(getenv('MOODLE_CONFIG') ?: die("set MOODLE_CONFIG to the Moodle config.php\n"));
@@ -10,13 +10,17 @@ require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/course/modlib.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 
-list($opts) = cli_get_params(['category' => 1, 'out' => __DIR__ . '/orbit_north.mbz', 'nobackup' => false]);
+list($opts) = cli_get_params(['category' => 1, 'out' => __DIR__ . '/orbit_north.mbz', 'nobackup' => false,
+                              'shortname' => '']);
 \core\session\manager::set_user(get_admin());
-$m = json_decode(file_get_contents(getenv('C2O_MANIFEST') ?: __DIR__ . '/manifest.json'), true);
+$mfile = getenv('C2O_MANIFEST') ?: __DIR__ . '/manifest.json';
+$m = json_decode(file_get_contents($mfile), true);
+// a bundle (manifest.py --bundle) lists its files relative to the manifest
+$abs = fn($p) => ($p !== '' && $p[0] === '/') ? $p : dirname(realpath($mfile)) . '/' . $p;
 $fs = get_file_storage();
 
 $c = (object)[
-    'fullname' => $m['course']['fullname'], 'shortname' => $m['course']['shortname'],
+    'fullname' => $m['course']['fullname'], 'shortname' => $opts['shortname'] ?: $m['course']['shortname'],
     'category' => (int)$opts['category'], 'format' => 'topics',
     'numsections' => count($m['sections']) - 1, 'summary' => $m['course']['summary'], 'summaryformat' => FORMAT_HTML,
     'showgrades' => 0, 'enablecompletion' => 0, 'lang' => '', 'newsitems' => 3, 'visible' => 1,
@@ -50,7 +54,7 @@ foreach ($m['sections'] as $sn => $s) {
                     // No owner: an ownerless .h5p is system-trusted, so its libraries can deploy.
                     $fs->create_file_from_pathname(['contextid' => $ctx->id, 'component' => 'mod_page',
                         'filearea' => 'content', 'itemid' => 0, 'filepath' => '/', 'filename' => $f['name'],
-                        'userid' => null], $f['path']);
+                        'userid' => null], $abs($f['path']));
                 }
                 break;
             case 'forum':

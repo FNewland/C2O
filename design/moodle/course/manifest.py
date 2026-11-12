@@ -453,8 +453,43 @@ def build() -> dict:
     }
 
 
+def bundle(m: dict, dest: Path) -> Path:
+    """Everything the build needs in one folder to copy to the Moodle server: manifest.json,
+    build_course.php and files/ (paths in the manifest relative to the folder)."""
+    import shutil
+    files = dest / "files"
+    files.mkdir(parents=True, exist_ok=True)
+    seen: dict[str, str] = {}
+    for s in m["sections"]:
+        for it in s["items"]:
+            for f in it.get("files", []):
+                src = Path(f["path"])
+                if seen.setdefault(f["name"], str(src)) != str(src):
+                    raise SystemExit(f"two different files named {f['name']}")
+                tgt = files / f["name"]
+                if not tgt.exists() or tgt.stat().st_size != src.stat().st_size:
+                    shutil.copy2(src, tgt)
+                f["path"] = f"files/{f['name']}"
+    for old in files.iterdir():                       # drop files a previous bundle needed
+        if old.name not in seen:
+            old.unlink()
+    shutil.copy2(Path(__file__).with_name("build_course.php"), dest / "build_course.php")
+    out = dest / "manifest.json"
+    out.write_text(json.dumps(m, ensure_ascii=False, indent=1))
+    return out
+
+
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="Write the course manifest (and optionally a bundle for the server).")
+    ap.add_argument("--bundle", help="folder to gather manifest.json, build_course.php and every file into")
+    a = ap.parse_args()
     m = build()
+    if a.bundle:
+        size = sum(Path(f["path"]).stat().st_size for s in m["sections"] for it in s["items"] for f in it.get("files", []))
+        out = bundle(m, Path(a.bundle).expanduser().resolve())
+        print(f"bundle {out.parent} ({size / 1e6:.0f} MB): copy it to the Moodle server and run build_course.php there")
+        sys.exit(0)
     out = Path(os.environ.get("C2O_MANIFEST", Path(__file__).with_name("manifest.json")))
     out.write_text(json.dumps(m, ensure_ascii=False, indent=1))
     n = sum(len(s["items"]) for s in m["sections"])

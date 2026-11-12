@@ -49,6 +49,25 @@ cd design/moodle/course && python3 manifest.py
 MOODLE_CONFIG=/path/to/moodle/config.php php build_course.php --category=1 --out=orbit_north.mbz
 ```
 
+### Updating the course on the live site
+
+Step 3 can gather everything the server needs into one folder instead
+(`manifest.json`, `build_course.php`, `files/`):
+
+```bash
+cd design/moodle/course && python3 manifest.py --bundle ~/orbit_north_bundle
+rsync -av --delete ~/orbit_north_bundle/ <server>:orbit_north_bundle/
+# on the server
+MOODLE_CONFIG=/path/to/moodle/config.php php ~/orbit_north_bundle/build_course.php \
+    --category=<id> --shortname=ORBIT-NORTH-NEW --nobackup
+```
+
+That builds the new version as a second course next to the old one (`--shortname`
+avoids the clash with the existing `ORBIT-NORTH`; `--nobackup` skips the .mbz).
+Check it, then hide or delete the old course and give the new one its shortname
+back. Deleting the old course deletes its forum posts and wiki pages: copy anything
+students wrote first.
+
 The video packages must carry the H5P editor libraries (`python -m c2ovideo repack`)
 or Moodle refuses them.
 
