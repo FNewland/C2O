@@ -27,3 +27,25 @@ def test_moodle_course_lists_the_videos_in_the_same_order():
     ids = re.findall(r'"(V-[A-Z]+-\d+)"', (REPO / "design/moodle/course/manifest.py").read_text(encoding="utf-8"))
     term = sorted(order._load()["place"], key=lambda v: order.place(v)[1])
     assert ids == term
+
+
+def test_moodle_term_layout_follows_the_twelve_weeks():
+    """The Moodle course's 12-week layout: one section per week, in the calendar's order,
+    with the operations weeks starting at week 8."""
+    import importlib.util
+    import os
+    from pathlib import Path
+    from c2ovideo.storyboard import REPO
+    spec = importlib.util.spec_from_file_location("moodle_manifest", REPO / "design/moodle/course/manifest.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    assert m.LAYOUT == os.environ.get("C2O_COURSE_LAYOUT", "term")
+    assert len(m.TERM) == len(m.SECTIONS) == 12
+    names = [t[0] for t in m.TERM]
+    assert all(n.startswith(f"Week {i} — ") for i, n in enumerate(names, 1))
+    assert "Operations training" in names[7] and "PDR" in names[6] and "Review" in names[11]
+    # the week each video sits in on the Moodle course is its week on the video page
+    for i, s in enumerate(m.SECTIONS, 1):
+        for item in s["items"]:
+            if item.startswith("V-"):
+                assert order.place(item)[0] == i, (item, i)

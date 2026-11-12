@@ -149,7 +149,22 @@ def doc_list_item(name_en, name_fr, intro_en, intro_fr, docs, idnumber) -> dict:
             "idnumber": idnumber}
 
 
-def summary(theme_en, theme_fr, lines, reading):
+class Summary:
+    """A section summary kept as its parts, so the 12-week layout can give the same
+    section its own agenda lines (lecture and studio instead of morning and afternoon)."""
+
+    def __init__(self, theme_en, theme_fr, lines, reading):
+        self.theme_en, self.theme_fr, self.lines, self.reading = theme_en, theme_fr, lines, reading
+
+    def render(self, lines=None) -> str:
+        return _summary_html(self.theme_en, self.theme_fr, lines or self.lines, self.reading)
+
+
+def summary(theme_en, theme_fr, lines, reading) -> Summary:
+    return Summary(theme_en, theme_fr, lines, reading)
+
+
+def _summary_html(theme_en, theme_fr, lines, reading):
     """Section summary: theme, agenda lines [(en, fr)], OER reading (en, fr)."""
     def block(lang):
         t = theme_en if lang == "en" else fr(theme_fr)
@@ -330,6 +345,94 @@ SECTIONS = [
     },
 ]
 
+
+# ── The 12-week term (design/docs/orbit_north/syllabus_12week_en.md) ─────────────────
+# The intensive's twelve days map one to one onto the term's twelve weeks: introduction
+# weeks 1-2 (the CDF opens in the week 2 studio), design to the PDR in week 7, operations
+# training weeks 8-9, simulations weeks 10-11, the review of the whole mission in week 12.
+# Same items, same order (video/course_order.yaml); the agenda reads lecture and studio.
+LAYOUT = os.environ.get("C2O_COURSE_LAYOUT", "term")      # "term" (12 weeks) or "intensive" (3 weeks)
+
+
+def _lec(en, fr_):
+    return ("Lecture and seminar: " + en, "Cours et séminaire : " + fr_)
+
+
+def _stu(en, fr_):
+    return ("Studio: " + en, "Atelier : " + fr_)
+
+
+TERM = [
+    ("Week 1 — Introduction: Canada in space and the concurrent design method",
+     "Semaine 1 — Introduction : le Canada dans l'espace et la méthode de conception concourante",
+     [_lec("L01 Canada in space and course onboarding; teams and roles",
+           "L01 Le Canada dans l'espace et accueil du cours ; équipes et rôles"),
+      _stu("L02 the concurrent design method; SpaceCDF accounts and tour; teams open a mission file and draft a problem statement",
+           "L02 la méthode de conception concourante ; comptes et visite de SpaceCDF ; les équipes ouvrent un dossier de mission et rédigent un énoncé du problème")]),
+    ("Week 2 — From need to concept: the CDF opens, and the informal MCR",
+     "Semaine 2 — Du besoin au concept : le CDF s'ouvre, et la MCR informelle",
+     [_lec("L03 from need to concept: problem statements, stakeholders, measures, trade studies, ConOps",
+           "L03 du besoin au concept : énoncés de problème, parties prenantes, mesures, études de compromis, ConOps"),
+      _stu("the CDF opens: mission alternatives trade; ConOps v0; first parametric budgets; risk register; informal MCR in the last hour",
+           "le CDF s'ouvre : étude des options de mission ; ConOps v0 ; premiers bilans paramétriques ; registre des risques ; MCR informelle pendant la dernière heure")]),
+    ("Week 3 — Locking the concept, and the Canadian regulatory landscape",
+     "Semaine 3 — Figer le concept, et le paysage réglementaire canadien",
+     [_lec("L04 closing the MCR and locking the concept; L05 the Canadian regulatory landscape",
+           "L04 clore la MCR et figer le concept ; L05 le paysage réglementaire canadien"),
+      _stu("MCR actions closed; concept v1; top-level requirements; regulatory brief and draft ISED application (due at the end of week 4)",
+           "actions de la MCR closes ; concept v1 ; exigences de haut niveau ; note réglementaire et ébauche de demande à ISDE (dues à la fin de la semaine 4)")]),
+    ("Week 4 — CDF 1: the System-V, requirements and first budgets",
+     "Semaine 4 — CDF 1 : le cycle en V, les exigences et les premiers bilans",
+     [_lec("L06 the System-V, requirements and first budgets", "L06 le cycle en V, les exigences et les premiers bilans"),
+      _stu("CDF 1: requirements baseline; function tree; first mass, power, data and link budgets",
+           "CDF 1 : référentiel d'exigences ; arbre fonctionnel ; premiers bilans de masse, d'énergie, de données et de liaison")]),
+    ("Week 5 — CDF 2: orbit, power, attitude and thermal",
+     "Semaine 5 — CDF 2 : orbite, énergie, attitude et thermique",
+     [_lec("L07 orbit, power, attitude and thermal", "L07 orbite, énergie, attitude et thermique"),
+      _stu("CDF 2: orbit selection; power, AOCS and thermal decisions logged",
+           "CDF 2 : choix d'orbite ; décisions d'énergie, de SCAO et de thermique consignées")]),
+    ("Week 6 — CDF 3: communications, structure, propulsion and the formal trades",
+     "Semaine 6 — CDF 3 : télécommunications, structure, propulsion et compromis formels",
+     [_lec("L08 communications, structure, propulsion and the formal trades",
+           "L08 télécommunications, structure, propulsion et compromis formels"),
+      _stu("CDF 3: link budget and ground-station plan; link-band and propulsion trade studies; equipment selection",
+           "CDF 3 : bilan de liaison et plan des stations sol ; compromis de bande et de propulsion ; sélection d'équipement"),
+      ("The reading break follows this week.", "La semaine de lecture suit cette semaine.")]),
+    ("Week 7 — CDF 4: integration, verification, cost and risk, and the PDR",
+     "Semaine 7 — CDF 4 : intégration, vérification, coûts et risques, et la PDR",
+     [_lec("L09 integration, verification, cost and risk", "L09 intégration, vérification, coûts et risques"),
+      _stu("CDF 4: interface closure; V&V matrix; test plan; cost and bill of materials; risk closure; ECSS documents; then the PDR-style review",
+           "CDF 4 : fermeture des interfaces ; matrice V et V ; plan d'essais ; coûts et nomenclature ; clôture des risques ; documents ECSS ; puis la revue de type PDR")]),
+    ("Week 8 — Operations training 1: from design to operations",
+     "Semaine 8 — Formation à l'exploitation 1 : de la conception à l'exploitation",
+     [_lec("L10 from design to operations: EOSAT-1, passes, PUS services, a telecommand's life, the mission planner",
+           "L10 de la conception à l'exploitation : EOSAT-1, passages, services PUS, la vie d'une télécommande, le planificateur de mission"),
+      _stu("MCS familiarisation by position; telemetry, alarms and procedures; pass planning",
+           "prise en main du MCS par poste ; télémesure, alarmes et procédures ; planification de passage")]),
+    ("Week 9 — Operations training 2: the control room",
+     "Semaine 9 — Formation à l'exploitation 2 : la salle de contrôle",
+     [_lec("L11 the control room: positions, the voice loop, anomaly response, shift handover",
+           "L11 la salle de contrôle : postes, boucle vocale, réponse aux anomalies, passation de quart"),
+      _stu("voice-loop drills; dry runs of LEOP, nominal and contingency passes; operations training quiz",
+           "exercices de boucle vocale ; répétitions de passages LEOP, nominaux et de contingence ; quiz de formation à l'exploitation")]),
+    ("Week 10 — Simulation 1: LEOP and commissioning",
+     "Semaine 10 — Simulation 1 : LEOP et mise en service",
+     [("L12 briefing, then a 6-hour simulated LEOP and commissioning shift: one team operates, the other observes",
+       "Briefing L12, puis un quart simulé de 6 heures de LEOP et de mise en service : une équipe exploite, l'autre observe"),
+      ("Post-simulation debrief", "Débriefing après la simulation")]),
+    ("Week 11 — Simulation 2: nominal operations and contingency",
+     "Semaine 11 — Simulation 2 : exploitation nominale et contingence",
+     [("L13 briefing, then a 6-hour simulated shift of nominal and contingency operations; the teams swap roles",
+       "Briefing L13, puis un quart simulé de 6 heures d'exploitation nominale et de contingence ; les équipes échangent les rôles"),
+      ("Post-simulation debrief", "Débriefing après la simulation")]),
+    ("Week 12 — Review of the whole mission",
+     "Semaine 12 — Revue de toute la mission",
+     [_lec("L14 debrief led by the student Flight Directors; lessons learned; pathways into the sector",
+           "L14 débriefing mené par les directeurs de vol étudiants ; leçons apprises ; parcours dans le secteur"),
+      _stu("from the need to the last pass: the design decisions against what operations showed; observer presentations; final mission review",
+           "du besoin au dernier passage : les décisions de conception face à ce que l'exploitation a montré ; présentations des observateurs ; revue finale de mission")]),
+]
+
 W3DOCS = {
     "tools": ("Week 3 handout · Student tool reference", "Document de la semaine 3 · Référence des outils",
               "The tools you will use on console: the mission control system, the mission planner and the procedure panel.",
@@ -354,6 +457,10 @@ def expand(token: str) -> dict:
     if token.startswith("W3DOCS:"):
         k = token[7:]
         ne, nf, ie, if_, docs = W3DOCS[k]
+        if LAYOUT == "term":           # the operations weeks, not the intensive's week 3
+            ne = ne.replace("Week 3 handouts", "Operations handouts").replace("Week 3 handout", "Operations handout")
+            nf = nf.replace("Documents de la semaine 3", "Documents d'exploitation").replace(
+                "Document de la semaine 3", "Document d'exploitation")
         return doc_list_item(ne, nf, ie, if_, docs, f"W3DOCS-{k}")
     return video_item(token)
 
@@ -364,6 +471,14 @@ WELCOME_EN = """<p><strong>ORBIT NORTH</strong> is a three-week course in space 
 
 WELCOME_FR = """<p><strong>ORBIT NORTH</strong> est un cours de trois semaines en conception et exploitation de missions spatiales : deux semaines à concevoir une mission CubeSat en mode concurrent, puis une semaine à en piloter une, EOSAT-1, dans une salle de contrôle de mission simulée.</p>
 <p>Ce site rassemble le matériel du cours : diapositives, courtes vidéos avec questions d'entraînement, documents et un manuel libre, organisés jour par jour. Passez de l'anglais au français avec le menu de langue en haut de la page ; tout le contenu existe dans les deux langues.</p>
+<p><strong>Rien sur ce site n'est noté, et aucun travail n'y est remis.</strong> Les livrables notés passent par les systèmes de l'université. L'espace d'équipe, à la fin du cours, sert à préparer ce que votre équipe choisit de partager publiquement.</p>"""
+
+WELCOME_TERM_EN = """<p><strong>ORBIT NORTH</strong> is a 12-week course in space mission design and operations: a week and a half of introduction, then designing a CubeSat mission concurrently until the preliminary design review in week 7, two weeks of operations training, two weeks flying one, EOSAT-1, in a simulated mission control room, and a final week reviewing the whole mission.</p>
+<p>This site holds the course material: lecture slides, short videos with practice questions, handouts and an open textbook, organised week by week. Switch between English and French with the language menu at the top of the page; everything here exists in both languages.</p>
+<p><strong>Nothing on this site is graded, and there is nowhere to submit work.</strong> Graded deliverables go through the university's own systems. The team workspace at the end of the course is for preparing material your team chooses to share publicly.</p>"""
+
+WELCOME_TERM_FR = """<p><strong>ORBIT NORTH</strong> est un cours de 12 semaines en conception et exploitation de missions spatiales : une semaine et demie d'introduction, puis la conception concourante d'une mission CubeSat jusqu'à la revue de conception préliminaire en semaine 7, deux semaines de formation à l'exploitation, deux semaines à en piloter une, EOSAT-1, dans une salle de contrôle de mission simulée, et une dernière semaine de revue de toute la mission.</p>
+<p>Ce site rassemble le matériel du cours : diapositives, courtes vidéos avec questions d'entraînement, documents et un manuel libre, organisés semaine par semaine. Passez de l'anglais au français avec le menu de langue en haut de la page ; tout le contenu existe dans les deux langues.</p>
 <p><strong>Rien sur ce site n'est noté, et aucun travail n'y est remis.</strong> Les livrables notés passent par les systèmes de l'université. L'espace d'équipe, à la fin du cours, sert à préparer ce que votre équipe choisit de partager publiquement.</p>"""
 
 VIDEO_HELP_EN = """<p>Each video page plays an interactive video. The video pauses at a few questions: answer them to check your understanding, then carry on. Your answers are not recorded or graded.</p>
@@ -392,7 +507,8 @@ WORKSPACE_FR = """<p>Voici l'espace où votre équipe travaille ensemble sur ce 
 def build() -> dict:
     general = [
         {"type": "page", "name": ml("Welcome", "Bienvenue"),
-         "content": mlh(WELCOME_EN, fr(WELCOME_FR)), "files": [], "idnumber": "WELCOME"},
+         "content": (mlh(WELCOME_TERM_EN, fr(WELCOME_TERM_FR)) if LAYOUT == "term"
+                     else mlh(WELCOME_EN, fr(WELCOME_FR))), "files": [], "idnumber": "WELCOME"},
         {"type": "page", "name": ml("How the videos work", "Fonctionnement des vidéos"),
          "content": mlh(VIDEO_HELP_EN, fr(VIDEO_HELP_FR)), "files": [], "idnumber": "VIDEO-HELP"},
         doc_list_item("Syllabus", "Plan de cours",
@@ -402,8 +518,14 @@ def build() -> dict:
                         PDF / "ORBIT_NORTH_Syllabus_EN.pdf", PDF / "ORBIT_NORTH_Syllabus_FR.pdf")], "SYLLABUS"),
     ]
     sections = [{"name": None, "summary": "", "items": general}]
-    for s in SECTIONS:
-        sections.append({"name": s["name"], "summary": s["summary"], "items": [expand(t) for t in s["items"]]})
+    for i, s in enumerate(SECTIONS):
+        if LAYOUT == "term":
+            name_en, name_fr, lines = TERM[i]
+            sections.append({"name": ml(name_en, name_fr), "summary": s["summary"].render(lines),
+                             "items": [expand(t) for t in s["items"]]})
+        else:
+            sections.append({"name": s["name"], "summary": s["summary"].render(),
+                             "items": [expand(t) for t in s["items"]]})
     sections.append({
         "name": ml("Team workspace", "Espace d'équipe"),
         "summary": mlh(p(esc("A shared space for each team to prepare its public showcase. Nothing here is graded.")),
@@ -426,14 +548,16 @@ def build() -> dict:
         "summary": "",
         "items": [
             doc_list_item("Open textbook · Concurrent Spacecraft Design", "Manuel libre · Concurrent Spacecraft Design",
-                          "The course textbook, licensed CC BY 4.0. Each day lists the chapters to read.",
-                          "Le manuel du cours, sous licence CC BY 4.0. Chaque journée indique les chapitres à lire.",
+                          "The course textbook, licensed CC BY 4.0. Each " + ("week" if LAYOUT == "term" else "day")
+                          + " lists the chapters to read.",
+                          "Le manuel du cours, sous licence CC BY 4.0. Chaque "
+                          + ("semaine" if LAYOUT == "term" else "journée") + " indique les chapitres à lire.",
                           [("Concurrent Spacecraft Design (English)", "Concurrent Spacecraft Design (français)",
                             PDF / "Concurrent_Spacecraft_Design_OER.pdf", PDF / "Concurrent_Spacecraft_Design_OER_FR.pdf")],
                           "OER"),
             doc_list_item("Course workbook", "Cahier d'exercices du cours",
-                          "Worked exercises and worksheets for the design days and the operations week. Use them to practise; they are not submitted here.",
-                          "Exercices et feuilles de travail pour les journées de conception et la semaine d'exploitation. Utilisez-les pour vous exercer ; ils ne sont pas remis ici.",
+                          "Worked exercises and worksheets for the design and operations parts of the course. Use them to practise; they are not submitted here.",
+                          "Exercices et feuilles de travail pour les parties conception et exploitation du cours. Utilisez-les pour vous exercer ; ils ne sont pas remis ici.",
                           [("SpaceCDF course workbook", "Cahier d'exercices SpaceCDF",
                             PDF / "en/SpaceCDF_Workbook.pdf", PDF / "fr/SpaceCDF_Workbook_FR.pdf")], "WORKBOOK"),
             doc_list_item("Course textbook with the operations part", "Manuel du cours avec la partie exploitation",

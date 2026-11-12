@@ -8,7 +8,8 @@ meant for a site outside the university firewall.
 | Section | Contents |
 |---|---|
 | General | Welcome, how the videos work, syllabus, announcements |
-| Week 1 · Days 1–2, Week 2 · Days 1–5, Week 3 · Days 1–5 | Day summary with the agenda and textbook chapters; lecture slides (L01–L14); the videos for that day; Week 3 handouts |
+| Weeks 1–12 (12-week term, the default) | Week summary with the lecture and studio and the textbook chapters; lecture slides (L01–L14); the videos for that week; operations handouts. Introduction weeks 1–2 (the CDF opens in the week 2 studio), design to the PDR in week 7, operations training weeks 8–9, simulations weeks 10–11, review of the whole mission in week 12 |
+| or Week 1 · Days 1–2, Week 2 · Days 1–5, Week 3 · Days 1–5 (`C2O_COURSE_LAYOUT=intensive`) | The same items for the three-week summer intensive, day by day |
 | Team workspace | How to use it; *Team room* forum; *Showcase drafts* collaborative wiki |
 | Textbook, workbook and references | Open textbook (CC BY 4.0), course workbook, course textbook with the operations part |
 
@@ -43,7 +44,8 @@ cd design/moodle/decks && npm install && python3 render.py
 # 2. fresh PDFs of the books and handouts (writes design/docs/pdf/{en,fr})
 cd design/docs && python3 build_course_books.py --lang en --only textbook workbook week3 \
   && python3 build_course_books.py --lang fr --only textbook workbook week3
-# 3. manifest (needs the built videos in video/out/<id>/<id>.{en,fr}.h5p)
+# 3. manifest (needs the built videos in video/out/<id>/<id>.{en,fr}.h5p);
+#    12-week term by default, C2O_COURSE_LAYOUT=intensive for the three-week version
 cd design/moodle/course && python3 manifest.py
 # 4. build the course on a Moodle and back it up without users
 MOODLE_CONFIG=/path/to/moodle/config.php php build_course.php --category=1 --out=orbit_north.mbz
