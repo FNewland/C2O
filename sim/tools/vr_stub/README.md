@@ -11,7 +11,30 @@ that works here works on demo day.
 | `vr_client_example.py` | Reference client (no graphics); also records real sessions to files |
 | `sample_vr_frames.ndjson` | Flat file: one orbit, 5 s steps, exactly as sent on the socket |
 | `sample_vr_frames.csv` | The same data as a spreadsheet-friendly CSV |
+| `sample_vr_power.ndjson`, `.csv` | The same orbit as channel 2 sends it: every frame with its `power` block |
+| `sample_vr_requests.ndjson` | A channel-3 conversation, one message per line: `{"t_s", "from": "headset" or "server", "message"}` |
+| `vr_test.py` | Test tool: checks a live channel, a request round trip or a file against the ICD; `selftest` checks the whole kit |
 | `unity/VRLinkClient.cs` | Unity starter script: socket thread, frame conversion, status line |
+
+## The solar wings are fixed flaps
+Draw each wing as a flap hinged at the top (−Z, zenith) edge of a long side (±Y face):
+folded down the side when stowed, swung out level with the top deck when deployed, hinge
+angle = 90° × `deploy.wing_*.fraction`. It never rotates. The panel rotation angle in the
+stream (`deploy.sada_angle_deg`, `power.wings.sada_angle_deg`, `hello.spacecraft.sada`) is
+**DO NOT USE** for the VR project. The camera is on the nadir deck (+Z).
+
+## Check the link with vr_test.py
+```bash
+python3 vr_test.py selftest                       # the kit works on this machine
+python3 vr_test.py check --host <ip>              # channel 1 (state), TCP 8100
+python3 vr_test.py check --host <ip> --channel power --ws
+python3 vr_test.py check --cloud --channel all    # wss://ops.c2o.live/vr, /vr/power, /vr/requests
+python3 vr_test.py watch --host <ip> --channel power
+python3 vr_test.py request deploy_antenna --team T07 --host <ip>
+python3 vr_test.py file sample_vr_frames.ndjson   # or your own recording
+```
+Each check prints PASS, WARN or FAIL and a RESULT line. The quaternion checks catch
+the classic mistakes (scalar first, a swapped axis).
 
 ## Week 1 — read the flat file
 Load `sample_vr_frames.csv` (or the `.ndjson`, one JSON object per line; skip
@@ -73,6 +96,6 @@ python3 vr_stub.py --replay pass.ndjson
 
 ## Regenerating the sample files
 ```bash
-python3 vr_stub.py --write-sample .            # 5 s steps
+python3 vr_stub.py --write-sample .            # 5 s steps (frames, power, requests)
 python3 vr_stub.py --write-sample . --sample-step 1
 ```

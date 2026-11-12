@@ -1,0 +1,13 @@
+{"t_s":0.0,"from":"server","message":{"type":"hello","schema":"smo-vr/1","source":"vr-stub","channel":"requests","ports":{"tcp":8104,"ws":8105},"requests":{"deploy_antenna":"Deploy the antenna","deploy_wing_py":"Deploy solar wing -Y (the headset's +Y wing)","deploy_wing_my":"Deploy solar wing +Y (the headset's -Y wing)","deploy_both_wings":"Deploy both solar wings"}}}
+{"t_s":2.0,"from":"headset","message":{"type":"request","request":"deploy_antenna","team":"T07","text":"we want to see the dipole unfold"}}
+{"t_s":2.0,"from":"server","message":{"type":"request_ack","schema":"smo-vr/1","id":"R1","request":"deploy_antenna","state":"PENDING"}}
+{"t_s":3.0,"from":"headset","message":{"type":"request","request":"deploy_antenna","team":"T07"}}
+{"t_s":3.0,"from":"server","message":{"type":"request_rejected","request":"deploy_antenna","reason":"one request every 2 s"}}
+{"t_s":6.0,"from":"headset","message":{"type":"request","request":"deploy_antenna","team":"T07"}}
+{"t_s":6.0,"from":"server","message":{"type":"request_ack","schema":"smo-vr/1","id":"R1","request":"deploy_antenna","state":"PENDING","duplicate":true}}
+{"t_s":9.0,"from":"headset","message":{"type":"request","request":"open_the_pod_bay_doors","team":"T07"}}
+{"t_s":9.0,"from":"server","message":{"type":"request_rejected","request":"open_the_pod_bay_doors","reason":"unknown request; one of deploy_antenna, deploy_wing_py, deploy_wing_my, deploy_both_wings"}}
+{"t_s":48.0,"from":"server","message":{"type":"request_update","schema":"smo-vr/1","id":"R1","request":"deploy_antenna","team":"T07","state":"SENT","note":"","tc_seq":214}}
+{"t_s":60.0,"from":"headset","message":{"type":"request","request":"deploy_both_wings","team":"T07","text":"flaps out please"}}
+{"t_s":60.0,"from":"server","message":{"type":"request_ack","schema":"smo-vr/1","id":"R2","request":"deploy_both_wings","state":"PENDING"}}
+{"t_s":95.0,"from":"server","message":{"type":"request_update","schema":"smo-vr/1","id":"R2","request":"deploy_both_wings","team":"T07","state":"DECLINED","note":"not in contact; ask again in the next pass","tc_seq":null}}

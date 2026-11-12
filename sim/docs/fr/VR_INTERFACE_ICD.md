@@ -144,7 +144,7 @@ Exemple (une seule ligne sur le réseau, mise en forme ici pour la lisibilité)�
 | `earth.gmst_deg` | deg | angle de rotation de la Terre : ECEF = ECI tourné de −gmst autour de Z. Faire tourner le modèle de Terre de **+gmst** autour de l'axe des pôles pour que les continents soient bien placés |
 | `earth.radius_km` | km | rayon terrestre utilisé par le simulateur |
 | `deploy.wing_py`, `wing_my` | `{state, fraction}` | `STOWED` 0.0 → `DEPLOYING` 0–1 (balayage d'environ 30 s) → `DEPLOYED` 1.0 |
-| `deploy.sada_angle_deg` | deg | angle du mécanisme d'entraînement du générateur solaire ; normale aux cellules de l'aile en axes satellite = `(cos a, 0, sin a)` |
+| `deploy.sada_angle_deg` | deg | **NE PAS UTILISER (projet RV).** Angle du mécanisme d'entraînement du générateur solaire, utilisé par le simulateur ; normale aux cellules de l'aile en axes satellite = `(cos a, 0, sin a)`. Les équipes RV dessinent les ailes comme des volets fixes (§ 6b) et ignorent ce champ |
 | `deploy.antenna.state` | énumération | `STOWED`, `DEPLOYED`, `JAMMED` (échec de déploiement partiel) |
 | `deploy.antenna.deployed` | booléen | vérité : l'antenne est-elle sortie |
 | `deploy.antenna.sensor` | énumération | ce que rapporte le microcontact de déploiement (`UNKNOWN STOWED DEPLOYED JAMMED`) — peut contredire la vérité en cas d'injection de pannes |
@@ -177,7 +177,7 @@ pas de champ `channel`, comme dans l'édition 1.)
 | `bus_voltage_v` | V | bus principal |
 | `generated_w`, `consumed_w`, `net_w` | W | tous les panneaux, toutes les charges, et la différence (positive = en charge) |
 | `wings.wing_py`, `wing_my` | A, W | chaque aile déployable dans les **axes smo-vr/1** (§6) : `wing_py` est donc la même aile que `deploy.wing_py` ; `deployed` est le verrou |
-| `wings.sada_angle_deg` | deg | comme `deploy.sada_angle_deg` |
+| `wings.sada_angle_deg` | deg | **NE PAS UTILISER (projet RV)**, comme `deploy.sada_angle_deg` |
 | `body_faces.px … mz` | A, W | les cellules montées sur chaque face du corps, axes smo-vr/1, ailes exclues |
 | `strings.a`, `b` | V, A | les deux chaînes du générateur que régule l'unité d'énergie (`enabled` faux = coupée ou en panne) |
 | `battery` | %, V, A, °C | état de charge, tension, courant (**positif = en charge**), température |
@@ -209,6 +209,20 @@ valeurs sont la vérité de simulation, comme le reste du flux ; une panne inj
   ceux de l'ECI, c'est simplement la rotation de l'objet satellite.
   *Vérification :* en pointage nadir nominal, la rotation du vecteur satellite `[0,0,1]` par `q` donne
   `-pos_eci/|pos_eci|` (verticale descendante).
+
+### 6b. Les ailes solaires du modèle RV : des volets fixes
+
+Pour le projet RV, les deux ailes sont des **volets fixes** : repliée, chacune est rabattue le
+long d'un grand côté du bus (faces ±Y) ; déployée, elle a pivoté autour de sa charnière au bord
+supérieur (−Z, zénith) jusqu'à être de niveau avec le pont supérieur, cellules vers le zénith.
+Elle ne tourne plus ensuite. Dessinez l'angle de charnière comme `90° × deploy.wing_*.fraction`
+(0° repliée, 90° de niveau avec le pont supérieur). Le simulateur modélise un mécanisme
+d'entraînement et en transmet l'angle (`deploy.sada_angle_deg`, `power.wings.sada_angle_deg`,
+`hello.spacecraft.sada`) : ces champs restent dans l'interface mais sont **À NE PAS UTILISER**
+pour le projet RV. La caméra (imageur) est sur le pont nadir (+Z).
+
+`tools/vr_stub/vr_test.py` vérifie un canal en direct ou un fichier enregistré par rapport à cette
+ICD (`python3 vr_test.py selftest` vérifie toute la trousse avec le simulateur de remplacement).
 
 ### Conversion vers les repères des moteurs de jeu
 

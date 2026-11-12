@@ -155,36 +155,39 @@ def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None,
 
 
 def stub_power(body):
-    """A plausible "power" block for a stub frame (the simulator's comes from its power
-    model): the wings make power when deployed and lit, the battery takes the rest."""
+    """A plausible "power" block for a stub frame. The simulator's comes from its power
+    model; these figures are scaled to match it in a nominal orbit (about 30 W from each
+    deployed wing in sunlight, up to 15 W from a sunlit body face, about 20 W of load,
+    a 33.4 V bus). The battery charge is a fixed figure here."""
     sun = body.get("sun") or {}
     lit = 0.0 if sun.get("in_eclipse") else float(sun.get("sun_fraction", 1.0))
     d = sun.get("dir_body") or [0.0, 0.0, 0.0]
     dep = body.get("deploy") or {}
-    bus_v = 30.0
+    bus_v = 33.4
     faces = {}
     for name, axis, sign in (("px", 0, 1), ("mx", 0, -1), ("py", 1, 1), ("my", 1, -1),
                              ("pz", 2, 1), ("mz", 2, -1)):
-        w = round(max(0.0, sign * d[axis]) * 0.06 * 1361 * 0.28 * lit, 2)
+        w = round(max(0.0, sign * d[axis]) * 15.5 * lit, 2)
         faces[name] = {"current_a": round(w / bus_v, 3), "power_w": w}
     wings = {}
     for wing in ("wing_py", "wing_my"):
         frac = float((dep.get(wing) or {}).get("fraction", 0.0))
-        w = round(frac * 0.24 * 1361 * 0.28 * 0.9 * lit, 2)
+        w = round(frac * 30.1 * lit, 2)
         wings[wing] = {"current_a": round(w / bus_v, 3), "power_w": w,
                        "deployed": (dep.get(wing) or {}).get("state") == "DEPLOYED"}
     wings["sada_angle_deg"] = dep.get("sada_angle_deg", 0.0)
     gen = round(sum(f["power_w"] for f in faces.values())
                 + wings["wing_py"]["power_w"] + wings["wing_my"]["power_w"], 2)
-    cons = 38.0
+    cons = 20.0
     net = round(gen - cons, 2)
+    on = lit > 0
     return {
         "bus_voltage_v": bus_v, "generated_w": gen, "consumed_w": cons, "net_w": net,
         "wings": wings, "body_faces": faces,
-        "strings": {"a": {"voltage_v": 28.2, "current_a": round(gen / 2 / bus_v, 3), "enabled": True},
-                    "b": {"voltage_v": 28.2, "current_a": round(gen / 2 / bus_v, 3), "enabled": True}},
-        "battery": {"soc_pct": 75.0, "voltage_v": 31.2, "current_a": round(net / 31.2, 3),
-                    "charging": net / 31.2 > 0.05, "temp_c": 15.0},
+        "strings": {"a": {"voltage_v": 32.4 if on else 0.0, "current_a": round(gen / 2 / 32.4, 3), "enabled": True},
+                    "b": {"voltage_v": 32.4 if on else 0.0, "current_a": round(gen / 2 / 32.4, 3), "enabled": True}},
+        "battery": {"soc_pct": 95.0, "voltage_v": 33.4, "current_a": round(net / 33.4, 3),
+                    "charging": net / 33.4 > 0.05, "temp_c": 6.0},
         "load_shed_stage": 0,
     }
 
@@ -789,6 +792,67 @@ def write_sample(directory, step=5.0, story="once"):
     return nd, cs
 
 
+def write_issue2_samples(directory, step=5.0, story="once"):
+    """Sample files for the issue-2 channels: sample_vr_power.ndjson/.csv (the same orbit
+    as sample_vr_frames, each frame with its "power" block, as channel 2 sends it) and
+    sample_vr_requests.ndjson (a channel-3 conversation: one line per message, wrapped as
+    {"t_s": seconds, "from": "headset" | "server", "message": {...}}). Returns the paths."""
+    st = Story(story)
+    frames = []
+    for i in range(int(math.ceil(PERIOD_S / step))):
+        t = i * step
+        body = st.body(t, int(t))
+        frames.append(state_message(i + 1, dict(body, power=stub_power(body))))
+    os.makedirs(directory, exist_ok=True)
+    nd = os.path.join(directory, "sample_vr_power.ndjson")
+    cs = os.path.join(directory, "sample_vr_power.csv")
+    hello = build_hello("vr-stub", DEFAULT_MAX_RATE_HZ, DEFAULT_POWER_TCP_PORT,
+                        DEFAULT_POWER_WS_PORT, "power")
+    with open(nd, "w", encoding="utf-8", newline="\n") as f:
+        f.write(dumps(hello) + "\n")
+        for fr in frames:
+            f.write(dumps(fr) + "\n")
+    rows = [flatten(fr) for fr in frames]
+    with open(cs, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    rq_hello = {"type": "hello", "schema": SCHEMA, "source": "vr-stub", "channel": "requests",
+                "ports": {"tcp": DEFAULT_REQUEST_TCP_PORT, "ws": DEFAULT_REQUEST_WS_PORT},
+                "requests": dict(REQUESTS)}
+    talk = [
+        (0.0, "server", rq_hello),
+        (2.0, "headset", {"type": "request", "request": "deploy_antenna", "team": "T07",
+                          "text": "we want to see the dipole unfold"}),
+        (2.0, "server", {"type": "request_ack", "schema": SCHEMA, "id": "R1",
+                         "request": "deploy_antenna", "state": "PENDING"}),
+        (3.0, "headset", {"type": "request", "request": "deploy_antenna", "team": "T07"}),
+        (3.0, "server", {"type": "request_rejected", "request": "deploy_antenna",
+                         "reason": "one request every 2 s"}),
+        (6.0, "headset", {"type": "request", "request": "deploy_antenna", "team": "T07"}),
+        (6.0, "server", {"type": "request_ack", "schema": SCHEMA, "id": "R1",
+                         "request": "deploy_antenna", "state": "PENDING", "duplicate": True}),
+        (9.0, "headset", {"type": "request", "request": "open_the_pod_bay_doors", "team": "T07"}),
+        (9.0, "server", {"type": "request_rejected", "request": "open_the_pod_bay_doors",
+                         "reason": "unknown request; one of " + ", ".join(REQUESTS)}),
+        (48.0, "server", {"type": "request_update", "schema": SCHEMA, "id": "R1",
+                          "request": "deploy_antenna", "team": "T07", "state": "SENT",
+                          "note": "", "tc_seq": 214}),
+        (60.0, "headset", {"type": "request", "request": "deploy_both_wings", "team": "T07",
+                           "text": "flaps out please"}),
+        (60.0, "server", {"type": "request_ack", "schema": SCHEMA, "id": "R2",
+                          "request": "deploy_both_wings", "state": "PENDING"}),
+        (95.0, "server", {"type": "request_update", "schema": SCHEMA, "id": "R2",
+                          "request": "deploy_both_wings", "team": "T07", "state": "DECLINED",
+                          "note": "not in contact; ask again in the next pass", "tc_seq": None}),
+    ]
+    rq = os.path.join(directory, "sample_vr_requests.ndjson")
+    with open(rq, "w", encoding="utf-8", newline="\n") as f:
+        for t, who, msg in talk:
+            f.write(dumps({"t_s": t, "from": who, "message": msg}) + "\n")
+    return nd, cs, rq
+
+
 # ═════════════════════════════════════════════════════════════════════════
 #  6. Servers
 # ═════════════════════════════════════════════════════════════════════════
@@ -1222,7 +1286,7 @@ def build_parser():
     p.add_argument("--log-dir", default="vr_logs",
                    help="where status lines are logged (default %(default)s)")
     p.add_argument("--write-sample", metavar="DIR",
-                   help="write sample_vr_frames.ndjson/.csv into DIR and exit")
+                   help="write the sample files (frames, power, requests) into DIR and exit")
     p.add_argument("--sample-step", type=float, default=5.0,
                    help="seconds between sample frames (default 5)")
     return p
@@ -1233,6 +1297,8 @@ def main(argv=None):
     if args.write_sample:
         nd, cs = write_sample(args.write_sample, args.sample_step)
         print(f"wrote {nd}\nwrote {cs}")
+        for path in write_issue2_samples(args.write_sample, args.sample_step):
+            print(f"wrote {path}")
         return 0
     if args.replay:
         feed = ReplayFeed(args.replay, args.speed)

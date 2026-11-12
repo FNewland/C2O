@@ -144,7 +144,7 @@ Example (one line on the wire, pretty-printed here):
 | `earth.gmst_deg` | deg | Earth rotation angle: ECEF = ECI rotated by −gmst about Z. Rotate your Earth model by **+gmst** about the pole so the continents are right |
 | `earth.radius_km` | km | Earth radius the simulator uses |
 | `deploy.wing_py`, `wing_my` | `{state, fraction}` | `STOWED` 0.0 → `DEPLOYING` 0–1 (≈30 s sweep) → `DEPLOYED` 1.0 |
-| `deploy.sada_angle_deg` | deg | solar-array drive angle; wing cell normal in body = `(cos a, 0, sin a)` |
+| `deploy.sada_angle_deg` | deg | **DO NOT USE (VR project).** Solar-array drive angle the simulator uses internally; wing cell normal in body = `(cos a, 0, sin a)`. VR teams draw the wings as fixed flaps (§6b) and ignore this field |
 | `deploy.antenna.state` | enum | `STOWED`, `DEPLOYED`, `JAMMED` (partial deployment failure) |
 | `deploy.antenna.deployed` | bool | truth: is the antenna out |
 | `deploy.antenna.sensor` | enum | what the deployment microswitch reports (`UNKNOWN STOWED DEPLOYED JAMMED`) — may disagree with truth under failure injection |
@@ -177,7 +177,7 @@ every `state` carries a `power` object from the same simulator tick. (Channel 1'
 | `bus_voltage_v` | V | main bus |
 | `generated_w`, `consumed_w`, `net_w` | W | all arrays together, all loads, and the difference (positive = charging) |
 | `wings.wing_py`, `wing_my` | A, W | each deployable wing in the **smo-vr/1 axes** (§6), so `wing_py` is the same wing as `deploy.wing_py`; `deployed` is the latch |
-| `wings.sada_angle_deg` | deg | as `deploy.sada_angle_deg` |
+| `wings.sada_angle_deg` | deg | **DO NOT USE (VR project)**, as `deploy.sada_angle_deg` |
 | `body_faces.px … mz` | A, W | the body-mounted cells on each face, smo-vr/1 axes, wings excluded |
 | `strings.a`, `b` | V, A | the two array strings the power unit regulates (`enabled` false = switched off or failed) |
 | `battery` | %, V, A, °C | state of charge, voltage, current (**positive = charging**), temperature |
@@ -209,6 +209,20 @@ string, a stuck drive) shows up here exactly as the power model sees it.
   ECI, it is simply the satellite object's rotation.
   *Check:* in nominal nadir pointing, rotating body `[0,0,1]` by `q` gives
   `-pos_eci/|pos_eci|` (straight down).
+
+### 6b. The solar wings in the VR model: fixed flaps
+
+For the VR project the two wings are **fixed flaps**: stowed, each lies folded down a
+long side of the bus (the ±Y faces); deployed, it has swung out about its hinge at the
+top (−Z, zenith) edge until it is level with the top deck, cells facing zenith. It never
+rotates after that. Draw the hinge angle as `90° × deploy.wing_*.fraction` (0° folded,
+90° level with the top deck). The simulator models a solar-array drive and sends its
+angle (`deploy.sada_angle_deg`, `power.wings.sada_angle_deg`, `hello.spacecraft.sada`):
+these fields stay in the interface but are **DO NOT USE** for the VR project. The camera
+(imager) is on the nadir deck (+Z).
+
+`tools/vr_stub/vr_test.py` checks a live channel or a recorded file against this ICD
+(`python3 vr_test.py selftest` checks the whole kit against the stub).
 
 ### Converting to engine frames
 
