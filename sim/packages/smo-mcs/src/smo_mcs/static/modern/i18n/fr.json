@@ -1066,5 +1066,18 @@
   "consecutive 1 Hz checks out of limits before the monitor reports": "contrôles consécutifs à 1 Hz hors limites avant que la surveillance ne le signale",
   "{{n}} s": "{{n}} s",
   "Severity": "Gravité",
-  "Persistence": "Persistance"
+  "Persistence": "Persistance",
+  "VR requests": "Demandes VR",
+  "Note to the team (sent with Decline)": "Note à l'équipe (envoyée avec Refuser)",
+  "Note to the team": "Note à l'équipe",
+  "VR request from {{team}}: {{what}}": "Demande VR de {{team}} : {{what}}",
+  "Send a request through normal commanding, or decline it. The team is told either way.": "Envoyez une demande par la commande habituelle, ou refusez-la. L'équipe est prévenue dans les deux cas.",
+  "Only the Flight Director sends or declines VR requests.": "Seul le directeur de vol envoie ou refuse les demandes VR.",
+  "{{n}} headset connection(s)": "{{n}} connexion(s) de casque",
+  "Decline": "Refuser",
+  "no VR requests": "aucune demande VR",
+  "pending": "en attente",
+  "declined": "refusée",
+  "expired": "expirée",
+  "withdrawn": "retirée"
 }

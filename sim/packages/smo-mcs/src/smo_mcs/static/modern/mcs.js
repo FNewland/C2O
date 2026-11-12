@@ -118,6 +118,8 @@ const S = {
   subsysEvents: { eps: [], tcs: [], aocs: [], ttc: [], payload: [], prop: [], obdh: [], orbital: [] },
   handover: [],
   goNoGo: null,
+  vrRequests: [],          // VR headset proposals (/api/vr-requests, ws vr_requests)
+  vrSummary: {},
   series: {},              // hex -> ring buffer for sparklines
   manual: null,
   manualOpen: "",        // path of the open section (active-item highlight)
@@ -683,6 +685,7 @@ export function connectWS() {
     go_nogo_poll: (m) => handleGoNoGo(m),
     go_nogo_status: (m) => handleGoNoGo(m),
     go_nogo_result: (m) => handleGoNoGo(m),
+    vr_requests: (m) => handleVrRequests(m),
     // Console seats: the server refused a position this person does not hold.
     seat_refused: (m) => {
       announce(tText("Refused: you do not hold the {{position}} desk", { position: m.position || "" }));
@@ -1178,7 +1181,7 @@ export function showPage(id) {
  * workbook uses to pages, rows and ids that exist. */
 const NAV_PARAM = /^0x[0-9A-Fa-f]{4}$/;
 const NAV_ID = /^[A-Za-z][\w-]{0,63}$/;
-const BD_TABS = ["events", "tm", "cmdhist", "conlog", "handover", "gonogo"];
+const BD_TABS = ["events", "tm", "cmdhist", "conlog", "handover", "gonogo", "vr"];
 let navMarkTimer = null;
 export function applyNavHash() {
   const raw = String(location.hash || "").replace(/^#/, "");
@@ -5218,6 +5221,8 @@ export function renderBottomDrawer() {
       `<div class="logrow nom">${t("no handover notes")}</div>`);
   } else if (bdTab === "gonogo") {
     renderGoNoGo();
+  } else if (bdTab === "vr") {
+    renderVrRequests();
   }
 }
 function selectBdTab(id, open = true) {
@@ -5231,7 +5236,7 @@ function selectBdTab(id, open = true) {
     $("bottom-drawer").classList.add("open");
     $("bd-toggle").setAttribute("aria-expanded", "true");
   }
-  for (const t of ["events", "tm", "cmdhist", "conlog", "handover", "gonogo"]) {
+  for (const t of BD_TABS) {
     show(`bdp-${t}`, t === id);
     const b = document.querySelector ? document.querySelector(`[data-bd="${t}"]`) : null;
     if (b) b.setAttribute("aria-selected", t === id ? "true" : "false");
@@ -5283,6 +5288,98 @@ async function goNoGoStart() {
   if (S.position !== "flight_director") return;
   await postJSON("/api/go-nogo/poll", { position: S.position,
     label: ($("gonogo-label") || {}).value || "GO/NO-GO" });
+}
+
+/* VR command requests (vr_requests.py, VR_INTERFACE_ICD §7a). Headset teams PROPOSE a
+ * deployment; nothing reaches the spacecraft until the Flight Director sends it here,
+ * through sendPus like every other command (authority, arm-through, history). */
+async function loadVrRequests() {
+  try { handleVrRequests(await getJSON("/api/vr-requests"), true); }
+  catch (e) { /* the drawer shows none */ }
+}
+function handleVrRequests(m, quiet = false) {
+  const before = new Set(S.vrRequests.filter((r) => r.state === "PENDING").map((r) => r.id));
+  S.vrRequests = m.requests || [];
+  S.vrSummary = m.summary || {};
+  const pending = S.vrRequests.filter((r) => r.state === "PENDING");
+  const badge = $("vr-req-count");
+  if (badge) { badge.textContent = String(pending.length); badge.classList.toggle("hide", !pending.length); }
+  const fresh = pending.filter((r) => !before.has(r.id));
+  if (!quiet && fresh.length && S.position === "flight_director") {
+    selectBdTab("vr");
+    announce(tText("VR request from {{team}}: {{what}}",
+      { team: fresh[0].team || fresh[0].peer, what: vrLabel(fresh[0]) }));
+  }
+  renderVrRequests();
+}
+function vrLabel(r) {
+  const l = r.label || {};
+  return l[getLang()] || l.en || r.request;
+}
+function vrStateText(s) {
+  return { PENDING: tText("pending"), SENT: tText("sent"), DECLINED: tText("declined"),
+    EXPIRED: tText("expired"), WITHDRAWN: tText("withdrawn") }[s] || s;
+}
+function vrArgsText(r) {
+  const a = Object.entries(r.args || {}).map(([k, v]) => `${k}=${v}`).join(", ");
+  return `${r.command}${a ? " (" + a + ")" : ""}`;
+}
+export function renderVrRequests() {
+  const fd = S.position === "flight_director";
+  const n = (S.vrSummary || {}).connected || 0;
+  show("vr-req-note", fd);
+  setText("vr-req-who", (fd ? tText("Send a request through normal commanding, or decline it. The team is told either way.")
+    : tText("Only the Flight Director sends or declines VR requests.")) +
+    " " + tText("{{n}} headset connection(s)", { n }));
+  const rows = (S.vrRequests || []).slice(0, 40).map((r) => {
+    const pending = r.state === "PENDING";
+    const kind = pending ? "warn" : r.state === "SENT" ? "ok" : r.state === "DECLINED" ? "alarm" : "nom";
+    const when = r.created ? new Date(r.created * 1000).toISOString().slice(11, 19) : "";
+    const acts = pending && fd
+      ? ` <button class="ds-btn sm" data-vr-send="${esc(r.id)}">${t("Send")}</button>` +
+        ` <button class="ds-btn ghost sm" data-vr-decline="${esc(r.id)}">${t("Decline")}</button>`
+      : "";
+    return `<div class="logrow ${pending ? "warn" : ""}">${esc(when)} ${renderChip({ kind, label: vrStateText(r.state) })} ` +
+      `<b>${esc(r.id)}</b> ${esc(r.team || r.peer || "")}: ${esc(vrLabel(r))} ` +
+      `<span class="mono sub">${esc(vrArgsText(r))}</span>` +
+      (r.text ? ` — <i>${esc(r.text)}</i>` : "") +
+      (r.decided_by ? ` <span class="sub">${esc(positionLabel(r.decided_by))}${r.tc_seq != null ? " · TC #" + esc(r.tc_seq) : ""}${r.note ? " · " + esc(r.note) : ""}</span>` : "") +
+      acts + `</div>`;
+  }).join("");
+  setHTML("vr-req-list", rows || `<div class="logrow nom">${t("no VR requests")}</div>`);
+}
+async function vrRequestSend(id) {
+  const r = (S.vrRequests || []).find((x) => x.id === id && x.state === "PENDING");
+  if (!r || S.position !== "flight_director") return;
+  const cmd = S.tcCatalog.find((c) => c.name === r.command);
+  if (!cmd) { announce(tText("unknown command")); return; }
+  const auth = commandAuthority(r.command);
+  if (!auth.allowed) { announce(auth.text); return; }
+  const key = "vr:" + id;
+  if (needsArm(cmd)) {
+    // arm→execute in place, as for every critical command: second press within 8 s sends
+    if (!S.armed[key]) {
+      S.armed[key] = true;
+      announce(tText("{{name}} ARMED — press again to execute", { name: cmd.name }));
+      setTimeout(() => { S.armed[key] = false; }, 8000);
+      return;
+    }
+    S.armed[key] = false;
+  }
+  const res = await sendPus({ service: cmd.service, subtype: cmd.subtype,
+    data_hex: encodeCatalogCommand(cmd, r.args || {}), name: cmd.name, position: S.position });
+  if (!res.ok) { announce(tText("{{name}} rejected", { name: cmd.name })); return; }
+  await postJSON(`/api/vr-requests/${encodeURIComponent(id)}/decide`,
+    { position: S.position, decision: "sent", tc_seq: res.json && res.json.seq });
+  announce(tText("{{name}} sent", { name: cmd.name }));
+}
+async function vrRequestDecline(id) {
+  if (S.position !== "flight_director") return;
+  const el = $("vr-req-note");
+  const note = el ? el.value.trim() : "";
+  await postJSON(`/api/vr-requests/${encodeURIComponent(id)}/decide`,
+    { position: S.position, decision: "declined", note });
+  if (el) el.value = "";
 }
 
 /* ═══ 18. ALARMS — docked drawer + causal chain ═══════════════════════════ */
@@ -5875,7 +5972,7 @@ function initDelegatedEvents() {
     });
   }
   document.addEventListener("click", (e) => {
-    const t = e.target.closest ? e.target.closest("[data-man-anchor],[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog],[data-mon-trace]") : null;
+    const t = e.target.closest ? e.target.closest("[data-man-anchor],[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-vr-send],[data-vr-decline],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog],[data-mon-trace]") : null;
     if (!t) return;
     const d = t.dataset;
     if (d.manAnchor) { e.preventDefault(); return scrollToManualAnchor(t, d.manAnchor); }
@@ -5926,6 +6023,8 @@ function initDelegatedEvents() {
     if (d.odGet) return void onDemandGet(d.odGet);
     if (d.man !== undefined) { e.preventDefault(); return void openManualSection(d.man); }
     if (d.gonogo) return void goNoGoRespond(d.gonogo);
+    if (d.vrSend) return void vrRequestSend(d.vrSend);
+    if (d.vrDecline) return void vrRequestDecline(d.vrDecline);
     if (d.hk) {
       const sid = Number($("hk-sid").value) || 1;
       const map = { enable: [3, 5], disable: [3, 6], oneshot: [3, 27] };
@@ -6590,7 +6689,7 @@ async function boot() {
   await Promise.all([loadTcCatalog(), loadSchematics(), loadDisplayConfig(),
     loadHkStructures(), loadMemoryMap(), loadAlarms(), loadFailureCodes(),
     loadGroundStations(),
-    loadFaultGraph(), loadGonogoMatrix(), loadConsoleLog()]);
+    loadFaultGraph(), loadGonogoMatrix(), loadConsoleLog(), loadVrRequests()]);
   await loadPictorial();
   const sel = $("pos-select");
   if (sel) sel.value = S.position;

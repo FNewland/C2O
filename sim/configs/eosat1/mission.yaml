@@ -64,7 +64,9 @@ network:
   vr_ws_port: 8101
   # Power channel: the same frames plus solar-array, battery and bus power
   # (SMO_VR_POWER_PORT, SMO_VR_POWER_WS_PORT). Command requests from headsets
-  # go to the MCS, not here (network.vr_request_* in the MCS settings).
+  # go to the MCS (vr_request_*): the flight director sends or declines them.
   vr_power_tcp_port: 8102
   vr_power_ws_port: 8103
+  vr_request_tcp_port: 8104
+  vr_request_ws_port: 8105
   vr_max_rate_hz: 10.0

@@ -507,6 +507,7 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
     <button role="tab" data-bd="conlog" aria-selected="false" data-i18n>Log</button>
     <button role="tab" data-bd="handover" aria-selected="false" data-i18n>Handover</button>
     <button role="tab" data-bd="gonogo" aria-selected="false" id="bd-tab-gonogo">GO/NO-GO</button>
+    <button role="tab" data-bd="vr" aria-selected="false" id="bd-tab-vr"><span data-i18n>VR requests</span> <span class="ds-badge hide" id="vr-req-count"></span></button>
     </div>
     <span class="grow" style="flex:1"></span>
     <select id="evt-sev-filter" class="ds-select" data-i18n-aria-label aria-label="Event severity filter">
@@ -545,6 +546,16 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
         <button class="ds-btn" id="handover-add" data-i18n>Add</button>
       </div>
       <div id="handover-list"></div>
+    </div>
+    <!-- VR headset teams propose deployments (antenna, solar wings); only the Flight
+         Director can send one (through normal commanding) or decline it -->
+    <div class="bd-pane hide" id="bdp-vr" role="tabpanel">
+      <div class="row" style="margin:4px 0">
+        <input id="vr-req-note" class="in" style="flex:1;max-width:420px" data-i18n-placeholder data-i18n-aria-label
+          aria-label="Note to the team" placeholder="Note to the team (sent with Decline)">
+        <span class="sub" id="vr-req-who"></span>
+      </div>
+      <div id="vr-req-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-gonogo" role="tabpanel">
       <div class="row" style="margin:4px 0">

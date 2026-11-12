@@ -103,6 +103,8 @@ MCS_ROUTES = [
     # The legacy /dumps page (mounted by the dump store) now redirects to the
     # delayed-TM viewer (screen review §4.2); same URL, own handler.
     "/dumps",
+    # VR command requests (2026-11-12): the headset socket and the FD decision
+    "/vr/requests", "/api/vr-requests", "/api/vr-requests/{pid}/decide",
 ]
 
 PLANNER_ROUTES = [
@@ -136,6 +138,8 @@ INSTRUCTOR_ROUTES = [
     # 2026-11-03 console seats (WP10): one-host laptop forwarder to the MCS
     # (behind the GSG these are answered on the ground, never proxied).
     "/api/seats", "/api/seats/{tail:.*}", "/api/seats/{tail:.*}",
+    # 2026-11-12 the VR streams on the HTTP port, for the space link
+    "/vr", "/vr/power",
 ]
 
 # Shared one-implementation-many-hosts registrars (mounted under /dumps,

@@ -662,6 +662,11 @@ class MCSServer:
             pass
         self._dump_dir = _resolve_dump_dir(_dump_mission_cfg)
         logger.info("Delayed-TM dump store: %s", self._dump_dir)
+        # VR command requests (vr_requests.py): headsets propose deployments, the
+        # Flight Director decides. Cyber-range ports from mission.yaml network.
+        _net = getattr(_dump_mission_cfg, "network", None)
+        self._vr_request_ports = vr_request_ports(_net)
+        self._vr_desk = None
 
         # TM dump playback data (Feature 3). Keys present in
         # _tm_dump_synthetic hold MCS-generated (not spacecraft) data — the
@@ -1757,6 +1762,17 @@ class MCSServer:
         register_seat_routes(app, self._seats,
                              default_lang=getattr(self, "_ui_lang", "en"))
 
+        # VR command requests: the headset WebSocket (the cloud's ops.c2o.live/vr/requests)
+        # and the Flight Director's decisions. The desk's own ports open after start-up.
+        from smo_mcs.vr_requests import VRRequestDesk
+        tcp_p, ws_p = self._vr_request_ports
+        self._vr_desk = VRRequestDesk(host=self.bind_host, tcp_port=tcp_p, ws_port=ws_p,
+                                      on_change=self._broadcast_vr_requests,
+                                      log=lambda text: self._console_log("note", text, position="vr"))
+        app.router.add_get("/vr/requests", self._vr_desk.handle_ws)
+        app.router.add_get("/api/vr-requests", self._handle_vr_requests_get)
+        app.router.add_post("/api/vr-requests/{pid}/decide", self._handle_vr_requests_decide)
+
         static_dir = Path(__file__).parent / "static"
         # Serve the top-level vendor directory directly so that
         # /static/vendor/ requests resolve even when the symlink
@@ -1793,6 +1809,8 @@ class MCSServer:
         await site.start()
         logger.info("MCS server started on %s:%d", self.bind_host,
                     self.http_port)
+        if self._vr_desk is not None and any(x is not None for x in self._vr_request_ports):
+            await self._vr_desk.start()
 
         # Start command queue processor as a background task
         asyncio.create_task(self._command_processor())
@@ -6243,6 +6261,57 @@ class MCSServer:
             }
         return web.json_response(result)
 
+    # ── VR command requests (vr_requests.py) ───────────────────────────────
+
+    async def _broadcast_vr_requests(self, proposals: list) -> None:
+        """Every console gets the list; the Flight Director's acts on it."""
+        msg = json.dumps({"type": "vr_requests", "requests": proposals,
+                          "summary": self._vr_desk.summary() if self._vr_desk else {}})
+        async with self._ws_lock:
+            clients = list(self._ws_clients)
+        for ws, _pos in clients:
+            try:
+                await ws.send_str(msg)
+            except Exception:  # noqa: BLE001 — the TM loop prunes dead sockets
+                pass
+
+    async def _handle_vr_requests_get(self, request):
+        """GET /api/vr-requests — proposals (pending first) and the headset count."""
+        if self._vr_desk is None:
+            return web.json_response({"requests": [], "summary": {}})
+        return web.json_response({"requests": self._vr_desk.proposals(),
+                                  "summary": self._vr_desk.summary()})
+
+    async def _handle_vr_requests_decide(self, request):
+        """POST /api/vr-requests/{pid}/decide {decision: sent|declined, note?, tc_seq?, position}.
+
+        Flight Director only. ``sent`` is recorded AFTER the console has sent the command
+        through /api/pus-command (normal authority, arm-through and verification); this
+        route never commands the spacecraft itself."""
+        try:
+            body = await request.json()
+        except Exception:  # noqa: BLE001
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        from smo_mcs.seats_http import SeatHttpError
+        try:
+            position = (await self._actor(request, body.get("position") or "")).position
+        except SeatHttpError as e:
+            return e.response()
+        if position != "flight_director":
+            return web.json_response({"error": "Only the Flight Director decides VR requests"},
+                                     status=403)
+        if self._vr_desk is None:
+            return web.json_response({"error": "VR requests are not running"}, status=503)
+        try:
+            p = await self._vr_desk.decide(request.match_info["pid"], body.get("decision", ""),
+                                           position=position, note=body.get("note", ""),
+                                           tc_seq=body.get("tc_seq"))
+        except KeyError:
+            return web.json_response({"error": "no such request"}, status=404)
+        except ValueError as e:
+            return web.json_response({"error": str(e)}, status=409)
+        return web.json_response(p)
+
     async def _handle_go_nogo_poll(self, request):
         """Initiate a GO/NO-GO poll (Flight Director only)."""
         try:
@@ -6557,6 +6626,23 @@ class MCSServer:
             "alarms": rows,
             "count": len(rows),
         })
+
+
+def vr_request_ports(network, env: dict | None = None) -> tuple:
+    """(tcp, ws) cyber-range ports of the VR request desk: env > mission.yaml > 8104/8105.
+    SMO_VR=0 (or network.vr_enabled: false) closes them; /vr/requests on the HTTP port stays."""
+    env = os.environ if env is None else env
+    if (str(env.get("SMO_VR", "")).strip().lower() in ("0", "false", "no", "off")
+            or not bool(getattr(network, "vr_enabled", True))):
+        return (None, None)
+
+    def pick(key, attr, default):
+        v = env.get(key)
+        if v not in (None, ""):
+            return None if str(v).lower() in ("off", "none", "-1") else int(v)
+        return int(getattr(network, attr, default) or default)
+    return (pick("SMO_VR_REQUEST_PORT", "vr_request_tcp_port", 8104),
+            pick("SMO_VR_REQUEST_WS_PORT", "vr_request_ws_port", 8105))
 
 
 def main():
