@@ -402,6 +402,21 @@ tool_iap() {
 }
 tools_each tool_iap
 
+# Every screen shares one address and one certificate, so a browser reuses one
+# connection for c2o.live, ops.c2o.live, ... (HTTP/2 connection pooling). IAP
+# refuses a pooled request for a host it was not told about with "error code
+# 51" (HTTP 429): list the course's own hosts as allowed domains.
+iap_domains="$(mktemp)"
+cat >"$iap_domains" <<EOF
+accessSettings:
+  allowedDomainsSettings:
+    enable: true
+    domains: ["$DOMAIN", "*.$DOMAIN"]
+EOF
+gcloud iap settings set "$iap_domains" --project="$PROJECT" --resource-type=iap_web >/dev/null
+rm -f "$iap_domains"
+info "IAP allowed domains: $DOMAIN, *.$DOMAIN"
+
 # Console seats (WP10): the MCS verifies IAP's signed header
 # (X-Goog-IAP-JWT-Assertion); its audience names the backend service the
 # request came through: ops (the MCS itself), sim (the instructor console's
