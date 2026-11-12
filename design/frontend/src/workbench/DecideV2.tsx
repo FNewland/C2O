@@ -333,6 +333,7 @@ interface Approval { id: string; seat: string; decision: string; note: string; b
 type ImpactLine = { before?: number | null; after?: number | null; delta?: number | null; unit?: string; owner_seat?: string }
 
 /** Readable names of the impact-preview keys (services/impact_preview.py); others are spelled out. */
+// English text is the i18n key
 const IMPACT_LABELS: Record<string, string> = {
   'contacts.union_min_per_day': 'Contact, union of the passes',
   'contacts.longest_gap_h': 'Longest gap between contacts',

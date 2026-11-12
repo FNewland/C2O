@@ -50,7 +50,7 @@ jobs:
   design-fast:
     name: design · pytest
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30               # the NFI walkthrough and wave-3 integration tests take ~14 min on 4 workers
     defaults:
       run:
         working-directory: design
