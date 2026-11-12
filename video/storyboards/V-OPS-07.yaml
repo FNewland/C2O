@@ -4,7 +4,7 @@
 # fly-through's tip-off rates are small: the narration says real ones are
 # usually larger. Prepares WB-5.5-L005 steps 1, 3 and 4.
 id: V-OPS-07
-week: 5
+week: 11
 audience: all
 title:
   en: "LEOP-005: monitoring the autonomous Sun acquisition"

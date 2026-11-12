@@ -3,7 +3,7 @@
 # T-A01 read in four beats, decided A conditionally, ECP-01 rejected through change control.
 # Recording seed S4 with everything up to scene 6.8 done. Proposed id (not in the plan).
 id: V-SCDF-24
-week: 4
+week: 9
 audience: all
 title:
   en: "When you disagree with the score, check the logic"

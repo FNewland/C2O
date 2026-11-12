@@ -11,6 +11,7 @@
          [--url app=http://…]  where the tools run (default: see capture.DEFAULT_URLS)
          [--publish]           and copy into the welcome page's video folder
     publish ID [--dir DIR]     copy a built video into SMO_VIDEO_DIR
+    catalog [--dir DIR]        re-sort the published videos into the term order (course_order.yaml)
     check ID [--lang ..]       speech-recognition check of the narration (optional)
     reviews                    print reviewers' notes saved on the welcome page
     stack setup sim|spacecdf   create sim/.venv or design/.venv (once, needs Python 3.11+)
@@ -274,6 +275,7 @@ def main(argv=None) -> int:
     ba.add_argument("--publish", action="store_true")
     ba.add_argument("--keep-frames", action="store_true", help="keep captured frames (needed for --reuse-capture)")
     p = sub.add_parser("publish"); p.add_argument("id"); p.add_argument("--dir")
+    cg = sub.add_parser("catalog"); cg.add_argument("--dir")
     c = sub.add_parser("check"); c.add_argument("id"); c.add_argument("--lang"); c.add_argument("--model", default="small")
     sub.add_parser("reviews")
     r = sub.add_parser("repack", help="rewrite built .h5p packages with the current library set")
@@ -300,7 +302,15 @@ def main(argv=None) -> int:
             for w in acronyms.lint(sb):
                 print("   ! acronym:", w)
             bad += len(probs)
+        if not a.ids:
+            from . import order
+            for pr in order.problems(sbs):
+                print("   ✗ order:", pr)
+                bad += 1
         return 1 if bad else 0
+    elif a.cmd == "catalog":
+        from . import publish
+        print(publish.resort(Path(a.dir) if a.dir else None))
     elif a.cmd == "narrate":
         sb = storyboard.load(a.id)
         for lang in _langs(a.lang):

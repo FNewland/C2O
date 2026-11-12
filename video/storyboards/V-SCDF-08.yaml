@@ -3,7 +3,7 @@
 # architecture, the seats, and the mission definition. Live wizard on an empty server.
 # Lower-third captions: the script's Caption EN / FR, one per scene (window.__lt).
 id: V-SCDF-08
-week: 1
+week: 2
 audience: all
 title:
   en: "Defining the mission from a proposal"

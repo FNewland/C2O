@@ -5,7 +5,7 @@
 # Trade numbers are illustrative: buy-the-data wins 0.79 to 0.52; training
 # would need a 31 % weight (0.4 / 1.3) before the own-CubeSat option wins.
 id: V-DES-03
-week: 1
+week: 2
 audience: all
 title:
   en: "From need to concept of operations"

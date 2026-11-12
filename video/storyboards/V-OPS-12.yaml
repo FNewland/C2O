@@ -6,7 +6,7 @@
 # pass); it was invisible until 2026-11-08, when 0x0217 was packed x1000 and
 # read 0.0 above 65.5 deg.
 id: V-OPS-12
-week: 6
+week: 11
 audience: all
 title:
   en: "Transition from Sun pointing to nadir fine pointing"

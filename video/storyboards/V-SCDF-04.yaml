@@ -3,7 +3,7 @@
 # flow-down, and the traceability view. Prepares LW-2.1/B and LW-2.1/C and
 # the decision records D-2.1-QUALITY and D-2.1-FLOWDOWN. Follows V-DES-04.
 id: V-SCDF-04
-week: 2
+week: 5
 audience: all
 title:
   en: "Requirements in SpaceCDF"

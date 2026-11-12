@@ -4,7 +4,7 @@
 # first command path by hand: blind uplink, bootloader check, application boot.
 # Prepares WB-5.5-L001 q2, q4, q5 and the log line q9.
 id: V-OPS-02
-week: 4
+week: 10
 audience: all
 title:
   en: "LEOP-001: first contact and OBC boot"

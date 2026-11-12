@@ -3,7 +3,7 @@
 # the design loop, electrical and data, the ICD items, FDIR, AOCS modes, flight rules, and the
 # analyses run again. Recording seed S4 with chapters 2–4 done. Proposed id (not in the plan).
 id: V-SCDF-20
-week: 3
+week: 8
 audience: all
 title:
   en: "Integration: interfaces, stack, power lines, FDIR and operations"

@@ -4,7 +4,7 @@
 # `stack up viz`). Team audience: every seat sends commands and reads S1.
 # Avoids the WB-5.4-Q categories (no limits/SID or pass-timing questions).
 id: V-CON-06
-week: 4
+week: 9
 audience: all
 title:
   en: "The life of a telecommand, from acceptance to completion"

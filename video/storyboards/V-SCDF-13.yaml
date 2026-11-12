@@ -3,7 +3,7 @@
 # their real-time and stored intervals, the FULL and LEAN profiles, and the downlink closure.
 # Recording seed S4. Cross-reference: V-CON-05 (packets, services and housekeeping on EOSAT-1).
 id: V-SCDF-13
-week: 2
+week: 7
 audience: all
 title:
   en: "Designing housekeeping telemetry"

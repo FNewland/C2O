@@ -17,7 +17,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import LANGS, h5p, worksheets
+from . import LANGS, h5p, order, worksheets
 from .storyboard import REPO, Storyboard, tr
 
 DEFAULT_DIR = REPO / "sim" / "workspace" / "videos"
@@ -66,8 +66,20 @@ def publish(sb: Storyboard, media: Path, dest: Path | None = None) -> Path:
     cat_f = dest / "catalog.json"
     cat = json.loads(cat_f.read_text(encoding="utf-8")) if cat_f.exists() else {"videos": []}
     cat["videos"] = [v for v in cat["videos"] if v["id"] != sb.id] + [entry(sb, media)]
-    cat["videos"].sort(key=lambda v: (v.get("week") or 99, v["id"]))
+    order.sort_catalog(cat)
+    write_catalog(cat_f, cat)
+    return target
+
+
+def write_catalog(cat_f: Path, cat: dict) -> None:
     tmp = cat_f.with_suffix(".tmp")
     tmp.write_text(json.dumps(cat, indent=1, ensure_ascii=False), encoding="utf-8")
     tmp.replace(cat_f)
-    return target
+
+
+def resort(dest: Path | None = None) -> Path:
+    """Re-apply the term order to the published catalogue (no media is touched)."""
+    cat_f = (dest or video_dir()) / "catalog.json"
+    cat = json.loads(cat_f.read_text(encoding="utf-8"))
+    write_catalog(cat_f, order.sort_catalog(cat))
+    return cat_f

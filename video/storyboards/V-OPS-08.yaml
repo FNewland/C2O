@@ -2,7 +2,7 @@
 # from the ground and check the result. From card-LEOP-006. Nominal card.
 # Prepares WB-5.5-L006 steps 2–5.
 id: V-OPS-08
-week: 5
+week: 11
 audience: all
 title:
   en: "LEOP-006: set the on-board clock"

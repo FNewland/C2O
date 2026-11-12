@@ -2,7 +2,7 @@
 # From card-LEOP-007 (the card's real entry state) in a pass. Nominal card.
 # Prepares WB-5.5-L007 (steps 3, 4, 5).
 id: V-OPS-06
-week: 5
+week: 11
 audience: all
 title:
   en: "LEOP-007: AOCS power-on and DETUMBLE"

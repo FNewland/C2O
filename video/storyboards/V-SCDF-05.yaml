@@ -3,7 +3,7 @@
 # requirements), the N² chart in Diagrams (diagram and table), and the ICD.
 # Prepares LW-2.4/C and the decision record D-2.4-INTERFACES. Follows V-DES-06.
 id: V-SCDF-05
-week: 3
+week: 8
 audience: all
 title:
   en: "Interfaces and the N² chart in SpaceCDF"

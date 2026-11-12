@@ -4,7 +4,7 @@
 # in Analyses (top risks, critical count, redundancy recommendations).
 # Prepares LW-4.3/A, LW-4.3/D and the decision record D-4.3-RISKS. Follows V-DES-11.
 id: V-SCDF-06
-week: 4
+week: 2
 audience: all
 title:
   en: "Risk register and FMECA in SpaceCDF"

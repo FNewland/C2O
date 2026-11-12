@@ -2,7 +2,7 @@
 # (DESIGN_SCRIPT_V2 scenes 4.1–4.8, with 4.4 the link cases in V-SCDF-19). Recording seed S4
 # (the equipment of equipment.yaml is seeded; each seat shows its selection and the catalogue).
 id: V-SCDF-09
-week: 2
+week: 7
 audience: all
 title:
   en: "Choosing equipment from the catalogue"

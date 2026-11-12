@@ -3,7 +3,7 @@
 # and decision records a gate expects, closing a gap (a risk mitigation), and the
 # go / no-go record. Prepares every gate week (MDR, PRR+SRR, PDR). Follows V-DES-13.
 id: V-SCDF-07
-week: 4
+week: 2
 audience: all
 title:
   en: "Review gates in SpaceCDF"

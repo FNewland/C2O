@@ -2,7 +2,7 @@
 # and after on the EPS power flow. Starts from card-LEOP-004 (the card's real
 # entry state) in a pass. Nominal card: nothing here is a scored-run recovery.
 id: V-OPS-05
-week: 5
+week: 11
 audience: all
 title:
   en: "LEOP-004: solar array deployment and the energy balance"

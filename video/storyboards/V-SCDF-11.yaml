@@ -3,7 +3,7 @@
 # negotiation (GS4) is opened and signed on camera. Recording seed S4, with the RF chain of
 # GS Inuvik in place except its time reference, which is added on camera.
 id: V-SCDF-11
-week: 2
+week: 3
 audience: all
 title:
   en: "Ground stations and contact time"

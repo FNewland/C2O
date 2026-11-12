@@ -5,7 +5,7 @@
 # Team audience, deeper for fdir_systems. Uses the momentum-management chain
 # (a nominal function) on purpose: no scored fault scenario's recovery is shown.
 id: V-CON-04
-week: 7
+week: 10
 audience: all
 title:
   en: "On-board fault detection, isolation and recovery"

@@ -5,7 +5,7 @@
 # transmitting when the S-band is silent, carries ttc.pa_on = 0, and the card's
 # Step 2 note sends the operator straight to Step 4 (rulings 2026-11-07).
 id: V-OPS-11
-week: 5
+week: 12
 audience: all
 title:
   en: "No telemetry at acquisition of signal: tracing the fault"

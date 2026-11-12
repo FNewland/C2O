@@ -67,7 +67,7 @@ def visible(cat: dict, instructor: bool) -> list[dict]:
 PAGE_CSS = """
 .vl-main{max-width:1180px;margin:0 auto;padding:24px 20px 64px}
 .vl-intro{color:var(--ink-2);max-width:72ch;margin:4px 0 22px}
-.vl-week{margin:26px 0 8px;font-size:var(--fs-sm,13px);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.vl-week{margin:28px 0 10px;font-size:var(--fs-md,15px);font-weight:600;color:var(--ink-2)}
 .vl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
 .vl-card{background:var(--surface-1);border:1px solid var(--line-1);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .vl-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface-2)}
@@ -142,9 +142,6 @@ function card(v) {
   const ties = (v.ties || []).map((t) => `<span class="ds-chip" title="${esc(tr(t.label))}">${esc(t.id)}</span>`).join("");
   let acts = `<a class="ds-btn is-primary" href="/videos/${v.slug}?lang=${L}">${esc(T("Watch"))}</a>`
     + `<a class="ds-btn" href="${base}${esc(d.transcript)}" download>${esc(T("Transcript"))}</a>`;
-  if (B.instructor) {
-    for (const l of ["en", "fr"]) if ((v.langs || {})[l]) acts += `<a class="ds-btn" href="${base}${esc(v.langs[l].h5p)}" download>${esc(T("H5P for Brightspace ({{lang}})", { lang: l.toUpperCase() }))}</a>`;
-  }
   if (B.reviewer) acts += `<a class="ds-btn" href="/videos/${v.slug}/review?lang=${L}">${esc(T("Review narration"))}</a>`;
   const q = d.questions ? T("{{n}} questions", { n: d.questions }) : "";
   return `<article class="vl-card"><img src="${base}${esc(d.poster)}" alt="" loading="lazy">
@@ -157,10 +154,15 @@ function paint() {
   const box = document.getElementById("vl-list");
   const vids = B.videos || [];
   if (!vids.length) { box.innerHTML = `<p class="vl-empty">${esc(T("No videos have been published yet."))}</p>`; return; }
+  // term order: by week, then the position course_order.yaml gives each video
+  const ordered = [...vids].sort((a, b) => ((a.week || 99) - (b.week || 99)) || ((a.order ?? 1e4) - (b.order ?? 1e4)) || String(a.id).localeCompare(String(b.id)));
+  const titles = new Map((B.weeks || []).map((w) => [w.week, w.title]));
   const weeks = new Map();
-  for (const v of vids) { const k = v.week || 0; if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(v); }
-  box.innerHTML = [...weeks.entries()].sort((a, b) => a[0] - b[0]).map(([w, vs]) =>
-    `<h2 class="vl-week">${esc(w ? T("Week {{n}}", { n: w }) : T("Any week"))}</h2><div class="vl-grid">${vs.map(card).join("")}</div>`).join("");
+  for (const v of ordered) { const k = v.week || 0; if (!weeks.has(k)) weeks.set(k, []); weeks.get(k).push(v); }
+  box.innerHTML = [...weeks.entries()].sort((a, b) => (a[0] || 99) - (b[0] || 99)).map(([w, vs]) => {
+    const head = w ? T("Week {{n}}", { n: w }) + (titles.get(w) ? " · " + tr(titles.get(w)) : "") : T("Any week");
+    return `<h2 class="vl-week">${esc(head)}</h2><div class="vl-grid">${vs.map(card).join("")}</div>`;
+  }).join("");
 }
 paint();
 I18n.onLangChange(paint);
@@ -315,7 +317,7 @@ def library_page(*, lang: str, instructor: bool, reviewer: bool) -> str:
             '<h1 data-i18n>Course videos</h1>'
             '<p class="vl-intro" data-i18n>Short walkthroughs of the tools. Questions pause the video; your answers go into your logbook, against the worksheet they belong to.</p>'
             '<div id="vl-list"></div></main>')
-    boot = {"videos": visible(cat, instructor), "instructor": instructor, "reviewer": reviewer}
+    boot = {"videos": visible(cat, instructor), "weeks": cat.get("weeks") or [], "instructor": instructor, "reviewer": reviewer}
     return _shell('<span data-i18n>Course videos</span>', body, boot, LIBRARY_JS, lang=lang)
 
 
