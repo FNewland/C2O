@@ -155,7 +155,7 @@ documents:
     audience: student
     category: guide
     source: design/docs/pdf/ORBIT_NORTH_Syllabus_12wk_EN.pdf
-    size: 77424
+    size: 79334
     pair: on-syllabus-12wk-fr
   - id: on-syllabus-12wk-fr
     title: {en: "ORBIT NORTH syllabus (12-week term)", fr: "Plan de cours ORBIT NORTH (session de 12 semaines)"}
@@ -163,7 +163,7 @@ documents:
     audience: student
     category: guide
     source: design/docs/pdf/ORBIT_NORTH_Syllabus_12wk_FR.pdf
-    size: 86823
+    size: 87953
     pair: on-syllabus-12wk-en
   - id: on-w3-training-day1-en
     title: {en: "Week 3 training day 1: operations concept", fr: "Semaine 3, journée de formation 1 : concept d’opérations"}

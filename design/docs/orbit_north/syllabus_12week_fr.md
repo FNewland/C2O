@@ -26,14 +26,17 @@ séances :
 | Séance | Durée | Contenu | Lieu |
 |--------|-------|---------|------|
 | A — Cours et séminaire | 1,5 h | Court exposé sur le thème de la semaine, discussion, conférenciers invités | Salle de classe, à confirmer |
-| B — Atelier | 3 h | Travail d'équipe dans le Centre de conception concourante (semaines 1 à 9) ou la salle de contrôle de mission (semaines 10 à 12) | Laboratoire SpaceCDF · Cyberrange uOttawa |
+| B — Atelier | 3 h | Travail d'équipe dans le Centre de conception concourante (semaines 1 à 7) ou la salle de contrôle de mission (semaines 8 à 12) | Laboratoire SpaceCDF · Cyberrange uOttawa |
 
-Les deux **semaines de simulation (semaines 11 et 12)** remplacent l'atelier
-par un **bloc prolongé de 6 heures** au Cyberrange, car un quart
-d'exploitation simulé ne peut pas être fractionné. Une séance finale de
-3 heures, consacrée au débriefing et à la revue finale de mission, a lieu
-pendant la dernière semaine de cours ou au début de la période d'examens.
-Une **semaine de lecture** suit la semaine 6.
+La session compte quatre blocs : **introduction** (semaine 1 et première
+moitié de la semaine 2), **conception concourante** (de l'atelier de la
+semaine 2 à la PDR à la fin de la semaine 7), **exploitation** (deux
+semaines de formation, semaines 8 et 9, puis deux semaines de simulation,
+semaines 10 et 11) et une **revue** de toute la mission en semaine 12. Les
+deux **semaines de simulation (semaines 10 et 11)** remplacent l'atelier par
+un **bloc prolongé de 6 heures** au Cyberrange, car un quart d'exploitation
+simulé ne peut pas être fractionné. Une **semaine de lecture** suit la
+semaine 6.
 
 **Mode.** En présentiel. Les volets CDF et simulation exigent une présence
 physique ; les enregistrements des courts exposés, les vidéos du cours et le
@@ -76,26 +79,29 @@ personnes sans formation préalable en spatial.
 
 ## Description complémentaire du cours
 
-La session suit le même arc en trois parties que l'intensif d'été.
+La session suit le même arc que l'intensif d'été, en quatre blocs.
 
-**Partie 1 — Contexte et concept (semaines 1 à 4).** L'écosystème spatial
-canadien, la méthode de conception concourante et la plateforme SpaceCDF ;
-d'un besoin de mission au concept v0 et à un premier concept d'opérations,
-présentés à une revue de concept de mission (MCR) informelle à la fin de
-la semaine 2. La semaine 3 clôt les actions de la MCR et fige le concept ;
-la semaine 4 approfondit le paysage réglementaire canadien — la Loi sur
-les systèmes de télédétection spatiale, les licences de spectre d'ISDE, le
-contrôle des exportations, la réduction des débris et l'immatriculation —
-et produit la note réglementaire de l'équipe.
+**Partie 1 — Introduction (semaine 1 et première moitié de la semaine 2).**
+L'écosystème spatial canadien, le processus d'ingénierie système, la
+méthode de conception concourante et la plateforme SpaceCDF ; d'un besoin
+de mission à l'énoncé du problème, aux parties prenantes et aux mesures
+d'efficacité.
 
-**Partie 2 — Conception concourante (semaines 5 à 9).** Une semaine de CDF
-par étape de conception : le cycle en V et le référentiel d'exigences
-(semaine 5 ; la PRR et la SRR y sont explicitement regroupées) ; orbite,
-énergie, SCAO et thermique (semaine 6) ; télécommunications, structure et
-propulsion avec deux études de compromis formelles (semaine 7) ; puis
-intégration, V et V, coûts et clôture des risques (semaine 8). La
-semaine 9 est la revue de type PDR (revue de conception préliminaire). Le
-rythme hebdomadaire laisse à chaque responsable de discipline, entre les
+**Partie 2 — Conception concourante (de l'atelier de la semaine 2 à la
+semaine 7).** L'atelier de la semaine 2 ouvre le CDF : les options de
+mission, le concept v0 et un premier concept d'opérations, présentés à une
+revue de concept de mission (MCR) informelle à la fin de la semaine 2. La
+semaine 3 clôt les actions de la MCR, fige le concept et traite du paysage
+réglementaire canadien — la Loi sur les systèmes de télédétection spatiale,
+les licences de spectre d'ISDE, le contrôle des exportations, la réduction
+des débris et l'immatriculation — pour la note réglementaire de l'équipe.
+Puis une semaine de CDF par étape de conception : le cycle en V et le
+référentiel d'exigences (semaine 4 ; la PRR et la SRR y sont explicitement
+regroupées) ; orbite, énergie, SCAO et thermique (semaine 5) ;
+télécommunications, structure et propulsion avec deux études de compromis
+formelles (semaine 6) ; puis intégration, V et V, coûts et clôture des
+risques, jusqu'à la revue de type PDR (revue de conception préliminaire), en
+semaine 7. Le rythme hebdomadaire laisse à chaque responsable de discipline, entre les
 ateliers, le temps de faire les analyses que l'intensif comprime en soirée.
 
 Les cadres d'ingénierie système eux-mêmes — cycle en V, ingénierie des
@@ -106,14 +112,20 @@ d'ingénierie système, le registre des risques, le référentiel de
 planification et un module de vérification réglementaire sous forme
 d'outils en direct.
 
-**Partie 3 — Exploitation (semaines 9 à 12).** Le segment sol et le système
-de contrôle de mission (semaine 9), la formation à l'exploitation et les
-répétitions au Cyberrange de l'uOttawa (semaine 10), puis deux semaines de
-simulation aux commandes d'EOSAT-1 : LEOP et mise en service (semaine 11),
-puis exploitation nominale et contingence (semaine 12). À chaque
-simulation, une équipe exploite pendant qu'une autre observe et documente ;
-les équipes échangent ensuite les rôles. Le cours se termine par un
-débriefing structuré et une revue finale de mission au sein de la cohorte.
+**Partie 3 — Exploitation (semaines 8 à 11).** Deux semaines de formation à
+l'exploitation au Cyberrange de l'uOttawa : le segment sol, le système de
+contrôle de mission et le planificateur de mission (semaine 8), puis la
+salle de contrôle, la boucle vocale et les répétitions de chaque type de
+passage (semaine 9). Puis deux semaines de simulation aux commandes
+d'EOSAT-1 : LEOP et mise en service (semaine 10), puis exploitation nominale
+et contingence (semaine 11). À chaque simulation, une équipe exploite
+pendant qu'une autre observe et documente ; les équipes échangent ensuite
+les rôles.
+
+**Partie 4 — Revue (semaine 12).** Une revue de toute la mission, du besoin
+au dernier passage : ce que la conception a décidé, ce que l'exploitation a
+montré de ces décisions, le débriefing structuré et une revue finale de
+mission au sein de la cohorte.
 
 Aucun manuel n'est à acheter. Toutes les lectures, tous les outils et tous
 les accès logiciels — y compris SpaceCDF et le manuel libre *Concurrent
@@ -252,7 +264,7 @@ première fois.
   dans la documentation ouverte de la NASA et des ECSS et dans le manuel
   libre, servant à préparer l'atelier de la semaine. De courtes vidéos avec
   questions d'entraînement accompagnent chaque thème.
-- Un fil de neuf semaines en Centre de conception concourante, où chaque
+- Un fil de six semaines (semaines 2 à 7) en Centre de conception concourante, où chaque
   étudiante et étudiant assume un rôle disciplinaire et l'équipe converge
   vers une conception préliminaire complète, soutenue par les modules
   intégrés du processus d'ingénierie système, des risques, de la
@@ -275,7 +287,7 @@ réutilisent l'abréviation « MCR » pour la *Mission Close-out Review*
 en fin de phase E ; nous n'utilisons pas ce sens ici. Les revues
 intermédiaires de la phase A (Preliminary Requirements Review, System
 Requirements Review) sont explicitement **intégrées à la première
-semaine de CDF (semaine 5)** dans ce cours ; leur contenu est livré par le module
+semaine de CDF (semaine 4)** dans ce cours ; leur contenu est livré par le module
 des exigences de SpaceCDF.
 
 ## Documentation requise
@@ -310,13 +322,13 @@ publiés dans Brightspace au début du cours.
 |------------|------|---------:|---------:|------------|
 | Quiz de préparation pré-cours | Individuel | 5 % | 3 % | Semaine 1 |
 | Examen du concept de mission (MCR, informel) | Équipe + individuel | 15 % | 15 % | Semaine 2 |
-| Cahiers d'exercices CDF et participation | Individuel | 10 % | 5 % | Semaines 5 – 8 |
-| Revue de conception préliminaire (revue de type PDR) | Équipe + individuel | 20 % | 22 % | Semaine 9 |
-| Quiz de formation aux opérations | Individuel | 5 % | 2 % | Semaine 10 |
-| Performance en simulation — quart d'opérateur | Équipe | 15 % | 18 % | Semaines 11 – 12 |
-| Rapport de critique d'observateur | Équipe + individuel | 10 % | 10 % | Semaines 11 – 12 |
-| Revue finale de mission | Équipe | 10 % | 5 % | Séance finale |
-| Portfolio réflexif individuel (1<sup>er</sup> cycle : réflexion structurée ; cycles supérieurs : analyse critique appuyée sur la littérature, 2 500 – 3 000 mots) | Individuel | 10 % | 20 % | 1 semaine après la séance finale |
+| Cahiers d'exercices CDF et participation | Individuel | 10 % | 5 % | Semaines 3 – 7 |
+| Revue de conception préliminaire (revue de type PDR) | Équipe + individuel | 20 % | 22 % | Semaine 7 |
+| Quiz de formation aux opérations | Individuel | 5 % | 2 % | Semaine 9 |
+| Performance en simulation — quart d'opérateur | Équipe | 15 % | 18 % | Semaines 10 – 11 |
+| Rapport de critique d'observateur | Équipe + individuel | 10 % | 10 % | Semaines 10 – 11 (rapport dû en semaine 12) |
+| Revue finale de mission | Équipe | 10 % | 5 % | Semaine 12 |
+| Portfolio réflexif individuel (1<sup>er</sup> cycle : réflexion structurée ; cycles supérieurs : analyse critique appuyée sur la littérature, 2 500 – 3 000 mots) | Individuel | 10 % | 20 % | 1 semaine après la semaine 12 |
 | **Total** |  | **100 %** | **100 %** | |
 
 ### Ce qu’évaluent les grandes évaluations
@@ -347,8 +359,8 @@ intensif ou sur une session. Prévoyez :
 - Environ 5 à 6 heures de préparation et de travail d'équipe hors classe
   par semaine : lectures et vidéos avant le cours, analyses disciplinaires
   entre les ateliers CDF, étude des procédures avant les simulations.
-- Des semaines plus chargées avant les deux revues (semaines 2 et 9) et
-  avant chaque simulation (semaines 11 et 12). Planifiez-les.
+- Des semaines plus chargées avant les deux revues (semaines 2 et 7) et
+  avant chaque simulation (semaines 10 et 11). Planifiez-les.
 
 Le travail d'équipe entre les ateliers compte : pendant les semaines de
 CDF, les chiffres de votre discipline alimentent ceux de tous les autres.
@@ -408,34 +420,38 @@ Les semaines sont indicatives. Les dates, les salles et tout ajustement
 seront confirmés dans Brightspace. Les numéros de cours (L01 à L14)
 renvoient aux jeux de diapositives du cours.
 
-### Partie 1 — Contexte et concept
+### Partie 1 — Introduction (semaines 1 et 2)
 
 | Semaine | Cours et séminaire (1,5 h) | Atelier (3 h) | Livrables |
 |---------|----------------------------|---------------|-----------|
 | 1 | **L01 Le Canada dans l'espace et accueil du cours.** Activités spatiales canadiennes d'hier, d'aujourd'hui et de demain ; arc du cours ; équipes, rôles et outils. | **L02 La méthode de conception concourante.** Survol réglementaire ; comptes et visite de SpaceCDF ; les équipes ouvrent un dossier de mission et rédigent un énoncé du problème. | Quiz de préparation ; équipe formée ; domaine de mission choisi |
-| 2 | **L03 Du besoin au concept.** Énoncés de problème, parties prenantes, MoE / MoP / TPM, études de compromis, ConOps. | Étude des options de mission ; ConOps v0 ; premiers bilans paramétriques ; ouverture du registre des risques. **MCR informelle** pendant la dernière heure. | Concept v0 ; ConOps v0 ; **MCR informelle** |
-| 3 | **L04 Clore la MCR et figer le concept.** Actions de revue, concept figé, exigences de haut niveau, enveloppe programmatique. | Clôture des actions de la MCR ; concept v1 ; exigences de haut niveau ; registre des risques v0. | **Concept v1 figé** |
-| 4 | **L05 Le paysage réglementaire canadien.** LSTS ; CPC-2-6-02 d'ISDE et coordination à l'UIT ; Liste des marchandises d'exportation contrôlée, marchandises contrôlées, ITAR / EAR ; réduction des débris (IADC 25 ans, FCC 5 ans) ; Convention sur l'immatriculation. | Note réglementaire ; ébauche de demande à ISDE ; risques réglementaires inscrits au registre. | Note réglementaire (équipe, 2 p.) ; ébauche de demande à ISDE |
+| 2 | **L03 Du besoin au concept.** Énoncés de problème, parties prenantes, MoE / MoP / TPM, études de compromis, ConOps. | **Le CDF s'ouvre.** Étude des options de mission dans SpaceCDF ; ConOps v0 ; premiers bilans paramétriques ; ouverture du registre des risques. **MCR informelle** pendant la dernière heure. | Concept v0 ; ConOps v0 ; **MCR informelle** |
 
-### Partie 2 — Conception concourante
+### Partie 2 — Conception concourante (semaines 2 à 7)
 
 | Semaine | Cours et séminaire (1,5 h) | Atelier (3 h) | Livrables |
 |---------|----------------------------|---------------|-----------|
-| 5 | **L06 Le cycle en V, les exigences et les premiers bilans.** Adaptation ; carte des jalons ; exigences SMART ; décomposition fonctionnelle ; marges de masse et d'énergie. | **CDF 1.** Référentiel d'exigences ; arbre fonctionnel ; premiers bilans de masse, d'énergie, de données et de liaison. | Cahier CDF 1 ; référentiel d'exigences |
-| 6 | **L07 Orbite, énergie, attitude et thermique.** Compromis d'orbite ; dimensionnement des panneaux et de la batterie ; architecture SCAO ; équilibre thermique. | **CDF 2.** Choix d'orbite ; décisions d'énergie, de SCAO et de thermique consignées. | Cahier CDF 2 ; décisions de sous-systèmes consignées |
+| 3 | **L04 Clore la MCR et figer le concept.** **L05 Le paysage réglementaire canadien.** Actions de revue, concept figé, exigences de haut niveau, enveloppe programmatique ; LSTS ; CPC-2-6-02 d'ISDE et coordination à l'UIT ; Liste des marchandises d'exportation contrôlée, marchandises contrôlées, ITAR / EAR ; réduction des débris (IADC 25 ans, FCC 5 ans) ; Convention sur l'immatriculation. | Clôture des actions de la MCR ; concept v1 ; exigences de haut niveau ; note réglementaire et ébauche de demande à ISDE ; risques réglementaires inscrits au registre. | **Concept v1 figé** ; note réglementaire (équipe, 2 p.) et ébauche de demande à ISDE dues à la fin de la semaine 4 |
+| 4 | **L06 Le cycle en V, les exigences et les premiers bilans.** Adaptation ; carte des jalons ; exigences SMART ; décomposition fonctionnelle ; marges de masse et d'énergie. | **CDF 1.** Référentiel d'exigences ; arbre fonctionnel ; premiers bilans de masse, d'énergie, de données et de liaison. | Cahier CDF 1 ; référentiel d'exigences |
+| 5 | **L07 Orbite, énergie, attitude et thermique.** Compromis d'orbite ; dimensionnement des panneaux et de la batterie ; architecture SCAO ; équilibre thermique. | **CDF 2.** Choix d'orbite ; décisions d'énergie, de SCAO et de thermique consignées. | Cahier CDF 2 ; décisions de sous-systèmes consignées |
+| 6 | **L08 Télécommunications, structure, propulsion et compromis formels.** Bilan de liaison ; bande et licences ; marges structurales ; gestion de bord ; propulsion. | **CDF 3.** Bilan de liaison et plan des stations sol ; vérification réglementaire de la bande ; compromis de bande et de propulsion ; sélection d'équipement. | Cahier CDF 3 ; liste d'équipement ; deux rapports de compromis |
 | — | *Semaine de lecture* | | |
-| 7 | **L08 Télécommunications, structure, propulsion et compromis formels.** Bilan de liaison ; bande et licences ; marges structurales ; gestion de bord ; propulsion. | **CDF 3.** Bilan de liaison et plan des stations sol ; vérification réglementaire de la bande ; compromis de bande et de propulsion ; sélection d'équipement. | Cahier CDF 3 ; liste d'équipement ; deux rapports de compromis |
-| 8 | **L09 Intégration, vérification, coûts et risques.** Interfaces N² ; matrice V et V ; essais d'environnement ; estimation des coûts ; AMDEC et fiabilité. | **CDF 4.** Fermeture des interfaces ; matrice V et V ; plan d'essais ; coûts et nomenclature ; clôture des risques ; optimiseur SpaceCDF ; export des documents ECSS. | Cahier CDF 4 ; matrices d'interfaces et de V et V ; coûts ; jeu de documents ECSS |
-| 9 | **L10 De la conception à l'exploitation.** EOSAT-1 ; phases de mission ; passages ; paquets et services PUS ; la vie d'une télécommande ; le planificateur de mission. | **Revue de type PDR (revue de conception préliminaire)**, avec questions du comité et consignation des actions. | **PDR présentée** |
+| 7 | **L09 Intégration, vérification, coûts et risques.** Interfaces N² ; matrice V et V ; essais d'environnement ; estimation des coûts ; AMDEC et fiabilité. | **CDF 4 et la PDR.** Fermeture des interfaces ; matrice V et V ; plan d'essais ; coûts et nomenclature ; clôture des risques ; export des documents ECSS ; puis la **revue de type PDR (revue de conception préliminaire)**, avec questions du comité et consignation des actions. | Cahier CDF 4 ; jeu de documents ECSS ; **PDR présentée** |
 
-### Partie 3 — Exploitation · Cyberrange uOttawa
+### Partie 3 — Exploitation · Cyberrange uOttawa (semaines 8 à 11)
 
 | Semaine | Cours et séminaire (1,5 h) | Atelier | Livrables |
 |---------|----------------------------|---------|-----------|
-| 10 | **L11 La salle de contrôle.** Postes, boucle vocale, réponse aux anomalies, gravité FDIR et escalade, passation de quart. | **Formation à l'exploitation (3 h).** Prise en main du MCS par poste ; planification de passage ; exercices de boucle vocale ; répétitions de passages LEOP, nominaux et de contingence. | Quiz de formation à l'exploitation |
-| 11 | *Pas de cours séparé : le briefing ouvre le bloc.* | **Simulation 1 — LEOP et mise en service (6 h).** Briefing L12 ; l'équipe A exploite un quart complet, l'équipe B observe et documente ; anomalies injectées en temps réel ; débriefing. | Opérateurs : journal de simulation et fiches d'anomalie · Observateurs : notes de critique |
-| 12 | *Pas de cours séparé : le briefing ouvre le bloc.* | **Simulation 2 — exploitation nominale et contingence (6 h).** Briefing L13 ; les équipes échangent les rôles ; débriefing. | Opérateurs : journal de simulation et fiches d'anomalie · Observateurs : notes de critique |
-| Séance finale | **L14 Débriefing, synthèse et parcours (3 h).** Débriefing mené par les directeurs de vol étudiants ; présentations des observateurs ; synthèse des leçons apprises ; parcours dans le secteur spatial canadien ; évaluation du cours ; **revue finale de mission** (au sein de la cohorte). | | Revue finale de mission ; rapport de critique d'observateur ; **portfolio réflexif individuel dû 1 semaine plus tard** |
+| 8 | **L10 De la conception à l'exploitation.** EOSAT-1 ; phases de mission ; passages ; paquets et services PUS ; la vie d'une télécommande ; le planificateur de mission. | **Formation à l'exploitation 1 (3 h).** Prise en main du MCS par poste ; télémesure, alarmes et procédures ; planification de passage dans le planificateur de mission. | Postes attribués ; premier plan de passage |
+| 9 | **L11 La salle de contrôle.** Postes, boucle vocale, réponse aux anomalies, gravité FDIR et escalade, passation de quart. | **Formation à l'exploitation 2 (3 h).** Exercices de boucle vocale ; répétitions de passages LEOP, nominaux et de contingence. | Quiz de formation à l'exploitation |
+| 10 | *Pas de cours séparé : le briefing ouvre le bloc.* | **Simulation 1 — LEOP et mise en service (6 h).** Briefing L12 ; l'équipe A exploite un quart complet, l'équipe B observe et documente ; anomalies injectées en temps réel ; débriefing. | Opérateurs : journal de simulation et fiches d'anomalie · Observateurs : notes de critique |
+| 11 | *Pas de cours séparé : le briefing ouvre le bloc.* | **Simulation 2 — exploitation nominale et contingence (6 h).** Briefing L13 ; les équipes échangent les rôles ; débriefing. | Opérateurs : journal de simulation et fiches d'anomalie · Observateurs : notes de critique |
+
+### Partie 4 — Revue (semaine 12)
+
+| Semaine | Cours et séminaire (1,5 h) | Atelier (3 h) | Livrables |
+|---------|----------------------------|---------------|-----------|
+| 12 | **L14 Débriefing, synthèse et parcours.** Débriefing mené par les directeurs de vol étudiants ; synthèse des leçons apprises ; parcours dans le secteur spatial canadien ; évaluation du cours. | **Revue de toute la mission.** Du besoin au dernier passage : les décisions de conception face à ce que l'exploitation a montré ; présentations des observateurs ; **revue finale de mission** (au sein de la cohorte). | Revue finale de mission ; rapport de critique d'observateur ; **portfolio réflexif individuel dû 1 semaine plus tard** |
 
 ## Règlement sur le bilinguisme à l'Université d'Ottawa
 

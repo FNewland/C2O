@@ -24,13 +24,16 @@ the University of Ottawa. Each regular week has two sessions:
 | Session | Length | What happens | Location |
 |---------|--------|--------------|----------|
 | A — Lecture and seminar | 1.5 h | Short lecture on the week's topic, discussion, guest speakers | Classroom, TBC |
-| B — Studio | 3 h | Team work in the Concurrent Design Facility (Weeks 1–9) or the mission control room (Weeks 10–12) | SpaceCDF lab · uOttawa Cyberrange |
+| B — Studio | 3 h | Team work in the Concurrent Design Facility (Weeks 1–7) or the mission control room (Weeks 8–12) | SpaceCDF lab · uOttawa Cyberrange |
 
-The two **simulation weeks (Weeks 11 and 12)** replace the studio with one
-**extended 6-hour block** at the Cyberrange, because a simulated operations
-shift cannot be split. A final 3-hour session for the debrief and final
-mission review is held in the last week of classes or early in the
-examination period. A one-week **reading break** falls after Week 6.
+The term has four blocks: **introduction** (Week 1 and the first half of
+Week 2), **concurrent design** (from the Week 2 studio to the PDR at the end
+of Week 7), **operations** (two weeks of training, Weeks 8–9, then two
+simulation weeks, Weeks 10–11) and a **review** of the whole mission in
+Week 12. The two **simulation weeks (Weeks 10 and 11)** replace the studio
+with one **extended 6-hour block** at the Cyberrange, because a simulated
+operations shift cannot be split. A one-week **reading break** falls after
+Week 6.
 
 **Mode.** In person. The CDF and simulation components require physical
 attendance; recordings of the short lectures, the course videos and the
@@ -69,25 +72,27 @@ no prior space background.
 
 ## Additional Course Description
 
-The term follows the same three-part arc as the summer intensive.
+The term follows the same arc as the summer intensive, in four blocks.
 
-**Part 1 — Context and concept (Weeks 1–4).** The Canadian space ecosystem,
-the concurrent design method and the SpaceCDF platform; from a mission need
-to concept v0 and a first concept of operations, presented at an informal
-Mission Concept Review (MCR) at the end of Week 2. Week 3 closes the MCR
-actions and locks the concept; Week 4 covers the Canadian regulatory
-landscape in depth — the Remote Sensing Space Systems Act, spectrum
-licensing through ISED, export controls, debris mitigation and
-registration — and produces the team's regulatory brief.
+**Part 1 — Introduction (Week 1 and the first half of Week 2).** The
+Canadian space ecosystem, the systems-engineering process, the concurrent
+design method and the SpaceCDF platform; from a mission need to a problem
+statement, stakeholders and measures of effectiveness.
 
-**Part 2 — Concurrent design (Weeks 5–9).** One CDF week per design stage:
-System-V and the requirements baseline (Week 5; PRR and SRR are explicitly
-collapsed into this week); orbit, power, AOCS and thermal (Week 6); comms,
-structure and propulsion with two formal trade studies (Week 7); and
-integration, V&V, cost and risk closure (Week 8). Week 9 is the
-PDR-style review (Preliminary Design Review). The weekly rhythm leaves time
-between CDF sessions for each discipline lead to do the analysis that the
-intensive compresses into evenings.
+**Part 2 — Concurrent design (Week 2 studio to Week 7).** The Week 2 studio
+opens the CDF: the mission alternatives, concept v0 and a first concept of
+operations, presented at an informal Mission Concept Review (MCR) at the end
+of Week 2. Week 3 closes the MCR actions, locks the concept and covers the
+Canadian regulatory landscape — the Remote Sensing Space Systems Act,
+spectrum licensing through ISED, export controls, debris mitigation and
+registration — for the team's regulatory brief. Then one CDF week per design
+stage: System-V and the requirements baseline (Week 4; PRR and SRR are
+explicitly collapsed into this week); orbit, power, AOCS and thermal
+(Week 5); comms, structure and propulsion with two formal trade studies
+(Week 6); and integration, V&V, cost and risk closure, ending with the
+PDR-style review (Preliminary Design Review), in Week 7. The weekly rhythm
+leaves time between CDF sessions for each discipline lead to do the analysis
+that the intensive compresses into evenings.
 
 The systems-engineering frameworks themselves — System-V, requirements
 engineering, functional decomposition, margin policy, trade studies,
@@ -96,13 +101,18 @@ SpaceCDF platform embeds the SE process scaffolding, the risk
 register, the planning baseline, and a regulatory-check module as
 live tools.
 
-**Part 3 — Operations (Weeks 9–12).** The ground segment and the mission
-control system (Week 9), operations training and dry runs at the uOttawa
-Cyberrange (Week 10), and two simulation weeks flying EOSAT-1: LEOP and
-commissioning (Week 11), then nominal operations and contingency
-(Week 12). In each simulation one team operates while another observes and
-documents; the teams then swap. The course closes with a structured debrief
-and a cohort-internal final mission review.
+**Part 3 — Operations (Weeks 8–11).** Two weeks of operations training at
+the uOttawa Cyberrange: the ground segment, the mission control system and
+the mission planner (Week 8), then the control room, the voice loop and dry
+runs of every kind of pass (Week 9). Then two simulation weeks flying
+EOSAT-1: LEOP and commissioning (Week 10), then nominal operations and
+contingency (Week 11). In each simulation one team operates while another
+observes and documents; the teams then swap.
+
+**Part 4 — Review (Week 12).** A review of the whole mission, from the need
+to the last pass: what the design decided, what operations showed about
+those decisions, the structured debrief and a cohort-internal final mission
+review.
 
 There are no required textbooks to purchase. All readings, tools, and
 software access — including SpaceCDF and the open textbook *Concurrent
@@ -227,7 +237,7 @@ doing something for the first time.
   NASA / ECSS material and the open textbook, used to set up the week's
   studio. Short course videos with practice questions accompany each
   topic.
-- A nine-week Concurrent Design Facility thread in which each student takes
+- A six-week Concurrent Design Facility thread (Weeks 2–7) in which each student takes
   a discipline role and the team converges on a complete preliminary
   mission design, supported by the SpaceCDF platform's embedded SE
   process, risk, planning, and regulatory-check modules.
@@ -246,7 +256,7 @@ is the end-of-Phase-B gate. ECSS reuses the abbreviation "MCR" for the
 Mission Close-out Review at the end of Phase E; we do not use that
 meaning here. The Phase A intermediate reviews (Preliminary
 Requirements Review, System Requirements Review) are explicitly
-**collapsed into CDF Week 1 (Week 5)** in this course; their content is delivered
+**collapsed into the first CDF design week (Week 4)** in this course; their content is delivered
 inside the SpaceCDF requirements module.
 
 ## Required Materials
@@ -280,13 +290,13 @@ rubrics will be posted in Brightspace at the start of the course.
 |------------|------|---------:|---------:|--------|
 | Pre-course readiness quiz | Individual | 5 % | 3 % | Week 1 |
 | Mission Concept Review (MCR, informal) | Team + Individual | 15 % | 15 % | Week 2 |
-| CDF daily worksheets and participation | Individual | 10 % | 5 % | Weeks 5 – 8 |
-| Preliminary Design Review (PDR-style review) | Team + Individual | 20 % | 22 % | Week 9 |
-| Operations training quiz | Individual | 5 % | 2 % | Week 10 |
-| Simulation performance — operator shift | Team | 15 % | 18 % | Weeks 11 – 12 |
-| Observer critique report | Team + Individual | 10 % | 10 % | Weeks 11 – 12 |
-| Final mission review | Team | 10 % | 5 % | Final session |
-| Individual reflective portfolio (UG: structured reflection; Grad: critical literature-informed analysis, 2500 – 3000 words) | Individual | 10 % | 20 % | 1 week after the final session |
+| CDF daily worksheets and participation | Individual | 10 % | 5 % | Weeks 3 – 7 |
+| Preliminary Design Review (PDR-style review) | Team + Individual | 20 % | 22 % | Week 7 |
+| Operations training quiz | Individual | 5 % | 2 % | Week 9 |
+| Simulation performance — operator shift | Team | 15 % | 18 % | Weeks 10 – 11 |
+| Observer critique report | Team + Individual | 10 % | 10 % | Weeks 10 – 11 (report due Week 12) |
+| Final mission review | Team | 10 % | 5 % | Week 12 |
+| Individual reflective portfolio (UG: structured reflection; Grad: critical literature-informed analysis, 2500 – 3000 words) | Individual | 10 % | 20 % | 1 week after Week 12 |
 | **Total** |  | **100 %** | **100 %** | |
 
 ### What the major assessments assess
@@ -317,8 +327,8 @@ intensive or across a term. Expect:
 - About 5 – 6 hours of preparation and team work outside class each week:
   readings and videos before the lecture, discipline analysis between CDF
   studios, and procedure study before the simulations.
-- Heavier weeks before the two reviews (Weeks 2 and 9) and before each
-  simulation (Weeks 11 and 12). Plan for them.
+- Heavier weeks before the two reviews (Weeks 2 and 7) and before each
+  simulation (Weeks 10 and 11). Plan for them.
 
 Team work between studios matters: in the CDF weeks your discipline's
 numbers are an input to everyone else's.
@@ -372,34 +382,38 @@ Learners are expected to take responsibility for their own success:
 Weeks are indicative. Dates, rooms and any adjustments will be confirmed in
 Brightspace. Lecture numbers (L01–L14) refer to the course slide decks.
 
-### Part 1 — Context and concept
+### Part 1 — Introduction (Weeks 1–2)
 
 | Week | Lecture and seminar (1.5 h) | Studio (3 h) | Deliverables |
 |------|-----------------------------|--------------|--------------|
 | 1 | **L01 Canada in space and course onboarding.** Past, present and emerging Canadian space activity; course arc; teams, roles and tools. | **L02 The concurrent design method.** Regulatory teaser; SpaceCDF accounts and tour; teams open a mission file and draft a problem statement. | Readiness quiz; team formed; mission area chosen |
-| 2 | **L03 From need to concept.** Problem statements, stakeholders, MoE / MoP / TPM, trade studies, ConOps. | Mission alternatives trade; ConOps v0; first parametric budgets; risk register opened. **Informal MCR** in the last hour. | Concept v0; ConOps v0; **informal MCR** |
-| 3 | **L04 Closing the MCR and locking the concept.** Review actions, concept lock, top-level requirements, programmatic envelope. | MCR action closure; concept v1; top-level requirements; risk register v0. | **Concept v1 locked** |
-| 4 | **L05 The Canadian regulatory landscape.** RSSSA; ISED CPC-2-6-02 and ITU coordination; Export Control List, Controlled Goods, ITAR / EAR; debris mitigation (IADC 25-year, FCC 5-year); UN Registration Convention. | Regulatory brief; draft ISED application; regulatory risks entered in the register. | Regulatory brief (team, 2 pp.); draft ISED application |
+| 2 | **L03 From need to concept.** Problem statements, stakeholders, MoE / MoP / TPM, trade studies, ConOps. | **The CDF opens.** Mission alternatives trade in SpaceCDF; ConOps v0; first parametric budgets; risk register opened. **Informal MCR** in the last hour. | Concept v0; ConOps v0; **informal MCR** |
 
-### Part 2 — Concurrent design
+### Part 2 — Concurrent design (Weeks 2–7)
 
 | Week | Lecture and seminar (1.5 h) | Studio (3 h) | Deliverables |
 |------|-----------------------------|--------------|--------------|
-| 5 | **L06 The System-V, requirements and first budgets.** Tailoring; lifecycle gate map; SMART requirements; functional decomposition; mass and power margins. | **CDF 1.** Requirements baseline; function tree; first mass, power, data and link budgets. | CDF worksheet 1; requirements baseline |
-| 6 | **L07 Orbit, power, attitude and thermal.** Orbit trade; array and battery sizing; AOCS architecture; thermal balance. | **CDF 2.** Orbit selection; power, AOCS and thermal decisions logged. | CDF worksheet 2; subsystem decisions logged |
+| 3 | **L04 Closing the MCR and locking the concept.** **L05 The Canadian regulatory landscape.** Review actions, concept lock, top-level requirements, programmatic envelope; RSSSA; ISED CPC-2-6-02 and ITU coordination; Export Control List, Controlled Goods, ITAR / EAR; debris mitigation (IADC 25-year, FCC 5-year); UN Registration Convention. | MCR action closure; concept v1; top-level requirements; regulatory brief and draft ISED application; regulatory risks entered in the register. | **Concept v1 locked**; regulatory brief (team, 2 pp.) and draft ISED application due at the end of Week 4 |
+| 4 | **L06 The System-V, requirements and first budgets.** Tailoring; lifecycle gate map; SMART requirements; functional decomposition; mass and power margins. | **CDF 1.** Requirements baseline; function tree; first mass, power, data and link budgets. | CDF worksheet 1; requirements baseline |
+| 5 | **L07 Orbit, power, attitude and thermal.** Orbit trade; array and battery sizing; AOCS architecture; thermal balance. | **CDF 2.** Orbit selection; power, AOCS and thermal decisions logged. | CDF worksheet 2; subsystem decisions logged |
+| 6 | **L08 Communications, structure, propulsion and the formal trades.** Link budget; band and licensing; structural margins; onboard data handling; propulsion. | **CDF 3.** Link budget and ground-station plan; regulatory check on the band; link-band and propulsion trade studies; equipment selection. | CDF worksheet 3; equipment list; two trade-study reports |
 | — | *Reading break* | | |
-| 7 | **L08 Communications, structure, propulsion and the formal trades.** Link budget; band and licensing; structural margins; onboard data handling; propulsion. | **CDF 3.** Link budget and ground-station plan; regulatory check on the band; link-band and propulsion trade studies; equipment selection. | CDF worksheet 3; equipment list; two trade-study reports |
-| 8 | **L09 Integration, verification, cost and risk.** N² interfaces; V&V matrix; environmental tests; cost estimation; FMECA and reliability. | **CDF 4.** Interface closure; V&V matrix; test plan; cost and bill of materials; risk closure; SpaceCDF optimiser; ECSS document export. | CDF worksheet 4; interface and V&V matrices; cost; ECSS document set |
-| 9 | **L10 From design to operations.** EOSAT-1; mission phases; passes; PUS packets and services; a telecommand's life; the mission planner. | **PDR-style review (Preliminary Design Review)** with review-board questions and action capture. | **PDR delivered** |
+| 7 | **L09 Integration, verification, cost and risk.** N² interfaces; V&V matrix; environmental tests; cost estimation; FMECA and reliability. | **CDF 4 and the PDR.** Interface closure; V&V matrix; test plan; cost and bill of materials; risk closure; ECSS document export; then the **PDR-style review (Preliminary Design Review)** with review-board questions and action capture. | CDF worksheet 4; ECSS document set; **PDR delivered** |
 
-### Part 3 — Operations · uOttawa Cyberrange
+### Part 3 — Operations · uOttawa Cyberrange (Weeks 8–11)
 
 | Week | Lecture and seminar (1.5 h) | Studio | Deliverables |
 |------|-----------------------------|--------|--------------|
-| 10 | **L11 The control room.** Positions, the voice loop, anomaly response, FDIR severity and escalation, shift handover. | **Operations training (3 h).** MCS familiarisation by position; pass planning; voice-loop drills; dry runs of LEOP, nominal and contingency passes. | Operations training quiz |
-| 11 | *No separate lecture: the briefing opens the block.* | **Simulation 1 — LEOP and commissioning (6 h).** L12 briefing; Team A operates a full shift, Team B observes and documents; real-time anomaly injection; post-sim debrief. | Operators: sim log and anomaly tickets · Observers: critique notes |
-| 12 | *No separate lecture: the briefing opens the block.* | **Simulation 2 — nominal operations and contingency (6 h).** L13 briefing; teams swap operator and observer roles; post-sim debrief. | Operators: sim log and anomaly tickets · Observers: critique notes |
-| Final session | **L14 Debrief, synthesis and pathways (3 h).** Debrief led by the student Flight Directors; observer presentations; lessons-learned synthesis; Canadian space sector pathways; course evaluation; **final mission review** (cohort-internal). | | Final mission review; observer critique report; **individual reflective portfolio due 1 week later** |
+| 8 | **L10 From design to operations.** EOSAT-1; mission phases; passes; PUS packets and services; a telecommand's life; the mission planner. | **Operations training 1 (3 h).** MCS familiarisation by position; telemetry, alarms and procedures; pass planning in the mission planner. | Positions assigned; first pass plan |
+| 9 | **L11 The control room.** Positions, the voice loop, anomaly response, FDIR severity and escalation, shift handover. | **Operations training 2 (3 h).** Voice-loop drills; dry runs of LEOP, nominal and contingency passes. | Operations training quiz |
+| 10 | *No separate lecture: the briefing opens the block.* | **Simulation 1 — LEOP and commissioning (6 h).** L12 briefing; Team A operates a full shift, Team B observes and documents; real-time anomaly injection; post-sim debrief. | Operators: sim log and anomaly tickets · Observers: critique notes |
+| 11 | *No separate lecture: the briefing opens the block.* | **Simulation 2 — nominal operations and contingency (6 h).** L13 briefing; teams swap operator and observer roles; post-sim debrief. | Operators: sim log and anomaly tickets · Observers: critique notes |
+
+### Part 4 — Review (Week 12)
+
+| Week | Lecture and seminar (1.5 h) | Studio (3 h) | Deliverables |
+|------|-----------------------------|--------------|--------------|
+| 12 | **L14 Debrief, synthesis and pathways.** Debrief led by the student Flight Directors; lessons-learned synthesis; Canadian space sector pathways; course evaluation. | **Review of the whole mission.** From the need to the last pass: the design decisions against what operations showed; observer presentations; **final mission review** (cohort-internal). | Final mission review; observer critique report; **individual reflective portfolio due 1 week later** |
 
 ## Regulation on Bilingualism at the University of Ottawa
 
