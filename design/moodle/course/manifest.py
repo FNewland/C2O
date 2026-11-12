@@ -832,7 +832,7 @@ def bundle(m: dict, dest: Path) -> Path:
     seen: dict[str, str] = {}
     for s in m["sections"]:
         for it in s["items"]:
-            for f in it.get("files", []):
+            for f in it.get("files", []) + ([it["file"]] if it.get("file") else []):
                 src = Path(f["path"])
                 if seen.setdefault(f["name"], str(src)) != str(src):
                     raise SystemExit(f"two different files named {f['name']}")
