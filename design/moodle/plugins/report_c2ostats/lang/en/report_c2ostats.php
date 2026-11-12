@@ -1,0 +1,25 @@
+<?php
+$string['pluginname'] = 'Course video statistics';
+$string['c2ostats:view'] = 'See the course video statistics (aggregate only)';
+$string['privacy'] = 'Counts of students only: no names, no individual rows. Any group of fewer than {$a} students shows as "<{$a}", and no rate is computed from it. Teachers are not counted.';
+$string['students'] = 'Students enrolled';
+$string['videos'] = 'Videos';
+$string['startedfirst'] = 'Finished the first video';
+$string['finishedlast'] = 'Finished the last video';
+$string['questionsshown'] = 'Questions with enough answers';
+$string['videosheading'] = 'Videos, in course order';
+$string['videoshelp'] = 'Opened: students who opened that language\'s activity. Finished: the activity is complete (questions answered, or opened for a video without questions); this is what unlocks the next item. Finished in either: students who finished the video in English or in French. First-try mean: the average score on the first attempt.';
+$string['video'] = 'Video';
+$string['finishedeither'] = 'Finished (EN or FR)';
+$string['opened'] = 'opened';
+$string['finished'] = 'finished';
+$string['meanfirst'] = 'first-try mean';
+$string['questionsheading'] = 'Questions, hardest first';
+$string['questionshelp'] = 'First attempts only, so a student who tries again does not hide a difficulty. Questions answered by fewer than {$a} students are not listed.';
+$string['noquestions'] = 'No question has been answered by {$a} students yet.';
+$string['rightfirst'] = 'Right first time';
+$string['question'] = 'Question';
+$string['language'] = 'Language';
+$string['answeredby'] = 'Students';
+$string['downloadcsv'] = 'Download this table (CSV)';
+$string['privacy:metadata'] = 'The report stores no data; it shows counts computed from the H5P and completion tables.';

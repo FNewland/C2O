@@ -1,0 +1,25 @@
+<?php
+$string['pluginname'] = 'Statistiques des vidéos du cours';
+$string['c2ostats:view'] = 'Voir les statistiques des vidéos du cours (agrégées seulement)';
+$string['privacy'] = 'Des nombres d\'étudiants seulement : aucun nom, aucune ligne individuelle. Tout groupe de moins de {$a} étudiants s\'affiche « <{$a} » et aucun taux n\'en est calculé. Les enseignants ne sont pas comptés.';
+$string['students'] = 'Étudiants inscrits';
+$string['videos'] = 'Vidéos';
+$string['startedfirst'] = 'Ont terminé la première vidéo';
+$string['finishedlast'] = 'Ont terminé la dernière vidéo';
+$string['questionsshown'] = 'Questions assez répondues';
+$string['videosheading'] = 'Vidéos, dans l\'ordre du cours';
+$string['videoshelp'] = 'Ouverte : étudiants ayant ouvert l\'activité dans cette langue. Terminée : l\'activité est achevée (questions répondues, ou ouverte pour une vidéo sans questions) ; c\'est ce qui déverrouille l\'élément suivant. Terminée (l\'une ou l\'autre langue) : étudiants ayant terminé la vidéo en anglais ou en français. Moyenne au premier essai : le score moyen de la première tentative.';
+$string['video'] = 'Vidéo';
+$string['finishedeither'] = 'Terminée (EN ou FR)';
+$string['opened'] = 'ouverte';
+$string['finished'] = 'terminée';
+$string['meanfirst'] = 'moyenne au 1er essai';
+$string['questionsheading'] = 'Questions, des plus difficiles aux plus faciles';
+$string['questionshelp'] = 'Premières tentatives seulement : un étudiant qui recommence ne masque pas une difficulté. Les questions répondues par moins de {$a} étudiants ne sont pas listées.';
+$string['noquestions'] = 'Aucune question n\'a encore été répondue par {$a} étudiants.';
+$string['rightfirst'] = 'Juste du premier coup';
+$string['question'] = 'Question';
+$string['language'] = 'Langue';
+$string['answeredby'] = 'Étudiants';
+$string['downloadcsv'] = 'Télécharger ce tableau (CSV)';
+$string['privacy:metadata'] = 'Le rapport n\'enregistre aucune donnée ; il affiche des nombres calculés à partir des tables H5P et d\'achèvement.';

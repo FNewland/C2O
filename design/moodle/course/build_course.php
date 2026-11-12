@@ -23,7 +23,9 @@ $c = (object)[
     'fullname' => $m['course']['fullname'], 'shortname' => $opts['shortname'] ?: $m['course']['shortname'],
     'category' => (int)$opts['category'], 'format' => 'topics',
     'numsections' => count($m['sections']) - 1, 'summary' => $m['course']['summary'], 'summaryformat' => FORMAT_HTML,
-    'showgrades' => 0, 'enablecompletion' => 0, 'lang' => '', 'newsitems' => 3, 'visible' => 1,
+    // Completion on: finishing a video (receiving its practice score) unlocks the next item.
+    'showgrades' => 0, 'enablecompletion' => 1, 'showcompletionconditions' => 1, 'lang' => '', 'newsitems' => 3,
+    'visible' => 1,
 ];
 $course = create_course($c);
 echo "course {$course->id}\n";
@@ -32,6 +34,16 @@ $news = forum_get_course_forum($course->id, 'news');
 $DB->set_field('forum', 'name', '<span lang="en" class="multilang">Announcements</span><span lang="fr" class="multilang">Annonces</span>', ['id' => $news->id]);
 
 $intro = fn($html) => ['text' => $html, 'format' => FORMAT_HTML, 'itemid' => file_get_unused_draft_itemid()];
+$after = [];        // cmid -> [idnumber, ...]: opens when any of these is complete
+$cmids = [];        // idnumber -> [cmid, modname], for links (@@CM:id@@) and the unlock chain
+$pages = [];        // page instance id -> content, resolved once every item exists
+$draft = function (string $path, string $name) use ($fs) {
+    global $USER;
+    $itemid = file_get_unused_draft_itemid();
+    $fs->create_file_from_pathname(['contextid' => context_user::instance($USER->id)->id, 'component' => 'user',
+        'filearea' => 'draft', 'itemid' => $itemid, 'filepath' => '/', 'filename' => $name], $path);
+    return $itemid;
+};
 
 foreach ($m['sections'] as $sn => $s) {
     $sec = $DB->get_record('course_sections', ['course' => $course->id, 'section' => $sn], '*', MUST_EXIST);
@@ -49,12 +61,52 @@ foreach ($m['sections'] as $sn => $s) {
                     'content' => $it['content'], 'contentformat' => FORMAT_HTML,
                     'display' => 5, 'printintro' => 0, 'printlastmodified' => 0]);
                 $cm = create_module($mi);
+                $pages[$cm->instance] = $it['content'];
                 $ctx = context_module::instance($cm->coursemodule);
                 foreach ($it['files'] as $f) {
                     // No owner: an ownerless .h5p is system-trusted, so its libraries can deploy.
                     $fs->create_file_from_pathname(['contextid' => $ctx->id, 'component' => 'mod_page',
                         'filearea' => 'content', 'itemid' => 0, 'filepath' => '/', 'filename' => $f['name'],
                         'userid' => null], $abs($f['path']));
+                }
+                break;
+            case 'h5pactivity':
+                // Tracked: attempts and answers are recorded (practice only; the grade item is
+                // hidden and the gradebook is off). Receiving a score = the video is finished.
+                $mi = (object)($base + ['modulename' => 'h5pactivity', 'introeditor' => $intro($it['intro']),
+                    'packagefile' => $draft($abs($it['file']['path']), $it['file']['name']),
+                    'enabletracking' => 1, 'grademethod' => 1, 'reviewmode' => 1, 'grade' => 100,
+                    'displayoptions' => 0, 'showdescription' => 0,
+                    'completion' => COMPLETION_TRACKING_AUTOMATIC,
+                    'completionusegrade' => empty($it['graded']) ? 0 : 1,
+                    'completionview' => empty($it['graded']) ? 1 : 0]);
+                $cm = create_module($mi);
+                break;
+            case 'data':
+                require_once($CFG->dirroot . '/mod/data/lib.php');
+                $mi = (object)($base + ['modulename' => 'data', 'introeditor' => $intro($it['intro']),
+                    'approval' => 0, 'manageapproved' => 1, 'comments' => 1, 'requiredentries' => 0,
+                    'requiredentriestoview' => 0, 'maxentries' => 0, 'rssarticles' => 0, 'assessed' => 0,
+                    'scale' => 0, 'timeavailablefrom' => 0, 'timeavailableto' => 0, 'timeviewfrom' => 0,
+                    'timeviewto' => 0]);
+                $cm = create_module($mi);
+                $data = $DB->get_record('data', ['id' => $cm->instance], '*', MUST_EXIST);
+                foreach ($it['fields'] as $fd) {
+                    $field = data_get_field_new($fd['type'], $data);
+                    $rec = (object)['name' => $fd['name'], 'description' => $fd['description'],
+                                    'required' => empty($fd['required']) ? 0 : 1];
+                    if (!empty($fd['options'])) {
+                        $rec->param1 = implode("\n", $fd['options']);
+                    }
+                    if ($fd['type'] === 'file') {
+                        $rec->param3 = 50 * 1024 * 1024;
+                    }
+                    if ($fd['type'] === 'textarea') {
+                        $rec->param2 = 60;
+                        $rec->param3 = 8;
+                    }
+                    $field->define_field($rec);
+                    $field->insert_field();
                 }
                 break;
             case 'forum':
@@ -72,8 +124,41 @@ foreach ($m['sections'] as $sn => $s) {
             default:
                 throw new coding_exception('unknown item type ' . $it['type']);
         }
+        $cmids[$it['idnumber']] = [$cm->coursemodule, $it['type']];
+        if (!empty($it['after_any'])) {
+            $after[$cm->coursemodule] = $it['after_any'];
+        }
         echo "  [$sn] {$it['type']} {$it['idnumber']} cm {$cm->coursemodule}\n";
     }
+}
+
+// Links between items: @@CM:<idnumber>@@ -> the item's page.
+$url = function (string $id) use ($cmids) {
+    if (!isset($cmids[$id])) {
+        throw new coding_exception("link to unknown item $id");
+    }
+    [$cmid, $mod] = $cmids[$id];
+    return (new moodle_url("/mod/$mod/view.php", ['id' => $cmid]))->out(false);
+};
+foreach ($pages as $pid => $content) {
+    if (strpos($content, '@@CM:') !== false) {
+        $content = preg_replace_callback('/@@CM:([A-Za-z0-9_-]+)@@/', fn($m) => $url($m[1]), $content);
+        $DB->set_field('page', 'content', $content, ['id' => $pid]);
+    }
+}
+
+// The unlock chain: an item opens when the previous video is finished in either language.
+// Locked items stay listed (show), so students see what is coming.
+foreach ($after ?? [] as $cmid => $ids) {
+    $conds = array_map(fn($id) => ['type' => 'completion', 'cm' => (int)$cmids[$id][0], 'e' => COMPLETION_COMPLETE], $ids);
+    $tree = ['op' => '|', 'show' => true, 'c' => $conds];
+    $DB->set_field('course_modules', 'availability', json_encode($tree), ['id' => $cmid]);
+}
+
+// Practice scores are never shown as grades.
+require_once($CFG->libdir . '/gradelib.php');
+foreach (grade_item::fetch_all(['courseid' => $course->id, 'itemtype' => 'mod', 'itemmodule' => 'h5pactivity']) ?: [] as $gi) {
+    $gi->set_hidden(1);
 }
 rebuild_course_cache($course->id, true);
 

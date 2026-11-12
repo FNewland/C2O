@@ -1,0 +1,452 @@
+# The MSE program's CLO rubrics used in ORBIT NORTH (the criteria the large assessments are marked on).
+# Source: see `source`. Used by design/moodle/course/manifest.py (assessment and rubric pages).
+source: Master of Systems Engineering — Program Learning Outcomes, rubrics (draft rev. 8, 10 November 2026, F. Newland, GPD). English wording verbatim; French translation for the course.
+levels:
+  1:
+    en: Initial thoughts
+    fr: Premières réflexions
+  2:
+    en: First engagement
+    fr: Premier engagement
+  3:
+    en: Deeper engagement
+    fr: Engagement approfondi
+  4:
+    en: First leadership
+    fr: Premier leadership
+  5:
+    en: Deeper leadership
+    fr: Leadership approfondi
+clos:
+  '1.1':
+    plo: PLO1
+    name:
+      en: Problem framing & need analysis
+      fr: Cadrage du problème et analyse des besoins
+    description:
+      en: Identify and articulate stakeholder needs, constraints and the problem context for ill-defined engineering challenges
+      fr: Cerner et formuler les besoins des parties prenantes, les contraintes et le contexte de problèmes d’ingénierie mal définis
+    levels:
+      1:
+        en: Recognizes that problems have stakeholders and context; identifies obvious needs when prompted
+        fr: Reconnaît qu’un problème a des parties prenantes et un contexte ; repère les besoins évidents quand on l’y invite
+      2:
+        en: Distinguishes stated wants from underlying needs; maps basic stakeholder landscape; frames problem with guidance
+        fr: Distingue les souhaits exprimés des besoins sous-jacents ; dresse une carte simple des parties prenantes ; cadre le problème avec de l’aide
+      3:
+        en: Conducts structured need analysis; synthesizes conflicting stakeholder inputs; frames ambiguous problems independently
+        fr: Mène une analyse structurée des besoins ; fait la synthèse d’attentes contradictoires ; cadre seul des problèmes ambigus
+      4:
+        en: Facilitates stakeholder discovery sessions; reframes problems when new information emerges; mentors others in need analysis
+        fr: Anime des séances de découverte avec les parties prenantes ; recadre le problème quand de nouvelles informations arrivent ; accompagne les autres dans l’analyse des besoins
+      5:
+        en: Leads multi-stakeholder need elicitation for complex systems-of-systems; develops organizational capability in problem framing
+        fr: Dirige l’élicitation des besoins de multiples parties prenantes pour des systèmes de systèmes complexes ; développe la capacité de l’organisation à cadrer les problèmes
+  '1.2':
+    plo: PLO2
+    name:
+      en: Requirements & architecture
+      fr: Exigences et architecture
+    description:
+      en: Develop, trace and manage requirements; create and evaluate system architectures that satisfy stakeholder needs
+      fr: Élaborer, tracer et gérer les exigences ; concevoir et évaluer des architectures système qui répondent aux besoins des parties prenantes
+    levels:
+      1:
+        en: Understands the purpose of requirements; can read and interpret simple specifications
+        fr: Comprend à quoi servent les exigences ; sait lire et interpréter des spécifications simples
+      2:
+        en: Writes functional requirements; distinguishes system from subsystem levels; sketches basic architectures
+        fr: Rédige des exigences fonctionnelles ; distingue les niveaux système et sous-système ; esquisse des architectures simples
+      3:
+        en: Develops traceable requirement sets; creates architecture views (functional, physical); conducts interface analysis
+        fr: Élabore des ensembles d’exigences traçables ; produit des vues d’architecture (fonctionnelle, physique) ; mène l’analyse des interfaces
+      4:
+        en: Leads requirements reviews; makes architecture trade-offs; manages requirement changes across lifecycle phases
+        fr: Dirige les revues d’exigences ; fait les compromis d’architecture ; gère les changements d’exigences au fil des phases du cycle de vie
+      5:
+        en: Establishes requirements governance for large programs; defines architecture frameworks; mentors senior engineers
+        fr: Établit la gouvernance des exigences de grands programmes ; définit des cadres d’architecture ; accompagne des ingénieurs chevronnés
+  '1.3':
+    plo: PLO2
+    name:
+      en: Integration & verification
+      fr: Intégration et vérification
+    description:
+      en: Plan and execute system integration, verification and validation activities across the lifecycle
+      fr: Planifier et mener l’intégration, la vérification et la validation du système tout au long du cycle de vie
+    levels:
+      1:
+        en: Understands the difference between verification and validation; follows test procedures
+        fr: Comprend la différence entre vérification et validation ; suit des procédures d’essai
+      2:
+        en: Develops test cases from requirements; supports integration activities; documents results
+        fr: Élabore des cas d’essai à partir des exigences ; contribue à l’intégration ; consigne les résultats
+      3:
+        en: Plans V&V campaigns; designs verification matrices; identifies verification methods appropriate to requirement type
+        fr: Planifie des campagnes de V et V ; conçoit des matrices de vérification ; choisit la méthode de vérification adaptée à chaque type d’exigence
+      4:
+        en: Leads integration events; resolves cross-subsystem anomalies; coordinates V&V across distributed teams
+        fr: Dirige les activités d’intégration ; résout les anomalies entre sous-systèmes ; coordonne la V et V entre équipes réparties
+      5:
+        en: Defines organizational V&V strategies; establishes verification infrastructure; guides programs through qualification
+        fr: Définit les stratégies de V et V de l’organisation ; établit l’infrastructure de vérification ; guide des programmes jusqu’à la qualification
+  '1.4':
+    plo: PLO1
+    name:
+      en: Decision under uncertainty
+      fr: Décision en situation d’incertitude
+    description:
+      en: Make and defend technical decisions when information is incomplete, time is constrained and stakes are high
+      fr: Prendre et défendre des décisions techniques quand l’information est incomplète, le temps compté et les enjeux élevés
+    levels:
+      1:
+        en: Recognizes that engineering decisions involve uncertainty; can articulate assumptions
+        fr: Reconnaît que les décisions d’ingénierie comportent de l’incertitude ; sait formuler ses hypothèses
+      2:
+        en: Makes decisions within defined scope using available data; documents rationale and assumptions
+        fr: Décide dans un périmètre défini à partir des données disponibles ; consigne la justification et les hypothèses
+      3:
+        en: Applies structured decision methods (Pugh, AHP); quantifies uncertainty; defends decisions to stakeholders
+        fr: Applique des méthodes de décision structurées (Pugh, AHP) ; quantifie l’incertitude ; défend ses décisions auprès des parties prenantes
+      4:
+        en: Makes consequential decisions under time pressure; manages decision gates; coaches others through difficult choices
+        fr: Prend des décisions lourdes de conséquences sous la pression du temps ; gère les jalons de décision ; accompagne les autres dans les choix difficiles
+      5:
+        en: Establishes decision governance for programs; develops organizational decision-making culture; leads under ambiguity
+        fr: Établit la gouvernance des décisions d’un programme ; développe une culture de la décision dans l’organisation ; dirige dans l’ambiguïté
+  '2.3':
+    plo: PLO5
+    name:
+      en: Digital twin & simulation
+      fr: Jumeau numérique et simulation
+    description:
+      en: Create and use digital twins to support design decisions, operations and continuous verification
+      fr: Créer et utiliser des jumeaux numériques pour appuyer les décisions de conception, l’exploitation et la vérification continue
+    levels:
+      1:
+        en: Understands digital twin concept; can interpret simulation outputs
+        fr: Comprend le concept de jumeau numérique ; sait interpréter des résultats de simulation
+      2:
+        en: Configures existing digital twins for specific scenarios; runs parametric analyses
+        fr: Configure des jumeaux numériques existants pour des scénarios donnés ; mène des analyses paramétriques
+      3:
+        en: Develops digital twin components; integrates physics-based and data-driven models; validates against real systems
+        fr: Développe des composants de jumeau numérique ; intègre des modèles physiques et fondés sur les données ; les valide par rapport aux systèmes réels
+      4:
+        en: Architects digital twin frameworks; manages twin fidelity across lifecycle phases; connects twins to operations
+        fr: Conçoit l’architecture de jumeaux numériques ; gère leur fidélité au fil du cycle de vie ; les relie à l’exploitation
+      5:
+        en: Establishes organizational digital engineering strategy; defines twin governance; advances state of practice
+        fr: Établit la stratégie d’ingénierie numérique de l’organisation ; définit la gouvernance des jumeaux ; fait progresser la pratique
+  '2.4':
+    plo: PLO5
+    name:
+      en: Concurrent design participation
+      fr: Participation à la conception concourante
+    description:
+      en: Contribute effectively to concurrent design sessions where specialists iterate a shared model in real time
+      fr: Contribuer efficacement aux séances de conception concourante où des spécialistes font évoluer un modèle partagé en temps réel
+    levels:
+      1:
+        en: Participates in concurrent design sessions; understands role of different disciplines
+        fr: Participe aux séances de conception concourante ; comprend le rôle des différentes disciplines
+      2:
+        en: Takes responsibility for assigned subsystem in CDF sessions; responds to interface requests
+        fr: Prend en charge le sous-système qui lui est confié en séance CDF ; répond aux demandes d’interface
+      3:
+        en: Actively drives trades in concurrent design; identifies cross-discipline opportunities; maintains margin discipline
+        fr: Fait avancer activement les compromis en conception concourante ; repère les occasions entre disciplines ; tient la discipline des marges
+      4:
+        en: Facilitates concurrent design sessions; resolves conflicts between disciplines; manages design iteration strategy
+        fr: Anime des séances de conception concourante ; résout les conflits entre disciplines ; gère la stratégie d’itération de la conception
+      5:
+        en: Establishes concurrent design capabilities; trains facilitators; defines CDF integration with program lifecycle
+        fr: Établit des capacités de conception concourante ; forme des animateurs ; définit l’intégration du CDF au cycle de vie des programmes
+  '3.1':
+    plo: PLO1
+    name:
+      en: Margin & budget management
+      fr: Gestion des marges et des bilans
+    description:
+      en: Establish, track and manage technical budgets (mass, power, data, cost) with appropriate margins
+      fr: Établir, suivre et gérer les bilans techniques (masse, énergie, données, coûts) avec des marges appropriées
+    levels:
+      1:
+        en: Understands the concept of technical budgets and margins; can read budget tables
+        fr: Comprend la notion de bilans techniques et de marges ; sait lire un tableau de bilan
+      2:
+        en: Tracks assigned budget items; flags margin erosion; documents budget assumptions
+        fr: Suit les postes de bilan qui lui sont confiés ; signale l’érosion des marges ; consigne les hypothèses du bilan
+      3:
+        en: Develops budget structures; allocates margins appropriately; manages budget across design phases
+        fr: Élabore la structure des bilans ; répartit les marges de façon appropriée ; gère les bilans au fil des phases de conception
+      4:
+        en: Leads margin negotiations across subsystems; makes margin release decisions; coaches teams on budget discipline
+        fr: Dirige les négociations de marges entre sous-systèmes ; décide des libérations de marge ; accompagne les équipes dans la discipline des bilans
+      5:
+        en: Establishes budget governance for programs; defines margin philosophy; mentors program margin managers
+        fr: Établit la gouvernance des bilans d’un programme ; définit la philosophie des marges ; accompagne les gestionnaires de marges du programme
+  '3.2':
+    plo: PLO1
+    name:
+      en: Trade study execution
+      fr: Conduite d’études de compromis
+    description:
+      en: Design and conduct trade studies that produce defensible recommendations with traceable rationale
+      fr: Concevoir et mener des études de compromis qui aboutissent à des recommandations défendables et à une justification traçable
+    levels:
+      1:
+        en: Understands that design choices involve trade-offs; can articulate alternatives
+        fr: Comprend que les choix de conception impliquent des compromis ; sait formuler des options
+      2:
+        en: Conducts simple trade studies using provided criteria; documents analysis and recommendation
+        fr: Mène des études de compromis simples à partir de critères fournis ; consigne l’analyse et la recommandation
+      3:
+        en: Designs trade study frameworks; develops weighted criteria; conducts sensitivity analysis
+        fr: Conçoit le cadre des études de compromis ; élabore des critères pondérés ; mène une analyse de sensibilité
+      4:
+        en: Leads complex multi-criteria trade studies; facilitates stakeholder agreement on criteria; defends recommendations
+        fr: Dirige des études de compromis multicritères complexes ; fait converger les parties prenantes sur les critères ; défend les recommandations
+      5:
+        en: Establishes organizational trade study standards; reviews high-stakes trades; develops trade study capability
+        fr: Établit les normes de l’organisation pour les études de compromis ; examine les compromis à fort enjeu ; développe la capacité en études de compromis
+  '3.3':
+    plo: PLO4
+    name:
+      en: Technical decision leadership
+      fr: Leadership des décisions techniques
+    description:
+      en: Lead teams to technical decisions when time is constrained, information is incomplete and stakes are high
+      fr: Mener des équipes à des décisions techniques quand le temps est compté, l’information incomplète et les enjeux élevés
+    levels:
+      1:
+        en: Participates in technical discussions; can present own perspective clearly
+        fr: Participe aux discussions techniques ; sait présenter clairement son point de vue
+      2:
+        en: Contributes substantively to technical decisions; supports team convergence; accepts decision outcomes
+        fr: Contribue de façon substantielle aux décisions techniques ; aide l’équipe à converger ; accepte la décision prise
+      3:
+        en: Leads small-team technical decisions; builds consensus; manages dissent constructively
+        fr: Dirige les décisions techniques d’une petite équipe ; construit le consensus ; gère les désaccords de façon constructive
+      4:
+        en: Chairs design reviews and decision gates; manages technical authority chain; develops team decision capability
+        fr: Préside les revues de conception et les jalons de décision ; gère la chaîne d’autorité technique ; développe la capacité de décision de l’équipe
+      5:
+        en: Establishes technical decision governance; mentors technical leads; builds organizational decision culture
+        fr: Établit la gouvernance des décisions techniques ; accompagne les responsables techniques ; construit une culture de la décision dans l’organisation
+  '3.4':
+    plo: PLO4
+    name:
+      en: Risk management
+      fr: Gestion des risques
+    description:
+      en: Identify, assess and manage technical and programmatic risks throughout the system lifecycle
+      fr: Cerner, évaluer et gérer les risques techniques et programmatiques tout au long du cycle de vie du système
+    levels:
+      1:
+        en: Understands that engineering involves risk; can identify obvious risks in own work
+        fr: Comprend que l’ingénierie comporte des risques ; repère les risques évidents de son propre travail
+      2:
+        en: Documents risks using standard formats; proposes basic mitigations; participates in risk reviews
+        fr: Consigne les risques selon des formats normalisés ; propose des mesures d’atténuation simples ; participe aux revues de risques
+      3:
+        en: Conducts risk assessments; develops mitigation plans; tracks risk trends; presents to risk boards
+        fr: Mène des évaluations de risques ; élabore des plans d’atténuation ; suit l’évolution des risques ; présente aux comités des risques
+      4:
+        en: Leads risk management for programs; makes risk acceptance decisions; integrates risk into planning
+        fr: Dirige la gestion des risques d’un programme ; décide de l’acceptation des risques ; intègre le risque à la planification
+      5:
+        en: Establishes organizational risk management frameworks; defines risk appetite; builds risk management culture
+        fr: Établit les cadres de gestion des risques de l’organisation ; définit l’appétence au risque ; construit une culture de la gestion des risques
+  '4.1':
+    plo: PLO3
+    name:
+      en: Stakeholder engagement
+      fr: Mobilisation des parties prenantes
+    description:
+      en: Identify, analyze and engage diverse stakeholders throughout system development and operation
+      fr: Cerner, analyser et mobiliser des parties prenantes diverses tout au long du développement et de l’exploitation du système
+    levels:
+      1:
+        en: Recognizes that systems have stakeholders beyond the immediate team; identifies obvious stakeholder groups
+        fr: Reconnaît qu’un système a des parties prenantes au-delà de l’équipe immédiate ; repère les groupes évidents
+      2:
+        en: Maps stakeholder landscape; understands different stakeholder interests; communicates appropriately to each
+        fr: Dresse la carte des parties prenantes ; comprend leurs intérêts ; communique de façon adaptée avec chacune
+      3:
+        en: Conducts stakeholder analysis; develops engagement strategies; manages stakeholder expectations actively
+        fr: Mène l’analyse des parties prenantes ; élabore des stratégies de mobilisation ; gère activement leurs attentes
+      4:
+        en: Leads multi-stakeholder engagement processes; resolves stakeholder conflicts; builds lasting relationships
+        fr: Dirige des démarches de mobilisation de multiples parties prenantes ; résout les conflits entre elles ; bâtit des relations durables
+      5:
+        en: Establishes stakeholder engagement frameworks; mentors engagement leads; shapes organizational stakeholder culture
+        fr: Établit des cadres de mobilisation des parties prenantes ; accompagne les responsables de la mobilisation ; façonne la culture de l’organisation à leur égard
+  '4.2':
+    plo: PLO4
+    name:
+      en: Multidisciplinary collaboration
+      fr: Collaboration multidisciplinaire
+    description:
+      en: Work effectively across engineering disciplines, with non-engineers and in diverse teams
+      fr: Travailler efficacement entre disciplines d’ingénierie, avec des non-ingénieurs et au sein d’équipes diverses
+    levels:
+      1:
+        en: Works respectfully with people from different backgrounds; seeks to understand other perspectives
+        fr: Travaille avec respect auprès de personnes d’horizons différents ; cherche à comprendre d’autres points de vue
+      2:
+        en: Contributes effectively in multidisciplinary teams; translates between disciplinary languages
+        fr: Contribue efficacement aux équipes multidisciplinaires ; traduit entre les langages des disciplines
+      3:
+        en: Bridges disciplinary boundaries; facilitates cross-functional problem-solving; values diverse contributions
+        fr: Jette des ponts entre les disciplines ; facilite la résolution de problèmes transversale ; valorise les contributions diverses
+      4:
+        en: Leads multidisciplinary teams; builds team culture; develops collaboration mechanisms
+        fr: Dirige des équipes multidisciplinaires ; construit la culture d’équipe ; met en place des mécanismes de collaboration
+      5:
+        en: Establishes multidisciplinary collaboration frameworks; builds organizational cross-functional capability
+        fr: Établit des cadres de collaboration multidisciplinaire ; développe la capacité transversale de l’organisation
+  '4.3':
+    plo: PLO4
+    name:
+      en: Ethics & governance
+      fr: Éthique et gouvernance
+    description:
+      en: Navigate ethical considerations and governance frameworks including Indigenous and community perspectives
+      fr: Composer avec les considérations éthiques et les cadres de gouvernance, y compris les perspectives autochtones et communautaires
+    levels:
+      1:
+        en: Recognizes that engineering has ethical dimensions; aware of professional codes of conduct
+        fr: Reconnaît que l’ingénierie a une dimension éthique ; connaît les codes de déontologie professionnelle
+      2:
+        en: Identifies ethical considerations in own work; understands governance requirements; seeks guidance when unsure
+        fr: Repère les considérations éthiques de son propre travail ; comprend les exigences de gouvernance ; demande conseil en cas de doute
+      3:
+        en: Applies ethical frameworks to engineering decisions; engages with Indigenous and community governance; raises concerns
+        fr: Applique des cadres éthiques aux décisions d’ingénierie ; s’engage avec la gouvernance autochtone et communautaire ; soulève ses préoccupations
+      4:
+        en: Leads ethical deliberation in teams; integrates diverse governance perspectives; establishes ethical practice
+        fr: Dirige la délibération éthique au sein des équipes ; intègre des perspectives de gouvernance diverses ; établit une pratique éthique
+      5:
+        en: Shapes organizational ethics culture; develops governance relationships; advances engineering ethics practice
+        fr: Façonne la culture éthique de l’organisation ; développe des relations de gouvernance ; fait progresser la pratique de l’éthique en ingénierie
+  '4.4':
+    plo: PLO3
+    name:
+      en: Communication & facilitation
+      fr: Communication et animation
+    description:
+      en: Communicate complex technical content and facilitate productive dialogue across boundaries
+      fr: Communiquer un contenu technique complexe et faciliter un dialogue productif au-delà des frontières
+    levels:
+      1:
+        en: Communicates clearly about own work; listens to understand; participates constructively in meetings
+        fr: Communique clairement sur son propre travail ; écoute pour comprendre ; participe de façon constructive aux réunions
+      2:
+        en: Adapts communication to audience; writes clear technical documents; presents effectively
+        fr: Adapte sa communication à son public ; rédige des documents techniques clairs ; présente efficacement
+      3:
+        en: Facilitates technical discussions; synthesizes diverse inputs; resolves miscommunication; manages difficult conversations
+        fr: Anime des discussions techniques ; fait la synthèse d’apports divers ; dissipe les malentendus ; gère les conversations difficiles
+      4:
+        en: Leads communication strategy for programs; facilitates high-stakes dialogue; develops team communication capability
+        fr: Dirige la stratégie de communication d’un programme ; anime des dialogues à fort enjeu ; développe la capacité de communication de l’équipe
+      5:
+        en: Establishes organizational communication frameworks; mentors communicators; advances facilitation practice
+        fr: Établit des cadres de communication dans l’organisation ; accompagne des communicateurs ; fait progresser la pratique de l’animation
+  '6.1':
+    plo: PLO5
+    name:
+      en: Domain learning agility
+      fr: Agilité d’apprentissage d’un domaine
+    description:
+      en: Rapidly acquire functional competence in new technical domains as engineering challenges require
+      fr: Acquérir rapidement une compétence fonctionnelle dans de nouveaux domaines techniques selon ce qu’exigent les défis d’ingénierie
+    levels:
+      1:
+        en: Recognizes when new learning is needed; seeks learning resources when prompted
+        fr: Reconnaît quand un nouvel apprentissage est nécessaire ; cherche des ressources quand on l’y invite
+      2:
+        en: Identifies knowledge gaps; develops learning plans; acquires new knowledge independently
+        fr: Repère ses lacunes ; élabore un plan d’apprentissage ; acquiert seul de nouvelles connaissances
+      3:
+        en: Rapidly assimilates new domains; transfers principles across fields; develops learning strategies
+        fr: Assimile rapidement de nouveaux domaines ; transpose des principes d’un domaine à l’autre ; élabore ses stratégies d’apprentissage
+      4:
+        en: Leads teams into new domains; creates learning pathways; accelerates collective learning
+        fr: Mène des équipes dans de nouveaux domaines ; crée des parcours d’apprentissage ; accélère l’apprentissage collectif
+      5:
+        en: Establishes organizational learning agility; develops learning infrastructure; advances adaptive expertise
+        fr: Établit l’agilité d’apprentissage de l’organisation ; développe l’infrastructure d’apprentissage ; fait progresser l’expertise adaptative
+  '6.2':
+    plo: GDLE6
+    name:
+      en: Reflective practice
+      fr: Pratique réflexive
+    description:
+      en: Systematically reflect on engineering practice to extract lessons, recognize the limits of one's knowledge and improve performance
+      fr: Réfléchir systématiquement à sa pratique d’ingénierie pour en tirer des leçons, reconnaître les limites de ses connaissances et s’améliorer
+    levels:
+      1:
+        en: Recognizes that experience teaches; can describe what went well or poorly
+        fr: Reconnaît que l’expérience enseigne ; sait décrire ce qui a bien ou mal fonctionné
+      2:
+        en: Conducts post-activity reflection; identifies lessons learned; seeks feedback
+        fr: Mène une réflexion après l’activité ; dégage les leçons apprises ; sollicite de la rétroaction
+      3:
+        en: Maintains reflective practice habits; applies lessons to future work; helps others reflect
+        fr: Entretient des habitudes de pratique réflexive ; applique les leçons à son travail futur ; aide les autres à réfléchir
+      4:
+        en: Leads team reflection processes; institutionalizes lessons learned; develops reflective culture
+        fr: Dirige la réflexion d’équipe ; institutionnalise les leçons apprises ; développe une culture réflexive
+      5:
+        en: Establishes organizational reflective practice; advances reflection methodology; mentors reflection facilitators
+        fr: Établit la pratique réflexive de l’organisation ; fait progresser la méthodologie de la réflexion ; accompagne des animateurs de réflexion
+  '6.3':
+    plo: GDLE6
+    name:
+      en: Portfolio curation
+      fr: Constitution du portfolio
+    description:
+      en: Develop and maintain an evidence portfolio demonstrating competencies with authentic artifacts
+      fr: Constituer et tenir à jour un portfolio de preuves qui démontre des compétences au moyen de productions authentiques
+    levels:
+      1:
+        en: Understands the purpose of portfolios; collects work samples when prompted
+        fr: Comprend à quoi sert un portfolio ; recueille des travaux quand on l’y invite
+      2:
+        en: Curates work samples systematically; links artifacts to competencies; maintains portfolio
+        fr: Organise systématiquement ses travaux ; relie les productions aux compétences ; tient son portfolio à jour
+      3:
+        en: Develops compelling portfolio narrative; selects artifacts strategically; presents portfolio effectively
+        fr: Construit un récit convaincant pour son portfolio ; choisit ses productions de façon stratégique ; présente son portfolio efficacement
+      4:
+        en: Mentors others in portfolio development; assesses portfolios; contributes to portfolio standards
+        fr: Accompagne les autres dans l’élaboration de leur portfolio ; évalue des portfolios ; contribue aux normes de portfolio
+      5:
+        en: Establishes portfolio-based assessment systems; advances competency-based credentialing practice
+        fr: Établit des systèmes d’évaluation fondés sur le portfolio ; fait progresser la reconnaissance des compétences
+  '7.4':
+    plo: PLO6-MEng
+    name:
+      en: Ecosystem navigation
+      fr: Navigation dans l’écosystème
+    description:
+      en: Understand and navigate the Ottawa innovation ecosystem to create opportunities and connections
+      fr: Comprendre l’écosystème d’innovation d’Ottawa et s’y orienter pour créer des occasions et des liens
+    levels:
+      1:
+        en: Aware that an innovation ecosystem exists; can identify major players in own domain
+        fr: Sait qu’il existe un écosystème d’innovation ; repère les principaux acteurs de son domaine
+      2:
+        en: Understands ecosystem structure; builds professional network; identifies opportunities
+        fr: Comprend la structure de l’écosystème ; bâtit son réseau professionnel ; repère des occasions
+      3:
+        en: Navigates ecosystem actively; creates connections; positions work within ecosystem context
+        fr: S’oriente activement dans l’écosystème ; crée des liens ; situe son travail dans le contexte de l’écosystème
+      4:
+        en: Shapes ecosystem relationships; creates collaborative opportunities; mentors ecosystem navigation
+        fr: Façonne les relations dans l’écosystème ; crée des occasions de collaboration ; accompagne les autres dans l’écosystème
+      5:
+        en: Advances ecosystem development; establishes ecosystem initiatives; builds ecosystem capability
+        fr: Fait progresser le développement de l’écosystème ; lance des initiatives ; développe la capacité de l’écosystème

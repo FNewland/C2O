@@ -75,33 +75,56 @@ def mlh(en_html: str, fr_html: str) -> str:
     return "".join(out)
 
 
+LANG_CSS = ("<style>body:not(.lang-fr) .c2o-fr, body.lang-fr .c2o-en{display:none}"
+            ".c2o-en table, .c2o-fr table{font-size:.85rem}</style>")
+
+
+def mlr(en_html: str, fr_html: str) -> str:
+    """Multilang pair for rich HTML (headings, ordered lists, tables), which the multilang filter's
+    <span> wrappers cannot hold: two blocks, the one for the other language hidden by Moodle's
+    body class (lang-en / lang-fr)."""
+    return f'{LANG_CSS}<div class="c2o-en" lang="en">{en_html}</div><div class="c2o-fr" lang="fr">{fr_html}</div>'
+
+
 def p(t: str) -> str:
     return f"<p>{t}</p>"
 
 
 SB = {sb.id: sb for sb in storyboard.all_storyboards()}
 
-PRACTICE = ("Questions in the video are for practice. Your answers are not recorded or graded.",
-            "Les questions de la vidéo servent à s'exercer. Vos réponses ne sont ni enregistrées ni notées.")
+PRACTICE = ("Questions in the video are for practice. Your answers are kept on this site only to unlock the next "
+            "item and for anonymous course statistics; they are never graded. Watch to the end and press Submit to "
+            "finish the video.",
+            "Les questions de la vidéo servent à s'exercer. Vos réponses ne sont conservées sur ce site que pour "
+            "débloquer l'élément suivant et pour des statistiques anonymes du cours ; elles ne sont jamais notées. "
+            "Regardez jusqu'à la fin et appuyez sur Soumettre pour terminer la vidéo.")
+LANG_NAME = {"en": ("English", "anglais"), "fr": ("French", "français")}
 
 
-def video_item(vid: str) -> dict:
+def video_items(vid: str) -> list[dict]:
+    """One tracked H5P activity per language (mod_h5pactivity): attempts and answers are recorded,
+    which is what unlocks the next item and feeds the instructor dashboard (aggregates only)."""
     sb = SB[vid]
     slug = sb.slug
-    files, parts = [], {}
+    out = []
     for lang in ("en", "fr"):
         pkg = VIDEOS / slug / f"{slug}.{lang}.h5p"
-        assert pkg.exists(), pkg
-        files.append({"name": pkg.name, "path": str(pkg)})
-        summ = tr(sb.raw.get("summary") or {}, lang) or ""
-        summ = fr(summ) if lang == "fr" else summ
-        note = PRACTICE[0] if lang == "en" else fr(PRACTICE[1])
-        parts[lang] = (p(esc(summ))
-                       + f'<div class="h5p-placeholder" contenteditable="false">@@PLUGINFILE@@/{pkg.name}</div>'
-                       + f'<p class="small text-muted">{esc(note)}</p>')
-    name = ml("Video · " + tr(sb.title, "en"), "Vidéo · " + tr(sb.title, "fr"))
-    return {"type": "page", "name": name, "content": mlh(parts["en"], parts["fr"]), "files": files,
-            "idnumber": vid}
+        if not pkg.exists() and os.environ.get("C2O_MANIFEST_DRY"):
+            pass
+        else:
+            assert pkg.exists(), pkg
+        summ_en = tr(sb.raw.get("summary") or {}, "en") or ""
+        summ_fr = fr(tr(sb.raw.get("summary") or {}, "fr") or "")
+        intro = mlh(p(esc(summ_en)) + f'<p class="small text-muted">{esc(PRACTICE[0])}</p>',
+                    p(esc(summ_fr)) + f'<p class="small text-muted">{esc(fr(PRACTICE[1]))}</p>')
+        ln_en, ln_fr = LANG_NAME[lang]
+        name = ml(f"Video · {tr(sb.title, 'en')} · {ln_en}", f"Vidéo · {tr(sb.title, 'fr')} · {ln_fr}")
+        out.append({"type": "h5pactivity", "name": name, "intro": intro, "lang": lang, "video": vid,
+                    # a video with questions is complete when its answers are recorded; a walkthrough
+                    # without questions sends no score, so opening it is what counts
+                    "graded": any(st.question for st in sb.steps),
+                    "file": {"name": pkg.name, "path": str(pkg)}, "idnumber": f"{vid}-{lang.upper()}"})
+    return out
 
 
 def deck_title(did: str) -> tuple[str, str]:
@@ -462,7 +485,13 @@ def expand(token: str) -> dict:
             nf = nf.replace("Documents de la semaine 3", "Documents d'exploitation").replace(
                 "Document de la semaine 3", "Document d'exploitation")
         return doc_list_item(ne, nf, ie, if_, docs, f"W3DOCS-{k}")
-    return video_item(token)
+    raise ValueError(token)
+
+
+def expand_all(token: str) -> list[dict]:
+    if token.startswith("V-"):
+        return video_items(token)
+    return [expand(token)]
 
 
 WELCOME_EN = """<p><strong>ORBIT NORTH</strong> is a three-week course in space mission design and operations: two weeks designing a CubeSat mission concurrently, then a week flying one, EOSAT-1, in a simulated mission control room.</p>
@@ -481,12 +510,14 @@ WELCOME_TERM_FR = """<p><strong>ORBIT NORTH</strong> est un cours de 12 semaines
 <p>Ce site rassemble le matériel du cours : diapositives, courtes vidéos avec questions d'entraînement, documents et un manuel libre, organisés semaine par semaine. Passez de l'anglais au français avec le menu de langue en haut de la page ; tout le contenu existe dans les deux langues.</p>
 <p><strong>Rien sur ce site n'est noté, et aucun travail n'y est remis.</strong> Les livrables notés passent par les systèmes de l'université. L'espace d'équipe, à la fin du cours, sert à préparer ce que votre équipe choisit de partager publiquement.</p>"""
 
-VIDEO_HELP_EN = """<p>Each video page plays an interactive video. The video pauses at a few questions: answer them to check your understanding, then carry on. Your answers are not recorded or graded.</p>
+VIDEO_HELP_EN = """<p>Each video comes in English and in French: open either one. The video pauses at a few questions: answer them to check your understanding, then carry on. At the end, press <strong>Submit</strong>: that marks the video as done and unlocks the next video or handout. Your answers are kept on this site only for that and for anonymous course statistics; they are never graded.</p>
+<p>All videos are listed from the start so you can see what is coming. They open one after the other, in the order of the course; you can go at your own pace.</p>
 <ul><li>Captions are on by default; use the CC button to turn them off.</li>
 <li>Chapters (the bookmark button) jump to each step.</li>
 <li>The video follows the course language: switch the site to French for the French version.</li></ul>"""
 
-VIDEO_HELP_FR = """<p>Chaque page vidéo lit une vidéo interactive. La vidéo s'arrête sur quelques questions : répondez pour vérifier votre compréhension, puis continuez. Vos réponses ne sont ni enregistrées ni notées.</p>
+VIDEO_HELP_FR = """<p>Chaque vidéo existe en anglais et en français : ouvrez l'une ou l'autre. La vidéo s'arrête sur quelques questions : répondez pour vérifier votre compréhension, puis continuez. À la fin, appuyez sur <strong>Soumettre</strong> : la vidéo est alors terminée et la vidéo ou le document suivant se débloque. Vos réponses ne sont conservées sur ce site que pour cela et pour des statistiques anonymes du cours ; elles ne sont jamais notées.</p>
+<p>Toutes les vidéos sont affichées dès le début pour que vous voyiez la suite. Elles s'ouvrent l'une après l'autre, dans l'ordre du cours ; vous avancez à votre rythme.</p>
 <ul><li>Les sous-titres sont activés par défaut ; le bouton CC permet de les désactiver.</li>
 <li>Les chapitres (bouton signet) mènent à chaque étape.</li>
 <li>La vidéo suit la langue du cours : passez le site en français pour la version française.</li></ul>"""
@@ -504,6 +535,222 @@ WORKSPACE_FR = """<p>Voici l'espace où votre équipe travaille ensemble sur ce 
 <p><strong>N'y publiez ni travaux notés, ni notes, ni rétroaction des enseignants, ni renseignements personnels.</strong> Ne partagez que ce que toute l'équipe accepte de rendre public.</p>"""
 
 
+
+# ── Assignments, rubrics and AI use (assessments.yaml, mse_clo_rubrics.yaml) ─────────────
+OUTCOMES = REPO / "design/configs/outcomes"
+
+
+def _yaml(path: Path):
+    import yaml
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _lv(lang: str, n: int, rub: dict) -> str:
+    return f"{n} · {rub['levels'][n][lang]}"
+
+
+def rubric_table(codes: list[str], lang: str) -> str:
+    """The CLO rubric rows an assessment is marked on, all five levels, target levels marked."""
+    rub = _yaml(OUTCOMES / "mse_clo_rubrics.yaml")
+    plos = _yaml(OUTCOMES / "orbit_north_outcomes.yaml")["plos"]
+    head = ("Criterion (program outcome)" if lang == "en" else "Critère (résultat du programme)")
+    cols = "".join(f'<th style="background:{c};color:#222">{esc(_lv(lang, n, rub))}</th>'
+                   for n, c in zip(range(1, 6), ("#FFF9C4", "#C8E6C9", "#81D4FA", "#E1BEE7", "#F8BBD0")))
+    rows = []
+    for code in codes:
+        c = rub["clos"][code]
+        plo = c["plo"]
+        plo_name = plos.get(plo, {}).get(lang, "")
+        cells = "".join(
+            f'<td style="{"outline:2px solid #8F001A;" if n in (3, 4) else ""}">{esc(c["levels"][n][lang] if lang == "en" else fr(c["levels"][n][lang]))}</td>'
+            for n in range(1, 6))
+        name = c["name"][lang] if lang == "en" else fr(c["name"][lang])
+        desc = c["description"][lang] if lang == "en" else fr(c["description"][lang])
+        rows.append(f'<tr><td><strong>{esc(code)} {esc(name)}</strong><br><span class="small">{esc(desc)}</span>'
+                    f'<br><span class="small text-muted">→ {esc(plo)} {esc(plo_name)}</span></td>{cells}</tr>')
+    tgt = _yaml(OUTCOMES / "orbit_north_outcomes.yaml")["targets"]
+    note = (f'<p class="small">{esc(tgt["GNG3100"][lang] if lang == "en" else fr(tgt["GNG3100"][lang]))} '
+            f'{esc(tgt["SYS5186"][lang] if lang == "en" else fr(tgt["SYS5186"][lang]))} '
+            + ("Levels 3 and 4 are outlined." if lang == "en" else fr("Les niveaux 3 et 4 sont encadrés."))
+            + "</p>")
+    return (f'<div style="overflow-x:auto"><table class="table table-bordered small"><thead><tr><th>{esc(head)}</th>{cols}</tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>' + note)
+
+
+def _cm_links(ids: list[str], lang: str, label) -> str:
+    """Links to course items by idnumber; build_course.php resolves @@CM:id@@ to the URL."""
+    out = []
+    for i in ids:
+        if i.startswith("V-"):
+            sb = SB[i]
+            t = tr(sb.title, lang)
+            out.append(f'<li><a href="@@CM:{i}-{lang.upper()}@@">{esc(t if lang == "en" else fr(t))}</a></li>')
+        else:
+            out.append(f'<li><a href="@@CM:{i}@@">{esc(label(i, lang))}</a></li>')
+    return "<ul>" + "".join(out) + "</ul>" if out else ""
+
+
+HANDOUT_LABEL = {"W3DOCS-tools": ("Student tool reference", "Référence des outils"),
+                 "W3DOCS-training": ("Training day handouts", "Documents des journées de formation"),
+                 "W3DOCS-sim": ("Procedure quick reference and peer-review worksheets",
+                                "Aide-mémoire des procédures et feuilles d'évaluation par les pairs")}
+
+
+def assessment_items() -> list[dict]:
+    spec = _yaml(Path(__file__).with_name("assessments.yaml"))
+    oc = _yaml(OUTCOMES / "orbit_north_outcomes.yaml")
+    rub = _yaml(OUTCOMES / "mse_clo_rubrics.yaml")
+    T = {"en": {"week": "Week", "who": "Who", "weight": "Weight", "purpose": "Why", "produce": "What you produce",
+                "steps": "How to do it", "help": "Videos and handouts that help", "rubric": "How it is marked",
+                "rubric_small": "Marked by the instructors on its own answer key (no program rubric).",
+                "ai": "AI use", "plo": "Program outcomes this assessment gives evidence for"},
+         "fr": {"week": "Semaine", "who": "Qui", "weight": "Pondération", "purpose": "Pourquoi",
+                "produce": "Ce que vous produisez", "steps": "Comment faire", "help": "Vidéos et documents utiles",
+                "rubric": "Comment c'est évalué",
+                "rubric_small": "Corrigé par l'équipe pédagogique selon son propre corrigé (sans grille du programme).",
+                "ai": "Utilisation de l'IA", "plo": "Résultats du programme dont cette évaluation fournit la preuve"}}
+    items = []
+    # 1. AI use, 2. the rubric map, then one page per assessment
+    items.append({"type": "page", "name": ml("Using generative AI: how to declare it", "Utiliser l'IA générative : comment le déclarer"),
+                  "content": mlr(spec["ai_declaration"]["en"]
+                                 + "<p>Declare AI use in every deliverable, in your logbooks when AI shaped a decision, "
+                                   "and in the AI use field of every entry in the team documents library.</p>",
+                                 fr(spec["ai_declaration"]["fr"])
+                                 + fr("<p>Déclarez l'utilisation de l'IA dans chaque livrable, dans vos carnets de bord quand "
+                                      "l'IA a influencé une décision, et dans le champ Utilisation de l'IA de chaque entrée "
+                                      "de la bibliothèque des documents d'équipe.</p>")),
+                  "files": [], "idnumber": "AI-USE"})
+    def map_table(lang):
+        h = ("Assessment", "Week", "GNG 3100", "SYS 5186", "Rubric criteria → program outcomes") if lang == "en" else \
+            ("Évaluation", "Semaine", "GNG 3100", "SYS 5186", "Critères de la grille → résultats du programme")
+        rows = []
+        for aid, a in oc["assessments"].items():
+            sa = spec["assessments"][aid]
+            crit = "; ".join(f'{c} {rub["clos"][c]["name"][lang]} → {rub["clos"][c]["plo"]}' for c in a["rubrics"]) \
+                if a.get("large") else (T[lang]["rubric_small"])
+            nm = a[lang] if lang == "en" else fr(a[lang])
+            rows.append(f'<tr><td><a href="@@CM:ASSESS-{aid}@@">{esc(nm)}</a></td><td>{esc(str(sa["week"]))}</td>'
+                        f'<td>{a["weight"]["GNG3100"]} %</td><td>{a["weight"]["SYS5186"]} %</td>'
+                        f'<td>{esc(crit if lang == "en" else fr(crit))}</td></tr>')
+        intro = ("Every assessment, its weight, and the program rubric criteria the large ones are marked on. "
+                 "Each criterion rolls up to a program learning outcome of the Master of Systems Engineering.") if lang == "en" else \
+            fr("Chaque évaluation, sa pondération, et les critères de la grille du programme sur lesquels les grandes évaluations "
+               "sont notées. Chaque critère se rattache à un résultat d'apprentissage du programme de maîtrise en ingénierie des systèmes.")
+        return (p(esc(intro)) + '<div style="overflow-x:auto"><table class="table table-bordered small"><thead><tr>'
+                + "".join(f"<th>{esc(x)}</th>" for x in h) + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>")
+    items.append({"type": "page", "name": ml("Assessments and the program rubrics", "Évaluations et grilles du programme"),
+                  "content": mlr(map_table("en"), map_table("fr")), "files": [], "idnumber": "RUBRIC-MAP"})
+    for aid, a in oc["assessments"].items():
+        sa = spec["assessments"][aid]
+        def page(lang):
+            t = T[lang]
+            f_ = (lambda x: x) if lang == "en" else fr
+            meta = (f'<p><strong>{t["week"]}</strong> {esc(str(sa["week"]))} · <strong>{t["who"]}</strong> {esc(f_(sa["who"][lang]))}'
+                    f' · <strong>{t["weight"]}</strong> GNG 3100 {a["weight"]["GNG3100"]} %, SYS 5186 {a["weight"]["SYS5186"]} %</p>')
+            body = (meta + f"<h4>{t['purpose']}</h4>" + p(esc(f_(sa["purpose"][lang])))
+                    + f"<h4>{t['produce']}</h4>" + p(esc(f_(sa["produce"][lang])))
+                    + f"<h4>{t['steps']}</h4><ol>" + "".join(f"<li>{esc(f_(st[lang]))}</li>" for st in sa["steps"]) + "</ol>")
+            help_ = _cm_links(list(sa.get("videos") or []) + list(sa.get("handouts") or []), lang,
+                              lambda i, l: HANDOUT_LABEL[i][0 if l == "en" else 1])
+            if help_:
+                body += f"<h4>{t['help']}</h4>" + help_
+            body += f"<h4>{t['rubric']}</h4>"
+            if a.get("large"):
+                plo = sorted({rub["clos"][c]["plo"] for c in a["rubrics"]})
+                body += p(f"<strong>{t['plo']}</strong>: " + esc(", ".join(plo))) + rubric_table(a["rubrics"], lang)
+            else:
+                body += p(esc(t["rubric_small"]))
+            body += f"<h4>{t['ai']}</h4>" + (spec["ai_declaration"][lang] if lang == "en" else fr(spec["ai_declaration"][lang]))
+            body += spec["submit"][lang] if lang == "en" else fr(spec["submit"][lang])
+            return body
+        items.append({"type": "page", "name": ml(f"{aid} · {a['en']}", f"{aid} · {a['fr']}"),
+                      "content": mlr(page("en"), page("fr")), "files": [], "idnumber": f"ASSESS-{aid}"})
+    return items
+
+
+# ── The project space (shared by every team) ─────────────────────────────────────────────
+PROJECT_EN = """<p>One space for all the teams to share and work on what the mission produces: the documents SpaceCDF and the C2O tools export, the decisions your team takes, and drafts for the public site. Everyone can read everything; each team edits its own entries.</p>
+<ul><li><strong>Team documents and decisions</strong>: add an entry for each document or decision. Upload the file exported from SpaceCDF or the C2O tools, say what it is and what was decided, and fill in <strong>AI use</strong> (write "none" if none was used).</li>
+<li><strong>Team room</strong>: discuss, ask the other teams, share work in progress.</li>
+<li><strong>Project wiki</strong>: write together, one page per team (start from the first page and link yours).</li>
+<li>When your team agrees an entry can be shown publicly, tick <strong>Ready for the public site</strong>. The course team picks from these for the community site.</li></ul>
+<p><strong>Nothing here is graded or submitted.</strong> Graded work goes to Brightspace. Do not post marks, instructor feedback or anyone's personal information.</p>"""
+PROJECT_FR = """<p>Un espace commun à toutes les équipes pour partager et travailler ce que produit la mission : les documents qu'exportent SpaceCDF et les outils C2O, les décisions de votre équipe, et les ébauches pour le site public. Tout le monde peut tout lire ; chaque équipe modifie ses propres entrées.</p>
+<ul><li><strong>Documents et décisions d'équipe</strong> : ajoutez une entrée pour chaque document ou décision. Déposez le fichier exporté de SpaceCDF ou des outils C2O, dites de quoi il s'agit et ce qui a été décidé, et remplissez <strong>Utilisation de l'IA</strong> (écrivez « aucune » s'il n'y en a pas eu).</li>
+<li><strong>Salle d'équipe</strong> : discutez, interrogez les autres équipes, partagez le travail en cours.</li>
+<li><strong>Wiki du projet</strong> : rédigez ensemble, une page par équipe (partez de la première page et ajoutez un lien vers la vôtre).</li>
+<li>Quand votre équipe accepte qu'une entrée soit montrée publiquement, cochez <strong>Prête pour le site public</strong>. L'équipe pédagogique choisit parmi celles-ci pour le site communautaire.</li></ul>
+<p><strong>Rien ici n'est noté ni remis.</strong> Les travaux notés vont dans Brightspace. N'y publiez ni notes, ni rétroaction des enseignants, ni renseignements personnels.</p>"""
+
+KINDS = ["Decision record · Fiche de décision", "Trade study · Étude de compromis",
+         "Review data pack · Dossier de revue", "Requirements · Exigences", "Budgets · Bilans",
+         "Interface document (ICD) · Document d'interface (DCI)", "Concept of operations · Concept d'opérations",
+         "Risk register · Registre des risques", "Licensing · Licences",
+         "Operations record (pass plan, anomaly ticket, handover) · Trace d'exploitation (plan de passage, fiche d'anomalie, passation)",
+         "Draft for the public site · Ébauche pour le site public", "Other · Autre"]
+SOURCES = ["SpaceCDF export · Export SpaceCDF", "C2O mission control (MCS, planner) · Contrôle de mission C2O (MCS, planificateur)",
+           "Simulator or logbook · Simulateur ou carnet de bord", "Made outside the tools · Fait hors des outils"]
+
+
+def project_items() -> list[dict]:
+    return [
+        {"type": "page", "name": ml("How the project space works", "Fonctionnement de l'espace projet"),
+         "content": mlh(PROJECT_EN, fr(PROJECT_FR)), "files": [], "idnumber": "WS-HELP"},
+        {"type": "data", "name": ml("Team documents and decisions", "Documents et décisions d'équipe"),
+         "intro": mlh(p(esc("Every team's documents and decisions, with the files from SpaceCDF and the C2O tools. "
+                             "Fill in AI use for every entry.")),
+                      p(esc(fr("Les documents et décisions de toutes les équipes, avec les fichiers de SpaceCDF et des "
+                               "outils C2O. Remplissez Utilisation de l'IA pour chaque entrée.")))),
+         "idnumber": "WS-DOCS",
+         "fields": [
+             {"type": "text", "name": "Team · Équipe", "description": "Your team's name · Le nom de votre équipe", "required": True},
+             {"type": "text", "name": "Title · Titre", "description": "What the entry is · Ce qu'est l'entrée", "required": True},
+             {"type": "menu", "name": "Kind · Type", "description": "Kind of document · Type de document", "required": True,
+              "options": KINDS},
+             {"type": "menu", "name": "Made with · Produit avec", "description": "Where it came from · D'où il vient",
+              "required": False, "options": SOURCES},
+             {"type": "file", "name": "File · Fichier", "description": "The exported or written file · Le fichier exporté ou rédigé",
+              "required": False},
+             {"type": "textarea", "name": "Summary or decision · Résumé ou décision",
+              "description": "What it says; for a decision: the options, the choice and why · Ce qu'il dit ; pour une décision : les options, le choix et pourquoi",
+              "required": True},
+             {"type": "textarea", "name": "AI use · Utilisation de l'IA",
+              "description": "Tools, for what, how you checked, what stayed yours; or 'none' · Outils, pour quoi, comment vous avez vérifié, ce qui reste à vous ; ou « aucune »",
+              "required": True},
+             {"type": "menu", "name": "Status · État", "description": "Draft, for team review or final · Ébauche, à revoir en équipe ou final",
+              "required": False, "options": ["Draft · Ébauche", "For team review · À revoir en équipe", "Final · Final"]},
+             {"type": "checkbox", "name": "Ready for the public site · Prête pour le site public",
+              "description": "The whole team agrees it can be shown publicly · Toute l'équipe accepte qu'elle soit montrée publiquement",
+              "required": False, "options": ["Yes · Oui"]},
+         ]},
+        {"type": "forum", "name": ml("Team room", "Salle d'équipe"),
+         "intro": mlh(p(esc("Discuss, ask the other teams, share work in progress.")),
+                      p(esc(fr("Discutez, interrogez les autres équipes, partagez le travail en cours.")))),
+         "idnumber": "WS-FORUM"},
+        {"type": "wiki", "name": ml("Project wiki", "Wiki du projet"),
+         "intro": mlh(p(esc("One page per team: start from the first page and add a link to your team's page.")),
+                      p(esc(fr("Une page par équipe : partez de la première page et ajoutez un lien vers celle de votre équipe.")))),
+         "firstpage": "Teams / Équipes", "idnumber": "WS-WIKI"},
+    ]
+
+
+def apply_unlock_chain(sections: list[dict]) -> None:
+    """Videos and handouts open one after the other in course order: each needs the previous
+    video finished, in either language. Slides, assignments and references are always open."""
+    prev: list[str] = []
+    for s in sections:
+        pending: list[str] = []
+        for it in s["items"]:
+            if it["type"] == "h5pactivity":
+                if prev:
+                    it["after_any"] = list(prev)
+                pending.append(it["idnumber"])
+                if it.get("lang") == "fr":            # the pair is complete: it is the new "previous"
+                    prev, pending = pending, []
+            elif str(it.get("idnumber", "")).startswith("W3DOCS-") and prev:
+                it["after_any"] = list(prev)
+
+
 def build() -> dict:
     general = [
         {"type": "page", "name": ml("Welcome", "Bienvenue"),
@@ -515,33 +762,31 @@ def build() -> dict:
                       "The course outline: outcomes, calendar and approach.",
                       "Le plan du cours : résultats d'apprentissage, calendrier et approche.",
                       [("ORBIT NORTH syllabus", "Plan de cours ORBIT NORTH",
-                        PDF / "ORBIT_NORTH_Syllabus_EN.pdf", PDF / "ORBIT_NORTH_Syllabus_FR.pdf")], "SYLLABUS"),
+                        PDF / ("ORBIT_NORTH_Syllabus_12wk_EN.pdf" if LAYOUT == "term" else "ORBIT_NORTH_Syllabus_EN.pdf"),
+                        PDF / ("ORBIT_NORTH_Syllabus_12wk_FR.pdf" if LAYOUT == "term" else "ORBIT_NORTH_Syllabus_FR.pdf"))],
+                      "SYLLABUS"),
     ]
-    sections = [{"name": None, "summary": "", "items": general}]
+    sections = [{"name": None, "summary": "", "items": general},
+                {"name": ml("Assignments, rubrics and AI use", "Travaux, grilles et utilisation de l'IA"),
+                 "summary": mlh(p(esc("What each assessment asks for, how to do it, the program rubric it is marked on, "
+                                      "and how to declare AI use. Everything is submitted on Brightspace, not here.")),
+                                p(esc(fr("Ce que demande chaque évaluation, comment la faire, la grille du programme qui sert "
+                                         "à la noter, et comment déclarer l'utilisation de l'IA. Tout se remet dans "
+                                         "Brightspace, pas ici.")))),
+                 "items": assessment_items()}]
     for i, s in enumerate(SECTIONS):
         if LAYOUT == "term":
             name_en, name_fr, lines = TERM[i]
             sections.append({"name": ml(name_en, name_fr), "summary": s["summary"].render(lines),
-                             "items": [expand(t) for t in s["items"]]})
+                             "items": [x for t in s["items"] for x in expand_all(t)]})
         else:
             sections.append({"name": s["name"], "summary": s["summary"].render(),
-                             "items": [expand(t) for t in s["items"]]})
+                             "items": [x for t in s["items"] for x in expand_all(t)]})
     sections.append({
-        "name": ml("Team workspace", "Espace d'équipe"),
-        "summary": mlh(p(esc("A shared space for each team to prepare its public showcase. Nothing here is graded.")),
-                       p(esc(fr("Un espace partagé où chaque équipe prépare sa vitrine publique. Rien ici n'est noté.")))),
-        "items": [
-            {"type": "page", "name": ml("How to use this space", "Comment utiliser cet espace"),
-             "content": mlh(WORKSPACE_EN, fr(WORKSPACE_FR)), "files": [], "idnumber": "WS-HELP"},
-            {"type": "forum", "name": ml("Team room", "Salle d'équipe"),
-             "intro": mlh(p(esc("Discuss, share drafts and coordinate your showcase.")),
-                          p(esc(fr("Discutez, partagez vos ébauches et coordonnez votre vitrine.")))),
-             "idnumber": "WS-FORUM"},
-            {"type": "wiki", "name": ml("Showcase drafts", "Ébauches de vitrine"),
-             "intro": mlh(p(esc("One page per team: start from the first page and add a link to your team's page.")),
-                          p(esc(fr("Une page par équipe : partez de la première page et ajoutez un lien vers celle de votre équipe.")))),
-             "firstpage": "Showcase / Vitrine", "idnumber": "WS-WIKI"},
-        ],
+        "name": ml("Project space", "Espace projet"),
+        "summary": mlh(p(esc("Shared by every team: documents, decisions and drafts for the public site. Nothing here is graded.")),
+                       p(esc(fr("Commun à toutes les équipes : documents, décisions et ébauches pour le site public. Rien ici n'est noté.")))),
+        "items": project_items(),
     })
     sections.append({
         "name": ml("Textbook, workbook and references", "Manuel, cahier et références"),
@@ -567,6 +812,7 @@ def build() -> dict:
                             PDF / "en/SpaceCDF_Textbook.pdf", PDF / "fr/SpaceCDF_Textbook_FR.pdf")], "TEXTBOOK"),
         ],
     })
+    apply_unlock_chain(sections)
     return {
         "course": {"fullname": ml("ORBIT NORTH — Space mission design and operations",
                                   "ORBIT NORTH — Conception et exploitation de missions spatiales"),

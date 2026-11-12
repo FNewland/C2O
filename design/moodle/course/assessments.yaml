@@ -1,0 +1,171 @@
+# ORBIT NORTH assessments as students see them on the open Moodle site: what to produce, how,
+# which videos and handouts help, the rubric rows it is marked on (large assessments), the AI
+# declaration, and the last step: upload to Brightspace. NOTHING is submitted on this site.
+#
+# Weights, rubric CLOs and learning outcomes come from design/configs/outcomes/
+# orbit_north_outcomes.yaml (A1-A9); rubric wording from mse_clo_rubrics.yaml. Weeks follow the
+# 12-week calendar (design/docs/orbit_north/syllabus_12week_en.md). `videos` and `handouts` are
+# course item ids; manifest.py turns them into links to the activity in the reader's language.
+# Edit freely: manifest.py rebuilds the pages from this file.
+
+ai_declaration:
+  en: |
+    <p>Generative AI is allowed, and encouraged in some activities, under the AIG (Assisted by Generative AI) transparency framework. Using it is fine; using it without saying so is an academic-integrity violation.</p>
+    <p>If you used generative AI for this deliverable, add the <strong>AIG badge</strong> to it and an <strong>AI use</strong> note with:</p>
+    <ol><li><strong>Tools</strong>: which tools and versions (for example a chatbot, a coding assistant, the SpaceCDF AI coach, a translator).</li>
+    <li><strong>For what</strong>: ideas, outline, drafting, analysis, code, figures, translation or editing, and which parts of the deliverable.</li>
+    <li><strong>How you checked it</strong>: what you verified against sources, calculations or the tools, and what you changed or rejected.</li>
+    <li><strong>What stayed yours</strong>: the decisions and judgements you made yourselves.</li></ol>
+    <p>If you used none, write "No generative AI was used." For team deliverables one note covers the team; say who used what.</p>
+    <p>Attribution framework: Peters (2023), Logos IA, CC BY-NC-SA 4.0 — <a href="https://mpeters.uqo.ca/en/logos-ia-en-peters-2023/">mpeters.uqo.ca</a>.</p>
+  fr: |
+    <p>L'IA générative est permise, et encouragée dans certaines activités, selon le cadre de transparence GIA (généré avec l'IA). L'utiliser est correct ; l'utiliser sans le dire constitue une infraction à l'intégrité académique.</p>
+    <p>Si vous avez utilisé l'IA générative pour ce livrable, ajoutez-y le <strong>badge GIA</strong> et une note <strong>Utilisation de l'IA</strong> qui précise :</p>
+    <ol><li><strong>Outils</strong> : lesquels et quelles versions (par exemple un agent conversationnel, un assistant de programmation, le coach IA de SpaceCDF, un traducteur).</li>
+    <li><strong>Pour quoi</strong> : idées, plan, rédaction, analyse, code, figures, traduction ou révision, et quelles parties du livrable.</li>
+    <li><strong>Comment vous avez vérifié</strong> : ce que vous avez contrôlé à partir de sources, de calculs ou des outils, et ce que vous avez modifié ou rejeté.</li>
+    <li><strong>Ce qui reste à vous</strong> : les décisions et les jugements que vous avez pris vous-mêmes.</li></ol>
+    <p>Si vous n'en avez pas utilisé, écrivez « Aucune IA générative n'a été utilisée. » Pour un livrable d'équipe, une seule note suffit ; indiquez qui a utilisé quoi.</p>
+    <p>Cadre d'attribution : Peters (2023), Logos IA, CC BY-NC-SA 4.0 — <a href="https://mpeters.uqo.ca/en/logos-ia-en-peters-2023/">mpeters.uqo.ca</a>.</p>
+
+submit:
+  en: "<p><strong>Last step: upload to Brightspace for grading and feedback.</strong> This site is outside the university network, so nothing is submitted here. Upload your deliverable, with its AI use note, to the matching assignment in the course's Brightspace site before the deadline.</p>"
+  fr: "<p><strong>Dernière étape : déposez votre travail dans Brightspace pour l'évaluation et la rétroaction.</strong> Ce site est hors du réseau de l'université : rien n'y est remis. Déposez votre livrable, avec sa note sur l'utilisation de l'IA, dans le travail correspondant du site Brightspace du cours avant l'échéance.</p>"
+
+assessments:
+  A1:
+    week: 1
+    who: {en: Individual, fr: Individuel}
+    purpose:
+      en: Check where you are starting from, so your team and the course team know what to build on.
+      fr: Faire le point sur vos acquis de départ, pour que votre équipe et l'équipe pédagogique sachent sur quoi bâtir.
+    produce:
+      en: A short online quiz on Brightspace (about 20 minutes) on the Canadian space sector, the systems-engineering process and the tools.
+      fr: Un court quiz en ligne dans Brightspace (environ 20 minutes) sur le secteur spatial canadien, le processus d'ingénierie système et les outils.
+    steps:
+      - {en: "Watch the week 1 videos and answer their practice questions.", fr: "Regardez les vidéos de la semaine 1 et répondez à leurs questions d'entraînement."}
+      - {en: "Open SpaceCDF and the C2O welcome page once, so you know where things are.", fr: "Ouvrez une fois SpaceCDF et la page d'accueil C2O pour savoir où se trouvent les choses."}
+      - {en: "Take the quiz on Brightspace before the end of week 1.", fr: "Faites le quiz dans Brightspace avant la fin de la semaine 1."}
+    videos: [V-DES-01, V-DES-02, V-SCDF-01, V-SCDF-14]
+  A2:
+    week: 2
+    who: {en: "Team, with an individual part", fr: "Équipe, avec une part individuelle"}
+    purpose:
+      en: Show that your team understands the problem it is solving and has a credible first concept, before any detailed design.
+      fr: Montrer que votre équipe comprend le problème qu'elle résout et dispose d'un premier concept crédible, avant toute conception détaillée.
+    produce:
+      en: "A 10-minute informal Mission Concept Review in the last hour of the week 2 studio: problem statement, stakeholders and their measures of effectiveness, the mission alternatives you weighed, concept v0 and ConOps v0, and your top risks. Then upload the slides and the SpaceCDF concept export."
+      fr: "Une revue de concept de mission informelle de 10 minutes pendant la dernière heure de l'atelier de la semaine 2 : énoncé du problème, parties prenantes et leurs mesures d'efficacité, options de mission étudiées, concept v0 et ConOps v0, principaux risques. Déposez ensuite les diapositives et l'export du concept de SpaceCDF."
+    steps:
+      - {en: "Write the problem statement and map the stakeholders in SpaceCDF (Mission tab).", fr: "Rédigez l'énoncé du problème et cartographiez les parties prenantes dans SpaceCDF (onglet Mission)."}
+      - {en: "Weigh at least three mission alternatives and record the decision with its reasons.", fr: "Comparez au moins trois options de mission et consignez la décision avec ses raisons."}
+      - {en: "Draft ConOps v0 and open the risk register with your top three risks.", fr: "Rédigez la ConOps v0 et ouvrez le registre des risques avec vos trois principaux risques."}
+      - {en: "Use the review gate view to check what an MCR asks for, then present.", fr: "Utilisez la vue des jalons de revue pour vérifier ce que demande une MCR, puis présentez."}
+      - {en: "Individual part: one paragraph each on the stakeholder you analysed and what you learned.", fr: "Part individuelle : un paragraphe chacun sur la partie prenante que vous avez analysée et ce que vous en avez appris."}
+    videos: [V-DES-03, V-SCDF-08, V-SCDF-17, V-SCDF-06, V-SCDF-07]
+  A3:
+    week: "3–7"
+    who: {en: Individual, fr: Individuel}
+    purpose:
+      en: Keep your discipline's analysis moving between studios, and show your part in the team's concurrent design.
+      fr: Faire avancer l'analyse de votre discipline entre les ateliers et montrer votre part dans la conception concourante de l'équipe.
+    produce:
+      en: The CDF worksheet of each design week (in the course workbook), filled from your work in SpaceCDF, and your participation in the studios.
+      fr: La feuille CDF de chaque semaine de conception (dans le cahier du cours), remplie à partir de votre travail dans SpaceCDF, et votre participation aux ateliers.
+    steps:
+      - {en: "Before each studio, watch that week's videos and do the worksheet's preparation part.", fr: "Avant chaque atelier, regardez les vidéos de la semaine et faites la partie préparation de la feuille."}
+      - {en: "In the studio, work your discipline seat in SpaceCDF and record the decisions you take in your logbook.", fr: "En atelier, tenez votre poste disciplinaire dans SpaceCDF et consignez vos décisions dans votre carnet de bord."}
+      - {en: "After the studio, finish the worksheet with the numbers SpaceCDF shows (budgets, margins, trade scores).", fr: "Après l'atelier, terminez la feuille avec les chiffres affichés par SpaceCDF (bilans, marges, notes des compromis)."}
+      - {en: "Upload each week's worksheet to Brightspace by the next studio.", fr: "Déposez la feuille de chaque semaine dans Brightspace avant l'atelier suivant."}
+    videos: [V-SCDF-04, V-SCDF-12, V-SCDF-02, V-SCDF-18, V-SCDF-19, V-SCDF-03, V-SCDF-09, V-SCDF-10, V-SCDF-13, V-SCDF-05, V-SCDF-20]
+  A4:
+    week: 7
+    who: {en: "Team, with an individual part", fr: "Équipe, avec une part individuelle"}
+    purpose:
+      en: Show that your preliminary design closes — requirements, budgets with margins, trades, interfaces, verification, cost and risk — and defend it to a review board.
+      fr: Montrer que votre conception préliminaire se tient — exigences, bilans avec marges, compromis, interfaces, vérification, coûts et risques — et la défendre devant un comité de revue.
+    produce:
+      en: "The PDR data pack exported from SpaceCDF (requirements, budgets, ICDs, V&V matrix, risk register, cost and bill of materials, decision records), a 20-minute review presentation, and your answers to the board's actions. Individual part: your discipline's section of the pack."
+      fr: "Le dossier de revue PDR exporté de SpaceCDF (exigences, bilans, DCI, matrice V et V, registre des risques, coûts et nomenclature, fiches de décision), une présentation de revue de 20 minutes et vos réponses aux actions du comité. Part individuelle : la section de votre discipline dans le dossier."
+    steps:
+      - {en: "Run the PDR gate in SpaceCDF and close every must-pass criterion it shows.", fr: "Lancez le jalon PDR dans SpaceCDF et fermez chaque critère obligatoire qu'il affiche."}
+      - {en: "Issue the interface documents and have both owning seats sign them.", fr: "Émettez les documents d'interface et faites-les signer par les deux postes responsables."}
+      - {en: "Where you disagree with a trade score, check the logic and record why you chose as you did.", fr: "Quand vous êtes en désaccord avec la note d'un compromis, vérifiez la logique et consignez pourquoi vous avez choisi ainsi."}
+      - {en: "Export the review package and build the presentation from it.", fr: "Exportez le dossier de revue et construisez la présentation à partir de lui."}
+      - {en: "Present in the week 7 studio; then answer the board's actions in writing.", fr: "Présentez à l'atelier de la semaine 7, puis répondez par écrit aux actions du comité."}
+    videos: [V-SCDF-22, V-SCDF-23, V-SCDF-24, V-SCDF-15, V-DES-11, V-DES-12, V-DES-13]
+  A5:
+    week: 9
+    who: {en: Individual, fr: Individuel}
+    purpose:
+      en: Check you are ready to sit at a console before the simulations.
+      fr: Vérifier que vous êtes prêts à prendre une console avant les simulations.
+    produce:
+      en: A short quiz on Brightspace on your position, the procedures, telecommands and telemetry, and anomaly response.
+      fr: Un court quiz dans Brightspace sur votre poste, les procédures, les télécommandes et la télémesure, et la réponse aux anomalies.
+    steps:
+      - {en: "Watch the week 8 and 9 videos and answer their practice questions.", fr: "Regardez les vidéos des semaines 8 et 9 et répondez à leurs questions d'entraînement."}
+      - {en: "Work through your position's procedure cards in the MCS during the training studios.", fr: "Parcourez les fiches de procédure de votre poste dans le MCS pendant les ateliers de formation."}
+      - {en: "Take the quiz on Brightspace before the end of week 9.", fr: "Faites le quiz dans Brightspace avant la fin de la semaine 9."}
+    videos: [V-CON-05, V-CON-06, V-PLN-01, V-OPS-01, V-OPS-03, V-CON-04, V-OPS-02]
+    handouts: [W3DOCS-tools, W3DOCS-training]
+  A6:
+    week: "10–11"
+    who: {en: Team, fr: Équipe}
+    purpose:
+      en: Fly EOSAT-1 through a real shift as a team, and show how you decide under pressure when things go wrong.
+      fr: Piloter EOSAT-1 en équipe pendant un vrai quart et montrer comment vous décidez sous pression quand les choses tournent mal.
+    produce:
+      en: "Your operator shift in one of the two simulations, assessed live, plus the shift's records: the pass plans, the procedure log, the anomaly tickets and the handover notes."
+      fr: "Votre quart d'opérateurs dans l'une des deux simulations, évalué en direct, plus les traces du quart : plans de passage, journal des procédures, fiches d'anomalie et notes de passation."
+    steps:
+      - {en: "Plan your passes in the mission planner before the shift.", fr: "Planifiez vos passages dans le planificateur de mission avant le quart."}
+      - {en: "Run the shift: procedures, voice loop, go/no-go polls, anomaly response.", fr: "Menez le quart : procédures, boucle vocale, scrutins go/no-go, réponse aux anomalies."}
+      - {en: "Write an anomaly ticket for every anomaly, with its cause and what you did.", fr: "Rédigez une fiche pour chaque anomalie, avec sa cause et ce que vous avez fait."}
+      - {en: "Download the logbooks and the console log at the end of the shift and upload them to Brightspace.", fr: "Téléchargez les carnets de bord et le journal de console à la fin du quart et déposez-les dans Brightspace."}
+    videos: [V-OPS-04, V-OPS-05, V-OPS-06, V-OPS-07, V-OPS-08, V-OPS-09, V-OPS-12, V-OPS-13, V-OPS-10, V-OPS-11]
+    handouts: [W3DOCS-sim]
+  A7:
+    week: "10–11 (report due week 12)"
+    who: {en: "Team, with an individual part", fr: "Équipe, avec une part individuelle"}
+    purpose:
+      en: Learn from watching another team fly, and give them feedback they can use.
+      fr: Apprendre en observant une autre équipe en vol, et lui donner une rétroaction utile.
+    produce:
+      en: "A critique report (4–6 pages) on the shift you observed, built from the peer-review worksheets, presented to the operators in week 12. Individual part: your own observations and one recommendation."
+      fr: "Un rapport de critique (4 à 6 pages) sur le quart observé, construit à partir des feuilles d'évaluation par les pairs, présenté aux opérateurs en semaine 12. Part individuelle : vos propres observations et une recommandation."
+    steps:
+      - {en: "During the shift, fill the peer-review worksheets with times, what happened and what the team did.", fr: "Pendant le quart, remplissez les feuilles d'évaluation avec les heures, ce qui s'est passé et ce que l'équipe a fait."}
+      - {en: "After the shift, compare notes as a team and pick the three most useful findings.", fr: "Après le quart, comparez vos notes en équipe et retenez les trois constats les plus utiles."}
+      - {en: "Write the report: what went well, what did not and why, and what you recommend.", fr: "Rédigez le rapport : ce qui a bien marché, ce qui n'a pas marché et pourquoi, et ce que vous recommandez."}
+      - {en: "Present it to the operators in week 12.", fr: "Présentez-le aux opérateurs en semaine 12."}
+    videos: [V-OPS-03, V-OPS-10, V-OPS-11]
+    handouts: [W3DOCS-sim]
+  A8:
+    week: 12
+    who: {en: Team, fr: Équipe}
+    purpose:
+      en: Look back over the whole mission, from the need to the last pass, and show what your design decisions meant once you flew.
+      fr: Revenir sur toute la mission, du besoin au dernier passage, et montrer ce que vos décisions de conception ont donné en vol.
+    produce:
+      en: "A 15-minute final mission review: the need and the concept, the key design decisions, what operations showed about them, and what you would change. Upload the slides and the decision records you discuss."
+      fr: "Une revue finale de mission de 15 minutes : le besoin et le concept, les décisions de conception clés, ce que l'exploitation en a montré, et ce que vous changeriez. Déposez les diapositives et les fiches de décision dont vous parlez."
+    steps:
+      - {en: "Pick three design decisions from your team documents and find what operations showed about each.", fr: "Choisissez trois décisions de conception dans vos documents d'équipe et retrouvez ce que l'exploitation a montré de chacune."}
+      - {en: "Check your verification matrix against what you actually saw in the simulations.", fr: "Confrontez votre matrice de vérification à ce que vous avez réellement observé en simulation."}
+      - {en: "Build and give the review in week 12.", fr: "Construisez la revue et présentez-la en semaine 12."}
+    videos: [V-SCDF-15, V-SCDF-24]
+  A9:
+    week: "1 week after week 12"
+    who: {en: Individual, fr: Individuel}
+    purpose:
+      en: Make sense of what you learned, where your knowledge ran out, and what you will do next.
+      fr: Donner un sens à ce que vous avez appris, voir où vos connaissances ont atteint leurs limites, et ce que vous ferez ensuite.
+    produce:
+      en: "A reflective portfolio. GNG 3100: a structured reflection with evidence from your logbook and team documents. SYS 5186: a critical, literature-informed analysis of 2500–3000 words."
+      fr: "Un portfolio réflexif. GNG 3100 : une réflexion structurée appuyée sur votre carnet de bord et les documents d'équipe. SYS 5186 : une analyse critique appuyée sur la littérature, de 2 500 à 3 000 mots."
+    steps:
+      - {en: "Download your logbooks from SpaceCDF and the MCS as you go: they are purged 48 hours after your last entry.", fr: "Téléchargez vos carnets de bord de SpaceCDF et du MCS au fur et à mesure : ils sont effacés 48 heures après votre dernière entrée."}
+      - {en: "Choose the pieces of evidence that best show your learning, and link each to a rubric criterion.", fr: "Choisissez les preuves qui montrent le mieux vos apprentissages et reliez chacune à un critère de la grille."}
+      - {en: "Write where your knowledge ran out, what you did about it, and what you would do differently.", fr: "Écrivez où vos connaissances ont atteint leurs limites, ce que vous avez fait, et ce que vous feriez autrement."}
+    videos: []
