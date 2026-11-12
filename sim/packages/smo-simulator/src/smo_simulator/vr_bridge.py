@@ -318,7 +318,7 @@ def build_vr_power(engine) -> dict:
         "wings": {
             "wing_py": dict(amps_watts(wing_py_i), deployed=bool(getattr(s, "wing_my_deployed", False))),
             "wing_my": dict(amps_watts(wing_my_i), deployed=bool(getattr(s, "wing_py_deployed", False))),
-            "sada_angle_deg": round(-float(getattr(s, "solar_array_drive_angle", 0.0) or 0.0), 2),
+            "sada_angle_deg": round(-float(getattr(s, "solar_array_drive_angle", 0.0) or 0.0), 2) + 0.0,
         },
         "body_faces": faces,
         "strings": {
