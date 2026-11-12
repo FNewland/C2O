@@ -62,4 +62,9 @@ network:
   vr_enabled: true
   vr_tcp_port: 8100
   vr_ws_port: 8101
+  # Power channel: the same frames plus solar-array, battery and bus power
+  # (SMO_VR_POWER_PORT, SMO_VR_POWER_WS_PORT). Command requests from headsets
+  # go to the MCS, not here (network.vr_request_* in the MCS settings).
+  vr_power_tcp_port: 8102
+  vr_power_ws_port: 8103
   vr_max_rate_hz: 10.0

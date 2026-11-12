@@ -279,10 +279,79 @@ def build_vr_state(engine) -> dict:
     }
 
 
+# smo-vr/1 body faces from the simulator's: +X is shared, +Y and +Z swap sign
+# (VR_FROM_SIM_BODY), so the VR "py" face is the simulator's "my" and so on.
+VR_FACE_FROM_SIM = {"px": "px", "mx": "mx", "py": "my", "my": "py", "pz": "mz", "mz": "pz"}
+
+
+def build_vr_power(engine) -> dict:
+    """The ``power`` block of the power channel (ICD §5a). Tick thread only.
+
+    Simulation truth from the power model, in the smo-vr/1 body axes. Power on a
+    face or wing is its current times the bus voltage (the model's own split).
+    """
+    eps = (getattr(engine, "subsystems", {}) or {}).get("eps")
+    s = getattr(eps, "_state", None)
+    if s is None:
+        return {}
+    bus_v = float(getattr(s, "bus_voltage", 0.0) or 0.0)
+    panels = dict(getattr(s, "sa_panel_currents", {}) or {})
+    wings = dict(getattr(s, "sa_wing_currents", {}) or {})
+
+    def amps_watts(i: float) -> dict:
+        return {"current_a": round(i, 3), "power_w": round(i * bus_v, 2)}
+
+    faces = {}
+    for vr_face, sim_face in VR_FACE_FROM_SIM.items():
+        body_i = float(panels.get(sim_face, 0.0) or 0.0) - float(wings.get(sim_face, 0.0) or 0.0)
+        faces[vr_face] = amps_watts(max(0.0, body_i))
+    wing_py_i = float(wings.get("my", 0.0) or 0.0)      # smo-vr/1 +Y wing = simulator -Y wing
+    wing_my_i = float(wings.get("py", 0.0) or 0.0)
+    gen = float(getattr(s, "power_gen_w", 0.0) or 0.0)
+    cons = float(getattr(s, "power_cons_w", 0.0) or 0.0)
+    bat_i = float(getattr(s, "bat_current", 0.0) or 0.0)
+    return {
+        "bus_voltage_v": round(bus_v, 3),
+        "generated_w": round(gen, 2),
+        "consumed_w": round(cons, 2),
+        "net_w": round(gen - cons, 2),
+        "wings": {
+            "wing_py": dict(amps_watts(wing_py_i), deployed=bool(getattr(s, "wing_my_deployed", False))),
+            "wing_my": dict(amps_watts(wing_my_i), deployed=bool(getattr(s, "wing_py_deployed", False))),
+            "sada_angle_deg": round(-float(getattr(s, "solar_array_drive_angle", 0.0) or 0.0), 2),
+        },
+        "body_faces": faces,
+        "strings": {
+            "a": {"voltage_v": round(float(getattr(s, "sa_a_voltage", 0.0) or 0.0), 3),
+                  "current_a": round(float(getattr(s, "sa_a_current", 0.0) or 0.0), 3),
+                  "enabled": bool(getattr(s, "sa_a_enabled", True))},
+            "b": {"voltage_v": round(float(getattr(s, "sa_b_voltage", 0.0) or 0.0), 3),
+                  "current_a": round(float(getattr(s, "sa_b_current", 0.0) or 0.0), 3),
+                  "enabled": bool(getattr(s, "sa_b_enabled", True))},
+        },
+        "battery": {
+            "soc_pct": round(float(getattr(s, "bat_soc_pct", 0.0) or 0.0), 2),
+            "voltage_v": round(float(getattr(s, "bat_voltage", 0.0) or 0.0), 3),
+            "current_a": round(bat_i, 3),
+            "charging": bat_i > 0.05,
+            "temp_c": round(float(getattr(s, "bat_temp", 0.0) or 0.0), 2),
+        },
+        "load_shed_stage": int(getattr(s, "load_shed_stage", 0) or 0),
+    }
+
+
+POWER_FIELDS = (
+    "power: bus_voltage_v; generated_w, consumed_w, net_w (W); wings.wing_py/wing_my "
+    "{current_a, power_w, deployed}, wings.sada_angle_deg; body_faces.px..mz {current_a, power_w} "
+    "(smo-vr/1 body axes, wings excluded); strings.a/b {voltage_v, current_a, enabled}; battery "
+    "{soc_pct, voltage_v, current_a (+ = charging), charging, temp_c}; load_shed_stage 0-3")
+
+
 def build_hello(source: str, max_rate_hz: float,
                 tcp_port: int | None = None,
-                ws_port: int | None = None) -> dict:
-    return {
+                ws_port: int | None = None,
+                channel: str = "state") -> dict:
+    hello = {
         "type": "hello",
         "schema": SCHEMA,
         "source": source,
@@ -301,6 +370,11 @@ def build_hello(source: str, max_rate_hz: float,
         "healthy_mask": HEALTHY_MASK,
         "spacecraft": SPACECRAFT_GEOMETRY,
     }
+    if channel != "state":          # the state channel's hello stays exactly as issued
+        hello["channel"] = channel
+    if channel == "power":
+        hello["power_fields"] = POWER_FIELDS
+    return hello
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -394,6 +468,7 @@ class VRLinkMonitor:
 
     def __init__(self, tcp_port: int | None = None,
                  ws_port: int | None = None):
+        self.channel = "state"
         self.tcp_port = tcp_port
         self.ws_port = ws_port
         self._clients: dict[int, VRClient] = {}
@@ -456,6 +531,7 @@ class VRLinkMonitor:
         for c in self._clients.values():
             rows.append({
                 "id": c.cid,
+                "channel": self.channel,
                 "team": c.team,
                 "transport": c.transport,
                 "peer": c.peer,
@@ -494,6 +570,24 @@ class VRLinkMonitor:
         }
 
 
+def merge_summaries(by_channel: dict) -> dict:
+    """One instructor view of every channel: the ``state`` summary's fields, all clients
+    (each row names its channel), and the power channel's ports."""
+    summaries = [v for v in by_channel.values() if v]
+    if not summaries:
+        return {"enabled": False}
+    base = dict(by_channel.get("state") or summaries[0])
+    rows = [r for v in summaries for r in v.get("clients", [])]
+    base["clients"] = rows
+    base["n_clients"] = len(rows)
+    base["overall"] = (max((r["health"] for r in rows), key=HEALTH_ORDER.index)
+                       if rows else "NO_CLIENTS")
+    pw = by_channel.get("power")
+    if pw:
+        base["power_tcp_port"], base["power_ws_port"] = pw.get("tcp_port"), pw.get("ws_port")
+    return base
+
+
 # ─────────────────────────────────────────────────────────────────────────
 #  The bridge (asyncio side)
 # ─────────────────────────────────────────────────────────────────────────
@@ -516,8 +610,10 @@ class VRBridge:
                  ws_port: int | None = DEFAULT_WS_PORT,
                  max_rate_hz: float = DEFAULT_MAX_RATE_HZ,
                  source: str = "smo-simulator",
-                 on_summary: Optional[Callable[[dict], None]] = None):
+                 on_summary: Optional[Callable[[dict], None]] = None,
+                 channel: str = "state"):
         self._get_state = get_state
+        self.channel = channel
         self._host = host
         self.tcp_port = tcp_port
         self.ws_port = ws_port
@@ -525,6 +621,9 @@ class VRBridge:
         self._source = source
         self._on_summary = on_summary
         self.monitor = VRLinkMonitor(tcp_port, ws_port)
+        self.monitor.channel = channel
+        if channel != "state":                 # ids stay unique across channels
+            self.monitor._next_id = 1001
         self._writers: dict[int, Any] = {}   # cid -> send coroutine fn
         self._seq = 0
         self._last_line: Optional[str] = None
@@ -557,8 +656,8 @@ class VRBridge:
         self.monitor.tcp_port, self.monitor.ws_port = self.tcp_port, self.ws_port
         self._publish_summary()
         self._task = asyncio.ensure_future(self._broadcast_loop())
-        logger.info("VR bridge (%s) on %s — TCP:%s WS:%s max %.1f Hz",
-                    SCHEMA, self._host, self.tcp_port, self.ws_port,
+        logger.info("VR bridge (%s, %s channel) on %s — TCP:%s WS:%s max %.1f Hz",
+                    SCHEMA, self.channel, self._host, self.tcp_port, self.ws_port,
                     self.max_rate_hz)
 
     async def stop(self) -> None:
@@ -579,7 +678,7 @@ class VRBridge:
 
     def _hello_line(self) -> str:
         return _dumps(build_hello(self._source, self.max_rate_hz,
-                                  self.tcp_port, self.ws_port))
+                                  self.tcp_port, self.ws_port, self.channel))
 
     def _next_frame_line(self, body: dict) -> str:
         self._seq += 1
@@ -684,12 +783,20 @@ class VRBridge:
 
     # -- WebSocket ----------------------------------------------------------
 
+    async def handle_ws(self, request):
+        """The WebSocket stream; also mounted on the simulator's HTTP port (``/vr``,
+        ``/vr/power``) so the space link can carry it to the cloud."""
+        return await self._handle_ws(request)
+
     async def _handle_ws(self, request):
         from aiohttp import web, WSMsgType
         ws = web.WebSocketResponse(heartbeat=10.0,
                                    max_msg_size=MAX_LINE_BYTES)
         await ws.prepare(request)
-        client = self.monitor.register("ws", str(request.remote or "?"))
+        # through the space link the socket peer is the link agent: prefer the forwarded address
+        peer = (request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+                or str(request.remote or "?"))
+        client = self.monitor.register("ws", peer)
 
         async def send(line: str) -> None:
             await ws.send_str(line)

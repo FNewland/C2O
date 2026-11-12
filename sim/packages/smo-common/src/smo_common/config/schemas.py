@@ -138,6 +138,8 @@ class NetworkConfig(StrictModel):
     vr_enabled: bool = True
     vr_tcp_port: int = 8100
     vr_ws_port: int = 8101
+    vr_power_tcp_port: int = 8102     # power channel: the same frames plus a power block
+    vr_power_ws_port: int = 8103
     vr_max_rate_hz: float = 10.0
 
 class GroundStationConfig(StrictModel):

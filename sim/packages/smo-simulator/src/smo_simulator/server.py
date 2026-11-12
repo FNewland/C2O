@@ -43,6 +43,7 @@ class SimulatorServer:
         # VR visualisation bridge (smo-vr/1). None = disabled.
         self._vr_cfg: dict | None = self._config.get("vr")
         self.vr_bridge = None
+        self.vr_bridges: dict = {}
 
     async def start(self) -> None:
         self._running = True
@@ -85,31 +86,50 @@ class SimulatorServer:
         )
 
     async def _start_vr_bridge(self) -> None:
-        from smo_simulator.vr_bridge import VRBridge
+        """Two channels (docs/VR_INTERFACE_ICD.md): ``state`` (smo-vr/1 as issued, 8100/8101)
+        and ``power`` (the same frames plus a power block, 8102/8103). Both are also served
+        on this HTTP port at /vr and /vr/power, which is what the space link carries to the
+        cloud (ops.c2o.live/vr...)."""
+        from smo_simulator.vr_bridge import VRBridge, merge_summaries
         cfg = self._vr_cfg or {}
+        summaries: dict = {}
 
-        def publish(summary: dict) -> None:
-            # Atomic rebind of a fresh dict — the tick thread reads it into
-            # the state summary; nothing mutates it afterwards.
-            self.engine.vr_link = summary
+        def publisher(channel: str):
+            def publish(summary: dict) -> None:
+                # Atomic rebind of a fresh dict — the tick thread reads it into
+                # the state summary; nothing mutates it afterwards.
+                summaries[channel] = summary
+                self.engine.vr_link = merge_summaries(summaries)
+            return publish
 
-        bridge = VRBridge(
-            self.engine.get_vr_state,
-            host=self._bind_host,
-            tcp_port=cfg.get("tcp_port"),
-            ws_port=cfg.get("ws_port"),
-            max_rate_hz=cfg.get("max_rate_hz", 10.0),
-            on_summary=publish,
-        )
-        try:
-            await bridge.start()
-        except OSError as e:
-            logger.error("VR bridge NOT started (%s). The simulator carries "
-                         "on without it; free the port or pass --vr-port / "
-                         "--vr-ws-port / --no-vr.", e)
-            await bridge.stop()
-            return
-        self.vr_bridge = bridge
+        specs = [("state", self.engine.get_vr_state, cfg.get("tcp_port"), cfg.get("ws_port")),
+                 ("power", self.engine.get_vr_power_state, cfg.get("power_tcp_port"),
+                  cfg.get("power_ws_port"))]
+        bridges = {}
+        for channel, get, tcp, ws in specs:
+            if tcp is None and ws is None and channel != "state":
+                continue
+            bridge = VRBridge(
+                get,
+                host=self._bind_host,
+                tcp_port=tcp,
+                ws_port=ws,
+                max_rate_hz=cfg.get("max_rate_hz", 10.0),
+                on_summary=publisher(channel),
+                channel=channel,
+            )
+            try:
+                await bridge.start()
+            except OSError as e:
+                logger.error("VR %s channel NOT started (%s). The simulator carries "
+                             "on without it; free the port or pass --vr-port / "
+                             "--vr-ws-port / --no-vr.", channel, e)
+                await bridge.stop()
+                continue
+            bridges[channel] = bridge
+        self.vr_bridge = bridges.get("state")
+        self.vr_bridges = bridges
+        self._app["vr_bridges"].update(bridges)    # the dict the app holds; it is frozen now
 
     async def _handle_tc_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
@@ -258,6 +278,8 @@ def resolve_vr_config(args, network, env: dict | None = None) -> dict | None:
                          "vr_tcp_port", 8100),
         "ws_port": pick(getattr(args, "vr_ws_port", None), "SMO_VR_WS_PORT",
                         "vr_ws_port", 8101),
+        "power_tcp_port": pick(None, "SMO_VR_POWER_PORT", "vr_power_tcp_port", 8102),
+        "power_ws_port": pick(None, "SMO_VR_POWER_WS_PORT", "vr_power_ws_port", 8103),
         "max_rate_hz": float(getattr(network, "vr_max_rate_hz", 10.0)),
     }
 

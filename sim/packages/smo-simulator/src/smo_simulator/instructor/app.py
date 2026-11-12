@@ -38,6 +38,7 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     apply_http_policy(app, revalidate_prefixes=("/static/",),
                       max_age_prefixes={"/static/vendor/": 86400})
     app["engine"] = engine
+    app["vr_bridges"] = {}      # filled by the server once the VR channels are up
     app["ws_clients"] = []
     # default flipped to modern (Agent-5 gate passed)
     resolved_ui = (ui_mode or os.environ.get("SMO_UI") or "modern").strip().lower()
@@ -82,6 +83,9 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     app.router.add_get("/api/instructor/debrief", handle_instructor_debrief)
     # VR visualisation bridge (smo-vr/1): headset link status + latest frame.
     app.router.add_get("/api/vr", handle_vr)
+    # The VR streams on this port too, for the space link (ops.c2o.live/vr, /vr/power).
+    app.router.add_get("/vr", handle_vr_stream)
+    app.router.add_get("/vr/power", handle_vr_stream)
     app.router.add_post("/api/command", handle_command)
     app.router.add_get("/api/scenarios", handle_scenarios)
     app.router.add_get("/api/scenario/debrief", handle_scenario_debrief)
@@ -409,6 +413,15 @@ async def handle_vr(request):
         "link": link if link is not None else {"enabled": False},
         "frame": get() if callable(get) else None,
     })
+
+
+async def handle_vr_stream(request):
+    """The smo-vr/1 WebSocket stream of one channel (``/vr`` state, ``/vr/power``)."""
+    channel = "power" if request.path.rstrip("/").endswith("/power") else "state"
+    bridge = request.app["vr_bridges"].get(channel)
+    if bridge is None:
+        return web.json_response({"error": f"VR {channel} channel is not running"}, status=503)
+    return await bridge.handle_ws(request)
 
 
 async def handle_command(request):

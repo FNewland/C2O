@@ -371,7 +371,8 @@ class TestWiring:
                               vr_ws_port=8101, vr_max_rate_hz=10.0)
         args = build_parser().parse_args([])
         assert resolve_vr_config(args, net, env={}) == {
-            "tcp_port": 8100, "ws_port": 8101, "max_rate_hz": 10.0}
+            "tcp_port": 8100, "ws_port": 8101, "power_tcp_port": 8102,
+            "power_ws_port": 8103, "max_rate_hz": 10.0}
         assert resolve_vr_config(args, net, env={"SMO_VR_PORT": "9100"})[
             "tcp_port"] == 9100
         args = build_parser().parse_args(["--vr-port", "7100"])
@@ -388,6 +389,7 @@ class TestWiring:
         from smo_common.config.loader import load_mission_config
         n = load_mission_config(ROOT / "configs" / "eosat1").network
         assert (n.vr_tcp_port, n.vr_ws_port) == (8100, 8101)
+        assert (n.vr_power_tcp_port, n.vr_power_ws_port) == (8102, 8103)
 
     def test_instructor_api_vr(self, engine):
         from aiohttp.test_utils import TestClient, TestServer
@@ -487,3 +489,85 @@ class TestStubParity:
         assert {f["sun"]["in_eclipse"] for f in frames} == {True, False}
         assert {f["mission"]["in_contact"] for f in frames} == {True, False}
         assert [f["seq"] for f in frames] == list(range(1, len(frames) + 1))
+
+
+# ── the power channel (ICD issue 2, §5a) ─────────────────────────────────
+
+def test_power_block_is_in_vr_axes_and_adds_up(engine):
+    p = vb.build_vr_power(engine)
+    assert set(p) >= {"bus_voltage_v", "generated_w", "consumed_w", "net_w", "wings",
+                      "body_faces", "strings", "battery", "load_shed_stage"}
+    assert set(p["body_faces"]) == {"px", "mx", "py", "my", "pz", "mz"}
+    assert p["net_w"] == pytest.approx(p["generated_w"] - p["consumed_w"], abs=0.02)
+    s = engine.subsystems["eps"]._state
+    # smo-vr/1 +Y wing is the simulator's -Y wing; +Z face is the simulator's -Z face
+    assert p["wings"]["wing_py"]["current_a"] == pytest.approx(s.sa_wing_currents["my"], abs=1e-3)
+    assert p["wings"]["wing_py"]["deployed"] == bool(s.wing_my_deployed)
+    sim_mz_body = s.sa_panel_currents["mz"] - s.sa_wing_currents.get("mz", 0.0)
+    assert p["body_faces"]["pz"]["current_a"] == pytest.approx(max(0.0, sim_mz_body), abs=1e-3)
+    assert p["battery"]["charging"] == (s.bat_current > 0.05)
+
+
+def test_power_frame_is_the_state_frame_plus_power(engine):
+    body = engine.get_vr_power_state()
+    base = engine.get_vr_state()
+    assert {k: v for k, v in body.items() if k != "power"} == base
+    assert body["power"]["bus_voltage_v"] > 0
+
+
+def test_power_channel_streams_and_is_tagged(engine):
+    async def run():
+        import aiohttp
+        summaries: dict = {}
+        state = vb.VRBridge(engine.get_vr_state, host="127.0.0.1", tcp_port=None, ws_port=0,
+                            on_summary=lambda s: summaries.__setitem__("state", s))
+        power = vb.VRBridge(engine.get_vr_power_state, host="127.0.0.1", tcp_port=0, ws_port=0,
+                            channel="power", on_summary=lambda s: summaries.__setitem__("power", s))
+        await state.start(); await power.start()
+        try:
+            r, w = await asyncio.open_connection("127.0.0.1", power.tcp_port)
+            hello = json.loads(await asyncio.wait_for(r.readline(), 5))
+            assert hello["schema"] == vb.SCHEMA and hello["channel"] == "power"
+            assert "power_fields" in hello
+            st = json.loads(await asyncio.wait_for(r.readline(), 5))
+            assert st["type"] == "state" and "power" in st and "orbit" in st
+            async with aiohttp.ClientSession() as s:
+                async with s.ws_connect(f"http://127.0.0.1:{state.ws_port}/vr") as ws:
+                    h = json.loads((await ws.receive(timeout=5)).data)
+                    assert "channel" not in h and "power_fields" not in h
+                    m = json.loads((await ws.receive(timeout=5)).data)
+                    assert "power" not in m          # the state channel is smo-vr/1 as issued
+                    await asyncio.sleep(1.2)
+                    merged = vb.merge_summaries(summaries)
+            assert merged["n_clients"] == 2
+            assert {c["channel"] for c in merged["clients"]} == {"state", "power"}
+            assert len({c["id"] for c in merged["clients"]}) == 2
+            assert merged["power_tcp_port"] == power.tcp_port
+            w.close()
+        finally:
+            await state.stop(); await power.stop()
+    asyncio.run(run())
+
+
+def test_streams_are_mounted_on_the_http_port(engine):
+    from aiohttp.test_utils import TestClient, TestServer
+    from smo_simulator.instructor.app import create_instructor_app
+
+    async def run():
+        app = create_instructor_app(engine)
+        power = vb.VRBridge(engine.get_vr_power_state, host="127.0.0.1", tcp_port=None,
+                            ws_port=None, channel="power")
+        await power.start()
+        app["vr_bridges"]["power"] = power
+        try:
+            async with TestClient(TestServer(app)) as client:
+                assert (await client.get("/vr")).status == 503      # state channel not running
+                async with client.ws_connect("/vr/power",
+                                             headers={"X-Forwarded-For": "203.0.113.7"}) as ws:
+                    h = json.loads((await ws.receive(timeout=5)).data)
+                    assert h["channel"] == "power"
+                    await asyncio.sleep(0.1)
+                    assert power.monitor.summary()["clients"][0]["peer"] == "203.0.113.7"
+        finally:
+            await power.stop()
+    asyncio.run(run())

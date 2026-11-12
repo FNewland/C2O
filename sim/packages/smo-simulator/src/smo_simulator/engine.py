@@ -28,7 +28,7 @@ from smo_common.protocol.ecss_packet import CucTime
 from smo_simulator.tc_scheduler import TCScheduler
 from smo_simulator.tm_storage import OnboardTMStorage
 from smo_simulator.fdir import FaultPropagationRule
-from smo_simulator.vr_bridge import build_vr_state
+from smo_simulator.vr_bridge import build_vr_power, build_vr_state
 
 logger = logging.getLogger(__name__)
 
@@ -4827,6 +4827,11 @@ class SimulationEngine:
         except Exception as e:  # noqa: BLE001
             logger.debug("VR state build failed: %s", e)
             vr_state = None
+        try:
+            vr_power = build_vr_power(self)
+        except Exception as e:  # noqa: BLE001
+            logger.debug("VR power build failed: %s", e)
+            vr_power = None
         with self._params_lock:
             self._snapshot = snapshot
             self._snapshot_tick = self._tick_count
@@ -4834,6 +4839,8 @@ class SimulationEngine:
                 self._instructor_snapshot = instructor
             if vr_state is not None:
                 self._vr_snapshot = vr_state
+            if vr_power is not None:
+                self._vr_power_snapshot = vr_power
 
     def get_state_summary(self) -> dict:
         """Return the most recently published spacecraft state summary.
@@ -4854,6 +4861,16 @@ class SimulationEngine:
         before the first tick. Safe to call from any thread."""
         with self._params_lock:
             return getattr(self, '_vr_snapshot', None)
+
+    def get_vr_power_state(self) -> dict | None:
+        """The power channel's frame body: the smo-vr/1 frame plus its ``power`` block
+        (both from the same tick). Safe to call from any thread."""
+        with self._params_lock:
+            body = getattr(self, '_vr_snapshot', None)
+            power = getattr(self, '_vr_power_snapshot', None)
+        if body is None:
+            return None
+        return dict(body, power=power or {})
 
     def _build_state_summary(self) -> dict:
         """Build the state summary from live state. Tick-thread only.
