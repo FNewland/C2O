@@ -5,7 +5,7 @@
 # Animated page video/explainers/aocs.html. Whole design team; AOCS position.
 # EOSAT-1 hardware from sim/configs/eosat1/subsystems/aocs.yaml.
 id: V-DES-09
-week: 6
+week: 5
 audience: all
 title:
   en: "Attitude determination and control"

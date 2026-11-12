@@ -2,7 +2,7 @@
 # the check band, and declare the end of LEOP. From card-LEOP-003. Nominal card.
 # Prepares WB-5.5-L003 steps 1, 2 and 7.
 id: V-OPS-09
-week: 11
+week: 10
 audience: all
 title:
   en: "LEOP-003: orbit check and the end of LEOP"

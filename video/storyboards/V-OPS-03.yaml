@@ -2,7 +2,7 @@
 # The fault (star tracker 1 failure) is NOT one of the scored runs' faults, and
 # the video stops at the call: no recovery steps are shown.
 id: V-OPS-03
-week: 10
+week: 9
 audience: all
 title:
   en: "Alarm to anomaly ticket"

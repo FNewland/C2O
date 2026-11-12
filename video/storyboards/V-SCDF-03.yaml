@@ -4,7 +4,7 @@
 # LW-3.3/B and the decision record D-3.3-LINK. Follows the concept video
 # V-DES-10 (same S-band numbers: margin 17.5 dB at 1 Mbit/s, 1695 km).
 id: V-SCDF-03
-week: 7
+week: 6
 audience: all
 title:
   en: "The link budget tool"

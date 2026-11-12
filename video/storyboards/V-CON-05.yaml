@@ -4,7 +4,7 @@
 # Team audience. No embedded question asks which SID carries a parameter
 # (WB-5.4-Q has a "limits and SIDs" category).
 id: V-CON-05
-week: 9
+week: 8
 audience: all
 title:
   en: "Packets, services and housekeeping"

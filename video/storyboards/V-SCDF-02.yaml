@@ -2,7 +2,7 @@
 # on an EOSAT-1-like study seeded through the API. Prepares LW-2.4 A, B, E and
 # the decision records D-2.4-MASS / D-2.4-POWER.
 id: V-SCDF-02
-week: 5
+week: 4
 audience: all
 title:
   en: "Budgets, margins and energy per orbit"

@@ -3,7 +3,7 @@
 # first part of LEOP-001 (contact, boot, HK enables) already flown through the
 # MCS API, so the video picks up where V-OPS-02 stops. Prepares WB-5.5-L002.
 id: V-OPS-04
-week: 11
+week: 10
 audience: all
 title:
   en: "Leaving beacon mode and the first health check"

@@ -2,7 +2,7 @@
 # 6.6 ICDs, 6.7 reliability and FMEA, 6.8 thermal nodal model). Recording seed S4 with chapters
 # 2–5 done and the MDR, PRR and SRR passed. Proposed id (not in the plan).
 id: V-SCDF-23
-week: 8
+week: 7
 audience: all
 title:
   en: "PDR evidence: interfaces, reliability and the thermal model"

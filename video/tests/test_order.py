@@ -11,7 +11,7 @@ def test_catalogue_is_sorted_into_term_order():
                       {"id": "V-OPS-01", "week": 2}]}
     order.sort_catalog(cat)
     assert [v["id"] for v in cat["videos"]] == ["V-DES-01", "V-SCDF-24", "V-OPS-01", "V-OPS-10"]
-    assert [v["week"] for v in cat["videos"]] == [1, 9, 9, 12]
+    assert [v["week"] for v in cat["videos"]] == [1, 7, 8, 11]
     assert cat["weeks"][0]["week"] == 1 and cat["weeks"][0]["title"]["fr"]
 
 

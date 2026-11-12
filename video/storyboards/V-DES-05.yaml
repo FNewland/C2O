@@ -8,7 +8,7 @@
 # (35.8 min), 23.7° track shift, 7.4 min longest pass at a 10° mask.
 # EOSAT-1 orbit from sim/configs/eosat1/orbit.yaml (513 km, 97.39°, LTAN ~10:00).
 id: V-DES-05
-week: 6
+week: 5
 audience: all
 title:
   en: "Choosing an orbit"

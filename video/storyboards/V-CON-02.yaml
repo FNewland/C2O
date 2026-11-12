@@ -7,7 +7,7 @@
 # from this budget. Prepares LEOP-004 (V-OPS-05), the SpaceCDF power budget
 # (V-SCDF-02) and every load-related card.
 id: V-CON-02
-week: 6
+week: 5
 audience: all
 title:
   en: "Energy balance through an orbit"

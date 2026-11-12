@@ -1,44 +1,46 @@
 # The order of the course videos on the C2O video page (/videos), week by week, following the
-# 12-week ORBIT NORTH calendar (design/docs/orbit_north/syllabus_12week_en.md). Within a week the
-# videos appear in the order listed. Every storyboard appears exactly once, and its ``week:``
-# must match the week it is listed under (``python -m c2ovideo validate`` checks both).
+# 12-week ORBIT NORTH calendar (design/docs/orbit_north/syllabus_12week_en.md): introduction
+# weeks 1-2, concurrent design from the week 2 studio to the PDR in week 7, operations training
+# weeks 8-9, simulations weeks 10-11, review week 12. Within a week the videos appear in the order
+# listed. Every storyboard appears exactly once, and its ``week:`` must match the week it is listed
+# under (``python -m c2ovideo validate`` checks both). A week with no videos is not shown.
 #
 # After changing this file, re-sort the published catalogue without re-rendering:
 #   python -m c2ovideo catalog          (then ``c2o videos push`` for the cloud site)
 weeks:
   - week: 1
-    title: {en: "Canada in space and the concurrent design method", fr: "Le Canada dans l'espace et la méthode de conception concourante"}
+    title: {en: "Introduction: Canada in space and the concurrent design method", fr: "Introduction : le Canada dans l'espace et la méthode de conception concourante"}
     videos: [V-DES-01, V-DES-02, V-SCDF-01, V-SCDF-14]
   - week: 2
-    title: {en: "From need to concept, and the informal MCR", fr: "Du besoin au concept, et la MCR informelle"}
+    title: {en: "From need to concept: the CDF opens, and the informal MCR", fr: "Du besoin au concept : le CDF s'ouvre, et la MCR informelle"}
     videos: [V-DES-03, V-SCDF-08, V-SCDF-17, V-SCDF-06, V-SCDF-07]
   - week: 3
-    title: {en: "Closing the MCR and locking the concept", fr: "Clore la MCR et figer le concept"}
-    videos: [V-SCDF-11]
+    title: {en: "Locking the concept, and the Canadian regulatory landscape", fr: "Figer le concept, et le paysage réglementaire canadien"}
+    videos: [V-SCDF-11, V-SCDF-21]
   - week: 4
-    title: {en: "The Canadian regulatory landscape", fr: "Le paysage réglementaire canadien"}
-    videos: [V-SCDF-21]
-  - week: 5
-    title: {en: "CDF 1: the System-V, requirements and first budgets", fr: "CDF 1 : le cycle en V, les exigences et les premiers bilans"}
+    title: {en: "CDF 1: the System-V, requirements and first budgets", fr: "CDF 1 : le cycle en V, les exigences et les premiers bilans"}
     videos: [V-DES-04, V-SCDF-04, V-SCDF-12, V-DES-06, V-SCDF-02, V-SCDF-18, V-SCDF-22]
-  - week: 6
-    title: {en: "CDF 2: orbit, power, attitude and thermal", fr: "CDF 2 : orbite, énergie, attitude et thermique"}
+  - week: 5
+    title: {en: "CDF 2: orbit, power, attitude and thermal", fr: "CDF 2 : orbite, énergie, attitude et thermique"}
     videos: [V-DES-05, V-DES-07, V-CON-02, V-SCDF-19, V-DES-09, V-DES-08]
-  - week: 7
-    title: {en: "CDF 3: communications, structure, propulsion and the formal trades", fr: "CDF 3 : télécommunications, structure, propulsion et compromis formels"}
+  - week: 6
+    title: {en: "CDF 3: communications, structure, propulsion and the formal trades", fr: "CDF 3 : télécommunications, structure, propulsion et compromis formels"}
     videos: [V-DES-10, V-SCDF-03, V-DES-14, V-SCDF-13, V-SCDF-09, V-SCDF-10]
+  - week: 7
+    title: {en: "CDF 4: integration, verification, cost and risk, and the PDR", fr: "CDF 4 : intégration, vérification, coûts et risques, et la PDR"}
+    videos: [V-SCDF-05, V-SCDF-20, V-DES-12, V-DES-13, V-DES-11, V-SCDF-23, V-SCDF-15, V-SCDF-24]
   - week: 8
-    title: {en: "CDF 4: integration, verification, cost and risk", fr: "CDF 4 : intégration, vérification, coûts et risques"}
-    videos: [V-SCDF-05, V-SCDF-20, V-DES-12, V-DES-13, V-DES-11, V-SCDF-23, V-SCDF-15]
+    title: {en: "Operations training 1: from design to operations", fr: "Formation à l'exploitation 1 : de la conception à l'exploitation"}
+    videos: [V-CON-05, V-CON-06, V-PLN-01, V-OPS-01]
   - week: 9
-    title: {en: "The PDR, and from design to operations", fr: "La PDR, et de la conception à l'exploitation"}
-    videos: [V-SCDF-24, V-CON-05, V-CON-06, V-PLN-01, V-OPS-01]
-  - week: 10
-    title: {en: "The control room and operations training", fr: "La salle de contrôle et la formation à l'exploitation"}
+    title: {en: "Operations training 2: the control room", fr: "Formation à l'exploitation 2 : la salle de contrôle"}
     videos: [V-OPS-03, V-CON-04, V-OPS-02]
-  - week: 11
-    title: {en: "Simulation 1: LEOP and commissioning", fr: "Simulation 1 : LEOP et mise en service"}
+  - week: 10
+    title: {en: "Simulation 1: LEOP and commissioning", fr: "Simulation 1 : LEOP et mise en service"}
     videos: [V-OPS-04, V-OPS-05, V-OPS-06, V-OPS-07, V-OPS-08, V-OPS-09, V-OPS-12, V-OPS-13]
-  - week: 12
-    title: {en: "Simulation 2: nominal operations and contingency", fr: "Simulation 2 : exploitation nominale et contingence"}
+  - week: 11
+    title: {en: "Simulation 2: nominal operations and contingency", fr: "Simulation 2 : exploitation nominale et contingence"}
     videos: [V-OPS-10, V-OPS-11]
+  - week: 12
+    title: {en: "Review of the whole mission", fr: "Revue de toute la mission"}
+    videos: []

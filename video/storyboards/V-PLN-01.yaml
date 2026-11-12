@@ -1,7 +1,7 @@
 # Week 3 — the mission planner: passes, eclipses, ground track, an imaging
 # activity and the constraint check. Prepares WB-5.3-PP (Day 1 pass plan).
 id: V-PLN-01
-week: 9
+week: 8
 audience: all
 title:
   en: "Plan a pass in the mission planner"

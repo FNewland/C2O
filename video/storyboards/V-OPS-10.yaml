@@ -4,7 +4,7 @@
 # commanding, reads the card's branch, holds and monitors; the instructor speeds
 # time and the spacecraft restores the line at 28.9 V.
 id: V-OPS-10
-week: 12
+week: 11
 audience: all
 title:
   en: "Under-voltage: confirming the cause before shedding loads"
