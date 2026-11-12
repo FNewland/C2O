@@ -9,18 +9,28 @@
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1",
-   "en_hash": "f27611c5660dc6c9",
-   "fr_hash": "14fe75ffa72da424"
+   "en_hash": "8707bc56cf92b91e",
+   "fr_hash": "7093f2a4650a9de5"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/1-purpose",
-   "en_hash": "148799a54f1d5875",
-   "fr_hash": "72f7074b4a88a1fc"
+   "en_hash": "0a52af00bc3e76c1",
+   "fr_hash": "599c06711960c756"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/2-transports",
-   "en_hash": "8e23a16f042075ac",
-   "fr_hash": "cf4c8f21749249b1"
+   "en_hash": "cbf3dd10c11be2b0",
+   "fr_hash": "cbf3dd10c11be2b0"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/2-transports/where-to-connect",
+   "en_hash": "61e08ea2483da164",
+   "fr_hash": "ab7ddd078e8ab5df"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/2-transports/framing",
+   "en_hash": "e30098c950887bc6",
+   "fr_hash": "7952f8f43cb44a3e"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/3-message-flow",
@@ -36,6 +46,11 @@
    "id": "vr-visualisation-interface-icd-smo-vr-1/5-state-server-client-1-hz",
    "en_hash": "1c7f626e3d9c40c1",
    "fr_hash": "52e55cb626c20785"
+  },
+  {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/5a-channel-2-power-state-frames-plus-power",
+   "en_hash": "9f0c1c3f2d0f996c",
+   "fr_hash": "f9d882beccca5aea"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/6-frames-and-conventions",
@@ -58,14 +73,19 @@
    "fr_hash": "3b4367971e990f7a"
   },
   {
+   "id": "vr-visualisation-interface-icd-smo-vr-1/7a-channel-3-command-requests-the-flight-director-decides",
+   "en_hash": "df5018a4320a4c93",
+   "fr_hash": "5518aad8c5a05217"
+  },
+  {
    "id": "vr-visualisation-interface-icd-smo-vr-1/8-rules-for-a-robust-client",
    "en_hash": "162efdb30119fd09",
    "fr_hash": "7a289d802052f180"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/9-flat-files",
-   "en_hash": "44175325f7da2a95",
-   "fr_hash": "2c94a44a03f58917"
+   "en_hash": "390af7f151765e24",
+   "fr_hash": "d4e64a019626c35d"
   },
   {
    "id": "vr-visualisation-interface-icd-smo-vr-1/10-known-limitations-issue-1",
@@ -73,5 +93,5 @@
    "fr_hash": "af589277069959e1"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "5040b493"
 }

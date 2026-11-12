@@ -1,6 +1,9 @@
 # VR Visualisation Interface — ICD `smo-vr/1`
 
-**Status:** issue 1, 2026-09-27 · **Owner:** SMO suite (smo-simulator `vr_bridge.py`)
+**Status:** issue 2, 2026-11-12 · **Owner:** SMO suite (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
+
+**Issue 2 adds two channels and the cloud addresses; channel 1 is unchanged.** A client
+written for issue 1 works as it did, on the same ports.
 **Users:** first-year VR headset teams (GNG) and anyone building an external 3-D viewer.
 
 ## 1. Purpose
@@ -12,8 +15,16 @@ are, and whether the solar wings and antenna are deployed. A headset may
 whether each headset is receiving data and is happy.
 
 This is **simulation truth for visualisation**. It is not spacecraft telemetry,
-it does not pass through the MCS or the radio, and nothing a headset sends can
-change the simulation.
+it does not pass through the MCS or the radio, and nothing a headset sends on
+channels 1 and 2 can change the simulation.
+
+Three channels:
+
+| Channel | What | Section |
+|---|---|---|
+| 1 · **state** | the smo-vr/1 stream exactly as issue 1 defined it | §4–§7 |
+| 2 · **power** | the same frames plus a `power` block: solar wings, body faces, strings, battery, bus | §5a |
+| 3 · **requests** | a headset *asks* for the antenna or a solar wing to be deployed; the **flight director** sees the proposal in the MCS and sends it or declines it. Nothing is commanded automatically | §7a |
 
 ```
  smo-simulator (engine tick, 1 Hz at x1)
@@ -28,9 +39,26 @@ so teams can develop without the simulator.
 
 ## 2. Transports
 
+### Where to connect
+
+| Channel | Cyber range / laptop (`./start.sh --public`) | Cloud (c2o.live) |
+|---|---|---|
+| 1 · state | TCP **8100**, WebSocket **8101** `/vr` | `wss://ops.c2o.live/vr` |
+| 2 · power | TCP **8102**, WebSocket **8103** `/vr` | `wss://ops.c2o.live/vr/power` |
+| 3 · requests | TCP **8104**, WebSocket **8105** `/vr/requests` (on the MCS host) | `wss://ops.c2o.live/vr/requests` |
+
+The cloud addresses need **no sign-in** (unlike the rest of ops.c2o.live) and are
+WebSockets only: the cloud's front door passes HTTPS on port 443 and nothing else,
+so there are no raw TCP ports there. Unity reaches them with a WebSocket package
+(for example NativeWebSocket); the messages are the same as on TCP, one JSON object
+per WebSocket text message. Channels 1 and 2 are read-only views; channel 3 only
+creates proposals that a person must accept.
+
+### Framing
+
 | | TCP | WebSocket |
 |---|---|---|
-| Default port | **8100** | **8101**, path `/vr` (or `/`) |
+| Default port | **8100** (power 8102, requests 8104) | **8101**, path `/vr` (or `/`) (power 8103; requests 8105, `/vr/requests`) |
 | Framing | one JSON object per line, UTF-8, `\n` terminated | one JSON object per text message |
 | Suits | Unity (`TcpClient`), Unreal, Python, C++ | browsers (WebXR, three.js) — browsers cannot open raw TCP |
 | Inbound limit | 4096 bytes per line | 4096 bytes per message |
@@ -39,10 +67,11 @@ so teams can develop without the simulator.
   clients may connect; each gets the same stream.
 * Configuration: `configs/eosat1/mission.yaml` → `network.vr_*`; overrides
   `smo-simulator --vr-port / --vr-ws-port / --no-vr`, env `SMO_VR_PORT`,
-  `SMO_VR_WS_PORT`, `SMO_VR=0`.
+  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT` (simulator),
+  `SMO_VR_REQUEST_PORT`, `SMO_VR_REQUEST_WS_PORT` (MCS), `SMO_VR=0` (all off).
 * **Headsets on Wi-Fi:** start the suite with `./start.sh --public` (LAN bind).
   The default local mode binds loopback only, which a headset cannot reach.
-  The machine's firewall must allow inbound 8100/8101.
+  The machine's firewall must allow inbound 8100–8105.
 * A client that cannot keep up (write blocked > 2 s) is disconnected. Reconnect.
 
 ## 3. Message flow
@@ -122,6 +151,41 @@ Example (one line on the wire, pretty-printed here):
 | `mission.sc_mode` | enum | `SAFE NOMINAL SCIENCE EMERGENCY` |
 | `mission.phase` | enum | `PRE_SEPARATION SEPARATION_TIMER INITIAL_POWER_ON BOOTLOADER_OPS LEOP COMMISSIONING NOMINAL` |
 | `mission.in_contact`, `ground_station` | bool, str | a ground station can see the spacecraft (draw a link beam?) |
+
+## 5a. Channel 2: `power` (state frames plus power)
+
+Channel 2 sends exactly the channel-1 `hello` and `state` messages with two additions:
+the `hello` carries `"channel": "power"` and a one-line `power_fields` summary, and
+every `state` carries a `power` object from the same simulator tick. (Channel 1's
+`hello` has no `channel` field, as in issue 1.)
+
+```json
+"power": {"bus_voltage_v": 30.4, "generated_w": 61.8, "consumed_w": 38.2, "net_w": 23.6,
+  "wings": {"wing_py": {"current_a": 0.86, "power_w": 26.1, "deployed": true},
+            "wing_my": {"current_a": 0.86, "power_w": 26.1, "deployed": true},
+            "sada_angle_deg": -48.2},
+  "body_faces": {"px": {"current_a": 0.0, "power_w": 0.0}, "mx": {...}, "py": {...},
+                 "my": {...}, "pz": {...}, "mz": {"current_a": 0.31, "power_w": 9.6}},
+  "strings": {"a": {"voltage_v": 28.2, "current_a": 1.05, "enabled": true},
+              "b": {"voltage_v": 28.2, "current_a": 1.0, "enabled": true}},
+  "battery": {"soc_pct": 74.6, "voltage_v": 31.1, "current_a": 0.76, "charging": true, "temp_c": 15.2},
+  "load_shed_stage": 0}
+```
+
+| Field | Unit | Meaning |
+|---|---|---|
+| `bus_voltage_v` | V | main bus |
+| `generated_w`, `consumed_w`, `net_w` | W | all arrays together, all loads, and the difference (positive = charging) |
+| `wings.wing_py`, `wing_my` | A, W | each deployable wing in the **smo-vr/1 axes** (§6), so `wing_py` is the same wing as `deploy.wing_py`; `deployed` is the latch |
+| `wings.sada_angle_deg` | deg | as `deploy.sada_angle_deg` |
+| `body_faces.px … mz` | A, W | the body-mounted cells on each face, smo-vr/1 axes, wings excluded |
+| `strings.a`, `b` | V, A | the two array strings the power unit regulates (`enabled` false = switched off or failed) |
+| `battery` | %, V, A, °C | state of charge, voltage, current (**positive = charging**), temperature |
+| `load_shed_stage` | 0–3 | 0 = no loads shed; 1–3 = progressive load shedding |
+
+Power on a face or a wing is its current times the bus voltage. All values are
+simulation truth, like the rest of the stream; a failure the instructor injects (a lost
+string, a stuck drive) shows up here exactly as the power model sees it.
 
 ## 6. Frames and conventions
 
@@ -210,6 +274,44 @@ How the simulator classifies each client (instructor badge `VR n <worst>`, `GET 
 Malformed status lines are counted (`rx_errors`, `last_error`) and ignored; the
 connection stays up.
 
+## 7a. Channel 3: command requests (the flight director decides)
+
+A headset may **ask** for one of four deployments. Nothing is sent to the spacecraft
+by this channel: each request becomes a proposal on the MCS (log drawer → **VR
+requests** tab). The **flight director** sends it through the console's normal
+commanding (the same authority, two-step arming and command history as any command)
+or declines it, and your connection is told which.
+
+On connect the server sends a `hello` with `"channel": "requests"` and the list of
+requests. Then, client → server:
+
+```json
+{"type":"request","request":"deploy_antenna","team":"T07","text":"we want to see the dipole"}
+```
+
+| `request` | Proposes (spacecraft command) |
+|---|---|
+| `deploy_antenna` | `TTC_DEPLOY_ANTENNA` |
+| `deploy_wing_py` | `EPS_DEPLOY_WING` wing = 1: the spacecraft's −Y wing, which is **your +Y wing** (smo-vr/1 axes, §6) |
+| `deploy_wing_my` | `EPS_DEPLOY_WING` wing = 0: the spacecraft's +Y wing, your −Y wing |
+| `deploy_both_wings` | `EPS_DEPLOY_WING` wing = 2 |
+
+Server → client:
+
+| Message | When |
+|---|---|
+| `{"type":"request_ack","id":"R3","request":"deploy_antenna","state":"PENDING"}` | at once; `"duplicate": true` if the same team already has that request open (you get its id) |
+| `{"type":"request_update","id":"R3","state":"SENT","tc_seq":214,"note":""}` | the flight director sent it (`tc_seq` = the command's sequence count) |
+| `{"type":"request_update","id":"R3","state":"DECLINED","note":"not in contact"}` | the flight director declined it, with an optional note |
+| `{"type":"request_update","id":"R3","state":"EXPIRED"}` | nobody decided within 15 minutes |
+| `{"type":"request_rejected","reason":"…"}` | the request was malformed, unknown, too fast (one every 2 s) or one too many (3 open per connection) |
+
+Also accepted: `{"type":"withdraw","id":"R3"}` (your own pending request),
+`{"type":"list"}` (the state of your requests), and the smo-vr/1 `status` line (§7).
+`SENT` means the command left the ground; whether the antenna or wing actually
+deploys is for the spacecraft to show, on channels 1 and 2 (`deploy.*`). A command
+sent outside a pass, or one that fails on board, can still leave things stowed.
+
 ## 8. Rules for a robust client
 
 1. **Ignore fields and message types you do not know.** New optional fields may
@@ -239,6 +341,11 @@ quaternion as `_x/_y/_z/_w`, booleans as 0/1. The story (compressed LEOP):
 | 1980–4000 | eclipse |
 | 4300–4800 | 25° roll slew for imaging, hold, slew back |
 | 5670 | one orbit |
+
+`vr_stub.py` serves all three channels (state 8100/8101, power 8102/8103, requests
+8104/8105, `--state-only` for issue 1 behaviour). Its "flight director" answers each
+request after `--decide-after` seconds (default 5) with `SENT`, or `DECLINED` with
+`--decline`.
 
 Record a real simulator session with
 `tools/vr_stub/vr_client_example.py --record run.ndjson --csv run.csv` and

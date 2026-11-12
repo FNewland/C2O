@@ -30,7 +30,24 @@ python3 vr_stub.py --chaos                # bad lines, stalls, duplicates: be ro
 ```
 Connect to `<laptop-ip>:8100` (TCP, Unity/native) or `ws://<laptop-ip>:8101/vr`
 (WebXR/three.js). The headset and laptop must be on the same network, and the
-laptop firewall must allow ports 8100–8101. Find the laptop IP with
+laptop firewall must allow ports 8100–8105.
+
+The stub serves all three channels of ICD issue 2:
+
+| Channel | TCP | WebSocket | Cloud (c2o.live, no sign-in) |
+|---|---|---|---|
+| 1 state (issue 1, unchanged) | 8100 | 8101 `/vr` | `wss://ops.c2o.live/vr` |
+| 2 state + solar-array, battery and bus power | 8102 | 8103 `/vr` | `wss://ops.c2o.live/vr/power` |
+| 3 command requests (antenna, wings) | 8104 | 8105 `/vr/requests` | `wss://ops.c2o.live/vr/requests` |
+
+On channel 3 the stub plays the flight director: it answers each request with
+`SENT` after 5 s (`--decide-after`, or `DECLINED` with `--decline`). In class the
+real flight director decides, and may well say no. Try it by hand:
+```bash
+printf '{"type":"request","request":"deploy_antenna","team":"T07"}\n' | nc <laptop-ip> 8104
+```
+The cloud has no raw TCP ports: from Unity, use a WebSocket package (for example
+NativeWebSocket) for the `wss://` addresses; the messages are identical. Find the laptop IP with
 `ipconfig` (Windows) or `ipconfig getifaddr en0` (macOS).
 
 Sanity check before blaming your headset:

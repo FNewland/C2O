@@ -1,6 +1,9 @@
 # Interface de visualisation VR — ICD `smo-vr/1`
 
-**État :** édition 1, 2026-09-27 · **Responsable :** suite SMO (smo-simulator `vr_bridge.py`)
+**État :** édition 2, 2026-11-12 · **Responsable :** suite SMO (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
+
+**L'édition 2 ajoute deux canaux et les adresses du nuage ; le canal 1 est inchangé.** Un client
+écrit pour l'édition 1 fonctionne comme avant, sur les mêmes ports.
 **Utilisateurs :** équipes de première année travaillant sur casque VR (GNG) et toute personne qui construit un visualiseur 3D externe.
 
 ## 1. Objet
@@ -12,8 +15,16 @@ et l'état de déploiement des ailes solaires et de l'antenne. Un casque peut
 si chaque casque reçoit les données et fonctionne correctement.
 
 Il s'agit de la **vérité de simulation destinée à la visualisation**. Ce n'est pas de la télémesure du satellite :
-elle ne transite ni par le MCS ni par la liaison radio, et rien de ce qu'envoie un casque ne peut
-modifier la simulation.
+elle ne transite ni par le MCS ni par la liaison radio, et rien de ce qu'envoie un casque sur
+les canaux 1 et 2 ne peut modifier la simulation.
+
+Trois canaux :
+
+| Canal | Contenu | Section |
+|---|---|---|
+| 1 · **state** | le flux smo-vr/1 exactement tel que l'édition 1 l'a défini | §4–§7 |
+| 2 · **power** | les mêmes trames plus un bloc `power` : ailes solaires, faces du corps, chaînes, batterie, bus | §5a |
+| 3 · **requests** | un casque *demande* le déploiement de l'antenne ou d'une aile solaire ; le **directeur de vol** voit la proposition dans le MCS et l'envoie ou la refuse. Rien n'est commandé automatiquement | §7a |
 
 ```
  smo-simulator (pas du moteur, 1 Hz à x1)
@@ -28,9 +39,26 @@ les équipes peuvent donc développer sans le simulateur.
 
 ## 2. Transports
 
+### Où se connecter
+
+| Canal | Salle cyber / portable (`./start.sh --public`) | Nuage (c2o.live) |
+|---|---|---|
+| 1 · state | TCP **8100**, WebSocket **8101** `/vr` | `wss://ops.c2o.live/vr` |
+| 2 · power | TCP **8102**, WebSocket **8103** `/vr` | `wss://ops.c2o.live/vr/power` |
+| 3 · requests | TCP **8104**, WebSocket **8105** `/vr/requests` (sur l'hôte du MCS) | `wss://ops.c2o.live/vr/requests` |
+
+Les adresses du nuage ne demandent **aucune connexion** (contrairement au reste de ops.c2o.live) et
+sont uniquement des WebSockets : la porte d'entrée du nuage ne laisse passer que le HTTPS sur le
+port 443, il n'y a donc pas de ports TCP bruts. Unity les atteint avec une bibliothèque WebSocket
+(par exemple NativeWebSocket) ; les messages sont les mêmes qu'en TCP, un objet JSON par message
+texte WebSocket. Les canaux 1 et 2 sont en lecture seule ; le canal 3 ne fait que créer des
+propositions qu'une personne doit accepter.
+
+### Tramage
+
 | | TCP | WebSocket |
 |---|---|---|
-| Port par défaut | **8100** | **8101**, chemin `/vr` (ou `/`) |
+| Port par défaut | **8100** (power 8102, requests 8104) | **8101**, chemin `/vr` (ou `/`) (power 8103 ; requests 8105, `/vr/requests`) |
 | Tramage | un objet JSON par ligne, UTF-8, terminé par `\n` | un objet JSON par message texte |
 | Adapté à | Unity (`TcpClient`), Unreal, Python, C++ | navigateurs (WebXR, three.js) — les navigateurs ne peuvent pas ouvrir de connexion TCP brute |
 | Limite en entrée | 4096 octets par ligne | 4096 octets par message |
@@ -39,10 +67,11 @@ les équipes peuvent donc développer sans le simulateur.
   clients n'est pas limité ; chacun reçoit le même flux.
 * Configuration : `configs/eosat1/mission.yaml` → `network.vr_*` ; surcharges
   `smo-simulator --vr-port / --vr-ws-port / --no-vr`, variables d'environnement `SMO_VR_PORT`,
-  `SMO_VR_WS_PORT`, `SMO_VR=0`.
+  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT` (simulateur),
+  `SMO_VR_REQUEST_PORT`, `SMO_VR_REQUEST_WS_PORT` (MCS), `SMO_VR=0` (tout désactivé).
 * **Casques en Wi-Fi :** lancer la suite avec `./start.sh --public` (écoute sur le réseau local).
   Le mode local par défaut n'écoute que sur l'interface de bouclage, inaccessible à un casque.
-  Le pare-feu de la machine doit autoriser les connexions entrantes sur 8100/8101.
+  Le pare-feu de la machine doit autoriser les connexions entrantes sur 8100–8105.
 * Un client qui ne suit pas le rythme (écriture bloquée plus de 2 s) est déconnecté. Il doit se reconnecter.
 
 ## 3. Enchaînement des messages
@@ -122,6 +151,41 @@ Exemple (une seule ligne sur le réseau, mise en forme ici pour la lisibilité)�
 | `mission.sc_mode` | énumération | `SAFE NOMINAL SCIENCE EMERGENCY` |
 | `mission.phase` | énumération | `PRE_SEPARATION SEPARATION_TIMER INITIAL_POWER_ON BOOTLOADER_OPS LEOP COMMISSIONING NOMINAL` |
 | `mission.in_contact`, `ground_station` | booléen, chaîne | une station sol voit le satellite (dessiner un faisceau de liaison ?) |
+
+## 5a. Canal 2 : `power` (trames d'état plus énergie)
+
+Le canal 2 envoie exactement les messages `hello` et `state` du canal 1, avec deux ajouts :
+le `hello` porte `"channel": "power"` et un résumé d'une ligne `power_fields`, et chaque
+`state` porte un objet `power` issu du même pas du simulateur. (Le `hello` du canal 1 n'a
+pas de champ `channel`, comme dans l'édition 1.)
+
+```json
+"power": {"bus_voltage_v": 30.4, "generated_w": 61.8, "consumed_w": 38.2, "net_w": 23.6,
+  "wings": {"wing_py": {"current_a": 0.86, "power_w": 26.1, "deployed": true},
+            "wing_my": {"current_a": 0.86, "power_w": 26.1, "deployed": true},
+            "sada_angle_deg": -48.2},
+  "body_faces": {"px": {"current_a": 0.0, "power_w": 0.0}, "mx": {...}, "py": {...},
+                 "my": {...}, "pz": {...}, "mz": {"current_a": 0.31, "power_w": 9.6}},
+  "strings": {"a": {"voltage_v": 28.2, "current_a": 1.05, "enabled": true},
+              "b": {"voltage_v": 28.2, "current_a": 1.0, "enabled": true}},
+  "battery": {"soc_pct": 74.6, "voltage_v": 31.1, "current_a": 0.76, "charging": true, "temp_c": 15.2},
+  "load_shed_stage": 0}
+```
+
+| Champ | Unité | Signification |
+|---|---|---|
+| `bus_voltage_v` | V | bus principal |
+| `generated_w`, `consumed_w`, `net_w` | W | tous les panneaux, toutes les charges, et la différence (positive = en charge) |
+| `wings.wing_py`, `wing_my` | A, W | chaque aile déployable dans les **axes smo-vr/1** (§6) : `wing_py` est donc la même aile que `deploy.wing_py` ; `deployed` est le verrou |
+| `wings.sada_angle_deg` | deg | comme `deploy.sada_angle_deg` |
+| `body_faces.px … mz` | A, W | les cellules montées sur chaque face du corps, axes smo-vr/1, ailes exclues |
+| `strings.a`, `b` | V, A | les deux chaînes du générateur que régule l'unité d'énergie (`enabled` faux = coupée ou en panne) |
+| `battery` | %, V, A, °C | état de charge, tension, courant (**positif = en charge**), température |
+| `load_shed_stage` | 0–3 | 0 = aucun délestage ; 1–3 = délestage progressif |
+
+La puissance d'une face ou d'une aile est son courant multiplié par la tension du bus. Toutes les
+valeurs sont la vérité de simulation, comme le reste du flux ; une panne injectée par l'instructeur
+(une chaîne perdue, un entraînement bloqué) y apparaît exactement comme le modèle d'énergie la voit.
 
 ## 6. Repères et conventions
 
@@ -210,6 +274,44 @@ Comment le simulateur classe chaque client (badge instructeur `VR n <worst>`, `G
 Les lignes d'état mal formées sont comptées (`rx_errors`, `last_error`) et ignorées ; la
 connexion est maintenue.
 
+## 7a. Canal 3 : demandes de commande (le directeur de vol décide)
+
+Un casque peut **demander** l'un des quatre déploiements. Ce canal n'envoie rien au satellite :
+chaque demande devient une proposition dans le MCS (tiroir du journal → onglet **Demandes VR**).
+Le **directeur de vol** l'envoie par la commande habituelle de la console (même autorisation,
+même armement en deux temps, même historique que toute commande) ou la refuse, et votre
+connexion en est informée.
+
+À la connexion, le serveur envoie un `hello` avec `"channel": "requests"` et la liste des
+demandes. Ensuite, client → serveur :
+
+```json
+{"type":"request","request":"deploy_antenna","team":"T07","text":"we want to see the dipole"}
+```
+
+| `request` | Propose (commande du satellite) |
+|---|---|
+| `deploy_antenna` | `TTC_DEPLOY_ANTENNA` |
+| `deploy_wing_py` | `EPS_DEPLOY_WING` wing = 1 : l'aile −Y du satellite, qui est **votre aile +Y** (axes smo-vr/1, §6) |
+| `deploy_wing_my` | `EPS_DEPLOY_WING` wing = 0 : l'aile +Y du satellite, votre aile −Y |
+| `deploy_both_wings` | `EPS_DEPLOY_WING` wing = 2 |
+
+Serveur → client :
+
+| Message | Quand |
+|---|---|
+| `{"type":"request_ack","id":"R3","request":"deploy_antenna","state":"PENDING"}` | immédiatement ; `"duplicate": true` si la même équipe a déjà cette demande ouverte (vous recevez son identifiant) |
+| `{"type":"request_update","id":"R3","state":"SENT","tc_seq":214,"note":""}` | le directeur de vol l'a envoyée (`tc_seq` = le compteur de séquence de la commande) |
+| `{"type":"request_update","id":"R3","state":"DECLINED","note":"not in contact"}` | le directeur de vol l'a refusée, avec une note facultative |
+| `{"type":"request_update","id":"R3","state":"EXPIRED"}` | personne n'a décidé en 15 minutes |
+| `{"type":"request_rejected","reason":"…"}` | la demande était mal formée, inconnue, trop rapide (une toutes les 2 s) ou de trop (3 ouvertes par connexion) |
+
+Sont aussi acceptés : `{"type":"withdraw","id":"R3"}` (votre propre demande en attente),
+`{"type":"list"}` (l'état de vos demandes) et la ligne `status` de smo-vr/1 (§7).
+`SENT` signifie que la commande a quitté le sol ; c'est au satellite de montrer si l'antenne ou
+l'aile se déploie réellement, sur les canaux 1 et 2 (`deploy.*`). Une commande envoyée hors
+passage, ou qui échoue à bord, peut laisser les éléments repliés.
+
 ## 8. Règles pour un client robuste
 
 1. **Ignorer les champs et les types de message inconnus.** De nouveaux champs facultatifs peuvent
@@ -239,6 +341,11 @@ quaternion sous la forme `_x/_y/_z/_w`, booléens en 0/1. Le scénario (LEOP com
 | 1980–4000 | éclipse |
 | 4300–4800 | basculement de 25° en roulis pour la prise de vue, maintien, basculement retour |
 | 5670 | une orbite |
+
+`vr_stub.py` sert les trois canaux (state 8100/8101, power 8102/8103, requests
+8104/8105 ; `--state-only` pour le comportement de l'édition 1). Son « directeur de vol » répond
+à chaque demande après `--decide-after` secondes (5 par défaut) par `SENT`, ou par `DECLINED`
+avec `--decline`.
 
 Enregistrer une séance réelle du simulateur avec
 `tools/vr_stub/vr_client_example.py --record run.ndjson --csv run.csv` et

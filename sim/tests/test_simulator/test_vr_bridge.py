@@ -571,3 +571,38 @@ def test_streams_are_mounted_on_the_http_port(engine):
         finally:
             await power.stop()
     asyncio.run(run())
+
+
+# ── the stub serves the power and request channels too (ICD issue 2) ─────
+
+def test_stub_power_hello_and_block_match_the_simulator(stub, engine):
+    assert stub.build_hello("x", 10.0, 8102, 8103, "power") == \
+        vb.build_hello("x", 10.0, 8102, 8103, "power")
+    body = stub.Story("leop", 1.0).body(1500.0, 1500)
+    sp, real = stub.stub_power(body), vb.build_vr_power(engine)
+
+    def shape(d):
+        return {k: shape(v) if isinstance(v, dict) else type(v).__name__ for k, v in d.items()}
+    # same fields and types; the numbers are the stub's own
+    assert shape(sp) == shape(real)
+
+
+def test_stub_request_channel_acks_then_decides(stub):
+    from smo_mcs import vr_requests as vq
+    assert set(stub.REQUESTS) == set(vq.REQUESTS)
+
+    async def run():
+        srv = stub.RequestStub("127.0.0.1", 0, None, decide_after=0.05)
+        task = asyncio.ensure_future(srv.run())
+        await asyncio.sleep(0.2)
+        r, w = await asyncio.open_connection("127.0.0.1", srv.tcp_port)
+        hello = json.loads(await asyncio.wait_for(r.readline(), 5))
+        assert hello["channel"] == "requests" and "deploy_antenna" in hello["requests"]
+        w.write(b'{"type":"request","request":"deploy_wing_py","team":"T2"}\n')
+        await w.drain()
+        ack = json.loads(await asyncio.wait_for(r.readline(), 5))
+        upd = json.loads(await asyncio.wait_for(r.readline(), 5))
+        assert ack["state"] == "PENDING" and upd["state"] == "SENT" and upd["id"] == ack["id"]
+        w.close()
+        task.cancel()
+    asyncio.run(run())

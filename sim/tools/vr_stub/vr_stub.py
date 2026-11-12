@@ -63,6 +63,21 @@ SCHEMA = "smo-vr/1"
 DEFAULT_TCP_PORT = 8100
 DEFAULT_WS_PORT = 8101
 DEFAULT_MAX_RATE_HZ = 10.0
+DEFAULT_POWER_TCP_PORT = 8102      # the same frames plus a "power" block (ICD §5a)
+DEFAULT_POWER_WS_PORT = 8103
+DEFAULT_REQUEST_TCP_PORT = 8104    # command requests (ICD §7a)
+DEFAULT_REQUEST_WS_PORT = 8105
+REQUESTS = {   # name -> what the flight director would be asked to send (spacecraft axes)
+    "deploy_antenna": "Deploy the antenna",
+    "deploy_wing_py": "Deploy solar wing -Y (the headset's +Y wing)",
+    "deploy_wing_my": "Deploy solar wing +Y (the headset's -Y wing)",
+    "deploy_both_wings": "Deploy both solar wings",
+}
+POWER_FIELDS = (
+    "power: bus_voltage_v; generated_w, consumed_w, net_w (W); wings.wing_py/wing_my "
+    "{current_a, power_w, deployed}, wings.sada_angle_deg; body_faces.px..mz {current_a, power_w} "
+    "(smo-vr/1 body axes, wings excluded); strings.a/b {voltage_v, current_a, enabled}; battery "
+    "{soc_pct, voltage_v, current_a (+ = charging), charging, temp_c}; load_shed_stage 0-3")
 KEEPALIVE_S = 1.0          # resend the latest frame at least this often
 SILENT_AFTER_S = 5.0       # a client that replied before and then stopped
 MAX_LINE_BYTES = 4096      # longest status line we accept
@@ -110,9 +125,10 @@ SPACECRAFT_GEOMETRY = {
 }
 
 
-def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None):
+def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None,
+                channel="state"):
     """The ``hello`` message a server sends once, right after you connect."""
-    return {
+    hello = {
         "type": "hello",
         "schema": SCHEMA,
         "source": source,
@@ -130,6 +146,46 @@ def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None):
         "status_bits": {str(k): v for k, v in STATUS_BITS.items()},
         "healthy_mask": HEALTHY_MASK,
         "spacecraft": SPACECRAFT_GEOMETRY,
+    }
+    if channel != "state":          # the state channel's hello stays exactly as issued
+        hello["channel"] = channel
+    if channel == "power":
+        hello["power_fields"] = POWER_FIELDS
+    return hello
+
+
+def stub_power(body):
+    """A plausible "power" block for a stub frame (the simulator's comes from its power
+    model): the wings make power when deployed and lit, the battery takes the rest."""
+    sun = body.get("sun") or {}
+    lit = 0.0 if sun.get("in_eclipse") else float(sun.get("sun_fraction", 1.0))
+    d = sun.get("dir_body") or [0.0, 0.0, 0.0]
+    dep = body.get("deploy") or {}
+    bus_v = 30.0
+    faces = {}
+    for name, axis, sign in (("px", 0, 1), ("mx", 0, -1), ("py", 1, 1), ("my", 1, -1),
+                             ("pz", 2, 1), ("mz", 2, -1)):
+        w = round(max(0.0, sign * d[axis]) * 0.06 * 1361 * 0.28 * lit, 2)
+        faces[name] = {"current_a": round(w / bus_v, 3), "power_w": w}
+    wings = {}
+    for wing in ("wing_py", "wing_my"):
+        frac = float((dep.get(wing) or {}).get("fraction", 0.0))
+        w = round(frac * 0.24 * 1361 * 0.28 * 0.9 * lit, 2)
+        wings[wing] = {"current_a": round(w / bus_v, 3), "power_w": w,
+                       "deployed": (dep.get(wing) or {}).get("state") == "DEPLOYED"}
+    wings["sada_angle_deg"] = dep.get("sada_angle_deg", 0.0)
+    gen = round(sum(f["power_w"] for f in faces.values())
+                + wings["wing_py"]["power_w"] + wings["wing_my"]["power_w"], 2)
+    cons = 38.0
+    net = round(gen - cons, 2)
+    return {
+        "bus_voltage_v": bus_v, "generated_w": gen, "consumed_w": cons, "net_w": net,
+        "wings": wings, "body_faces": faces,
+        "strings": {"a": {"voltage_v": 28.2, "current_a": round(gen / 2 / bus_v, 3), "enabled": True},
+                    "b": {"voltage_v": 28.2, "current_a": round(gen / 2 / bus_v, 3), "enabled": True}},
+        "battery": {"soc_pct": 75.0, "voltage_v": 31.2, "current_a": round(net / 31.2, 3),
+                    "charging": net / 31.2 > 0.05, "temp_c": 15.0},
+        "load_shed_stage": 0,
     }
 
 
@@ -829,8 +885,9 @@ class StubServer:
     """Serves frames to every connected client over TCP and WebSocket."""
 
     def __init__(self, feed, host, tcp_port, ws_port, rate_hz, chaos=False,
-                 status_log=None):
+                 status_log=None, channel="state"):
         self.feed = feed
+        self.channel = channel
         self.host = host
         self.tcp_port, self.ws_port = tcp_port, ws_port
         self.rate_hz = max(0.5, min(float(rate_hz), DEFAULT_MAX_RATE_HZ))
@@ -845,7 +902,13 @@ class StubServer:
 
     def hello_line(self):
         return dumps(build_hello("vr-stub", self.rate_hz, self.tcp_port,
-                                 self.ws_port))
+                                 self.ws_port, self.channel))
+
+    def frame_body(self):
+        body = self.feed.current()
+        if self.channel == "power":
+            body = dict(body, power=stub_power(body))
+        return body
 
     async def send_all(self, line):
         for peer, send in list(self.senders.items()):
@@ -861,7 +924,7 @@ class StubServer:
         while True:
             await asyncio.sleep(period)
             self.seq += 1
-            line = dumps(state_message(self.seq, self.feed.current()))
+            line = dumps(state_message(self.seq, self.frame_body()))
             if self.chaos:
                 line = await self.misbehave(line)
                 if line is None:
@@ -958,7 +1021,7 @@ class StubServer:
                 k, v = h.split(":", 1)
                 headers[k.strip().lower()] = v.strip()
         key = headers.get("sec-websocket-key")
-        if path.split("?")[0] not in ("/", "/vr") or not key:
+        if path.split("?")[0] not in ("/", "/vr", "/vr/power", "/vr/requests") or not key:
             writer.write(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n")
             await writer.drain()
             writer.close()
@@ -1032,12 +1095,85 @@ class StubServer:
                                            self.ws_port)
             self.ws_port = s.sockets[0].getsockname()[1]
             servers.append(s)
-        print(f"vr_stub ({SCHEMA}) on {self.host}: TCP {self.tcp_port}, "
+        print(f"vr_stub ({SCHEMA}, {self.channel} channel) on {self.host}: TCP {self.tcp_port}, "
               f"WebSocket ws://<this-machine>:{self.ws_port}/vr, "
-              f"{self.rate_hz:g} frame(s)/s. Ctrl+C to stop.")
-        if self.log:
+              f"{self.rate_hz:g} frame(s)/s.")
+        if self.log and self.channel == "state":
             print(f"Status lines are logged to {self.log.path}")
         await self.broadcast()
+
+
+class RequestStub(StubServer):
+    """The command-request channel (ICD §7a) without an MCS: every request is
+    acknowledged as PENDING, then "decided" after --decide-after seconds (SENT, or
+    DECLINED with --decline), as a flight director would."""
+
+    def __init__(self, host, tcp_port, ws_port, decide_after=5.0, decline=False):
+        super().__init__(None, host, tcp_port, ws_port, 1.0, channel="requests")
+        self.decide_after = decide_after
+        self.decline = decline
+        self.next_id = 1
+        self.pending = {}            # id -> (peer, request, team)
+
+    def hello_line(self):
+        return dumps({"type": "hello", "schema": SCHEMA, "source": "vr-stub",
+                      "channel": "requests", "ports": {"tcp": self.tcp_port, "ws": self.ws_port},
+                      "requests": dict(REQUESTS),
+                      "usage": 'send {"type":"request","request":"deploy_antenna","team":"T07",'
+                               '"text":"why"}; the flight director decides; you get request_ack, '
+                               "then request_update"})
+
+    async def greet(self, peer, send):
+        await send(self.hello_line())
+        self.senders[peer] = send
+        print(f"+ {peer} connected to the request channel")
+
+    async def reply(self, peer, obj):
+        send = self.senders.get(peer)
+        if send:
+            try:
+                await send(dumps(obj))
+            except Exception:
+                self.senders.pop(peer, None)
+
+    def on_text(self, peer, transport, raw):
+        asyncio.ensure_future(self.handle_request(peer, raw))
+
+    async def handle_request(self, peer, raw):
+        try:
+            msg = json.loads(raw)
+            assert isinstance(msg, dict)
+        except Exception:
+            await self.reply(peer, {"type": "request_rejected", "reason": "line is not a JSON object"})
+            return
+        if msg.get("type") == "status":
+            return
+        if msg.get("type") != "request":
+            await self.reply(peer, {"type": "request_rejected",
+                                    "reason": "type must be request, withdraw, list or status"})
+            return
+        name = str(msg.get("request", "")).strip().lower()
+        if name not in REQUESTS:
+            await self.reply(peer, {"type": "request_rejected", "request": name,
+                                    "reason": "unknown request; one of " + ", ".join(REQUESTS)})
+            return
+        pid = f"R{self.next_id}"
+        self.next_id += 1
+        team = str(msg.get("team") or "")[:32]
+        print(f"  {peer} {team}: {name} -> {pid} PENDING")
+        await self.reply(peer, {"type": "request_ack", "schema": SCHEMA, "id": pid,
+                                "request": name, "state": "PENDING"})
+        await asyncio.sleep(self.decide_after)
+        state = "DECLINED" if self.decline else "SENT"
+        print(f"  {pid} {state}")
+        await self.reply(peer, {"type": "request_update", "schema": SCHEMA, "id": pid,
+                                "request": name, "team": team, "state": state,
+                                "note": "stub flight director" if self.decline else "",
+                                "tc_seq": None if self.decline else 1000 + int(pid[1:])})
+
+    async def broadcast(self):
+        while True:
+            await asyncio.sleep(3600)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -1056,6 +1192,20 @@ def build_parser():
     p.add_argument("--ws-port", type=int, default=DEFAULT_WS_PORT,
                    help="WebSocket port (default %(default)s)")
     p.add_argument("--no-ws", action="store_true", help="TCP only")
+    p.add_argument("--power-port", type=int, default=DEFAULT_POWER_TCP_PORT,
+                   help="power channel TCP port (default %(default)s)")
+    p.add_argument("--power-ws-port", type=int, default=DEFAULT_POWER_WS_PORT,
+                   help="power channel WebSocket port (default %(default)s)")
+    p.add_argument("--request-port", type=int, default=DEFAULT_REQUEST_TCP_PORT,
+                   help="command-request TCP port (default %(default)s)")
+    p.add_argument("--request-ws-port", type=int, default=DEFAULT_REQUEST_WS_PORT,
+                   help="command-request WebSocket port (default %(default)s)")
+    p.add_argument("--state-only", action="store_true",
+                   help="serve only the state channel (8100/8101), as issue 1 did")
+    p.add_argument("--decide-after", type=float, default=5.0,
+                   help="seconds before the stub 'flight director' answers a request")
+    p.add_argument("--decline", action="store_true",
+                   help="the stub flight director declines every request")
     p.add_argument("--speed", type=float, default=1.0,
                    help="story seconds per wall-clock second (default 1)")
     p.add_argument("--rate", type=float, default=1.0,
@@ -1091,8 +1241,20 @@ def main(argv=None):
     server = StubServer(feed, args.host, args.port,
                         None if args.no_ws else args.ws_port, args.rate,
                         chaos=args.chaos, status_log=StatusLog(args.log_dir))
+    servers = [server]
+    if not args.state_only:
+        servers.append(StubServer(feed, args.host, args.power_port,
+                                  None if args.no_ws else args.power_ws_port, args.rate,
+                                  chaos=args.chaos, channel="power"))
+        servers.append(RequestStub(args.host, args.request_port,
+                                   None if args.no_ws else args.request_ws_port,
+                                   args.decide_after, args.decline))
+
+    async def run_all():
+        await asyncio.gather(*(s.run() for s in servers))
+    print("Ctrl+C to stop.")
     try:
-        asyncio.run(server.run())
+        asyncio.run(run_all())
     except KeyboardInterrupt:
         print("\nstopped")
     except OSError as e:
