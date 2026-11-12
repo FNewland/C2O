@@ -655,6 +655,8 @@ echo "  Config editor:    http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT/config    (inst
 echo "  Report generator: http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT/reports"
 if [ "${SMO_VR:-1}" != "0" ]; then
 echo "  VR bridge:        tcp://$ACCESS_HOST:${SMO_VR_PORT:-8100}  ws://$ACCESS_HOST:${SMO_VR_WS_PORT:-8101}/vr   (docs/VR_INTERFACE_ICD.md)"
+echo "  VR + power:       tcp://$ACCESS_HOST:${SMO_VR_POWER_PORT:-8102}  ws://$ACCESS_HOST:${SMO_VR_POWER_WS_PORT:-8103}/vr"
+echo "  VR requests:      tcp://$ACCESS_HOST:${SMO_VR_REQUEST_PORT:-8104}  ws://$ACCESS_HOST:${SMO_VR_REQUEST_WS_PORT:-8105}/vr/requests   (flight director decides)"
 fi
 echo "  MCS:              http://$ACCESS_HOST:9090"
 echo "    UI generation:  $SMO_UI   (classic: http://$ACCESS_HOST:9090/classic  modern: http://$ACCESS_HOST:9090/modern)"
@@ -704,6 +706,8 @@ echo "========================================="
 echo "  Simulator:        http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT   (instructor console, local only)"
 if [ "${SMO_VR:-1}" != "0" ]; then
 echo "  VR bridge:        tcp://$ACCESS_HOST:${SMO_VR_PORT:-8100}  ws://$ACCESS_HOST:${SMO_VR_WS_PORT:-8101}/vr"
+echo "  VR + power:       tcp://$ACCESS_HOST:${SMO_VR_POWER_PORT:-8102}  ws://$ACCESS_HOST:${SMO_VR_POWER_WS_PORT:-8103}/vr"
+echo "  VR requests:      tcp://$ACCESS_HOST:${SMO_VR_REQUEST_PORT:-8104}  ws://$ACCESS_HOST:${SMO_VR_REQUEST_WS_PORT:-8105}/vr/requests"
 fi
 echo "  Space-link agent: → $SMO_LINK_URL  (session $SMO_LINK_SESSION, mode ${SMO_LINK_MODE:-complete})"
 echo "  Scenario Gen:     http://$ACCESS_HOST:8096"

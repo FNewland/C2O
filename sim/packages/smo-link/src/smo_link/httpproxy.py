@@ -67,6 +67,10 @@ READ_PATTERNS = tuple(re.compile(p, re.ASCII) for p in (
 ))
 COMMAND_EXACT = frozenset({"/api/command", "/api/breakpoint/save", "/api/breakpoint/load"})
 WS_EXACT = frozenset({"/ws"})
+#: The VR streams (docs/VR_INTERFACE_ICD.md): simulation truth for visualisation,
+#: read-only. Reached through the instructor host like /ws, and through the GSG's
+#: public VR port (gsg_vr_proxy), which serves nothing else.
+VR_WS_EXACT = frozenset({"/vr", "/vr/power"})
 
 READ_METHODS = frozenset({"GET", "HEAD"})
 _QUERY_RE = re.compile(r"[\x21-\x22\x24-\x7e]*", re.ASCII)   # printable ASCII, no '#', no space
@@ -113,7 +117,7 @@ def normalise_path(raw: str) -> str | None:
 
 def route_allowed(method: str, norm: str, websocket: bool = False) -> bool:
     if websocket:
-        return method == "GET" and norm in WS_EXACT
+        return method == "GET" and (norm in WS_EXACT or norm in VR_WS_EXACT)
     if method in READ_METHODS:
         return norm in READ_EXACT or any(p.fullmatch(norm) for p in READ_PATTERNS)
     if method == "POST":
@@ -309,6 +313,24 @@ async def gsg_proxy(request: web.Request, link: Any, allowed_origins: list[str],
         open_msg["protocols"] = protos[:8]
         return await _gsg_ws(request, link, open_msg)
     return await _gsg_http(request, link, open_msg)
+
+
+async def gsg_vr_proxy(request: web.Request, link: Any) -> web.StreamResponse:
+    """The public VR streams (ops.c2o.live/vr, /vr/power): no sign-in, no Host or Origin
+    check (a headset app sends neither reliably), WebSocket GET to the two VR paths only.
+    What crosses the link is the same OPEN as the instructor proxy's, so the agent's own
+    allowlist applies again on the space side."""
+    is_ws = (request.headers.get("Upgrade", "").lower() == "websocket"
+             and request.method == "GET")
+    norm = normalise_path(request.raw_path)
+    if not is_ws or norm not in VR_WS_EXACT:
+        return web.json_response({"error": "VR streams are WebSockets at /vr and /vr/power"},
+                                 status=404)
+    if link is None or link.closed:
+        return web.json_response({"error": "space link down"}, status=503)
+    open_msg = {"kind": "ws", "method": "GET", "path": encode_path(norm), "query": "",
+                "headers": filter_request_headers(request.headers.items()), "protocols": []}
+    return await _gsg_ws(request, link, open_msg)
 
 
 def _status(head: dict, default: int = 502) -> int:

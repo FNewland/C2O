@@ -66,6 +66,8 @@ class FakeSim:
         app.router.add_route("*", "/api/config/{tail:.*}", self._config)
         app.router.add_post("/api/reports/generate", self._config)
         app.router.add_get("/ws", self._ws)
+        app.router.add_get("/vr", self._vr)
+        app.router.add_get("/vr/power", self._vr)
         app.router.add_route("*", "/api/logbook{tail:.*}", self._logbook)
         app.router.add_route("*", "/api/seats{tail:.*}", self._seats)
         from smo_common.dump_store import register_dump_routes
@@ -172,6 +174,19 @@ class FakeSim:
     async def _config(self, r):
         self.config_hits += 1
         return web.Response(text=f"CONFIG EDITOR {r.method} {r.path}")
+
+    async def _vr(self, r):
+        """The simulator's VR stream on its HTTP port: hello, one frame, echo status lines."""
+        ws = web.WebSocketResponse()
+        await ws.prepare(r)
+        channel = "power" if r.path.endswith("/power") else "state"
+        await ws.send_str('{"type":"hello","schema":"smo-vr/1"' +
+                          (',"channel":"power"' if channel == "power" else "") + '}')
+        await ws.send_str('{"type":"state","schema":"smo-vr/1","seq":1}')
+        async for m in ws:
+            if m.type == WSMsgType.TEXT:
+                self.ws_inbound.append(m.data)
+        return ws
 
     async def _ws(self, r):
         ws = web.WebSocketResponse()

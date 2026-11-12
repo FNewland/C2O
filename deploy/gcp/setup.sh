@@ -95,7 +95,7 @@ log "Firewall (nothing else reaches the VMs: the VPC denies all other ingress)"
 # Google front ends and health checkers -> the published ground ports
 # (MCS, planner, instructor proxy, link, welcome page 8090, tool viewers
 # 8092-8095, SpaceCDF 8000).
-fw "$FW_LB" tcp:8080,tcp:8090,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8000 "$TAG_GROUND" \
+fw "$FW_LB" tcp:8080,tcp:8090,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8098,tcp:8000 "$TAG_GROUND" \
     --source-ranges=130.211.0.0/22,35.191.0.0/16
 # ... and -> the instructor tools next to the cloud simulator.
 if [ "$CREATE_SIM_VM" = yes ]; then
@@ -288,7 +288,7 @@ fi
 tool_port() { [ "$4" = "$want" ] && printf ',%s:%s' "$1" "$3"; return 0; }
 want=ground; ground_tool_ports="$(tools_each tool_port)"
 gcloud compute instance-groups unmanaged set-named-ports "$IG" --zone="$ZONE" \
-    --named-ports="mcs:9090,planner:9091,instructor:8080,link:9100,portal:8090$ground_tool_ports"
+    --named-ports="mcs:9090,planner:9091,instructor:8080,link:9100,portal:8090,vr:8098$ground_tool_ports"
 if [ "$CREATE_SIM_VM" = yes ]; then
     # The sim VM gets its own group: a backend service sends traffic to every
     # VM in a group, and only the sim VM runs the instructor tools.
@@ -319,6 +319,7 @@ hc "$HC_PLAN" 9091 /api/time-source
 hc "$HC_SIM"  8080 /healthz
 hc "$HC_LINK" 9100 /healthz
 hc "$HC_PORTAL" 8090 /healthz
+hc "$HC_VR" 8098 /vr/healthz
 tool_hc() { hc "$PREFIX-hc-$1" "$3" /; }
 tools_each tool_hc
 
@@ -368,6 +369,7 @@ be "$BE_PLAN" planner    "$HC_PLAN"
 be "$BE_SIM"  instructor "$HC_SIM"
 be "$BE_LINK" link       "$HC_LINK"
 be "$BE_PORTAL" portal   "$HC_PORTAL"
+be "$BE_VR"   vr         "$HC_VR"
 tool_be() {
     local group="$IG"; [ "$4" = sim ] && group="$IG_SIM"
     be "$PREFIX-be-$1" "$1" "$PREFIX-hc-$1" "$group"
@@ -381,9 +383,13 @@ for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" $(tools_each tool_be_name);
     gcloud compute backend-services update "$b" --global --iap=enabled >/dev/null
 done
 # /link must NOT be behind IAP: the agent is not a browser; its HMAC proves it.
-if [ "$(gcloud compute backend-services describe "$BE_LINK" --global --format='value(iap.enabled)')" = "True" ]; then
-    gcloud compute backend-services update "$BE_LINK" --global --iap=disabled >/dev/null
-fi
+# Nor /vr*: headset apps cannot sign in. That back end serves only the read-only VR
+# streams and the request socket (proposals the Flight Director must accept).
+for b in "$BE_LINK" "$BE_VR"; do
+    if [ "$(gcloud compute backend-services describe "$b" --global --format='value(iap.enabled)')" = "True" ]; then
+        gcloud compute backend-services update "$b" --global --iap=disabled >/dev/null
+    fi
+done
 iap_grant() {  # iap_grant BACKEND GROUP
     gcloud iap web add-iam-policy-binding --resource-type=backend-services --service="$1" \
         --member="group:$2" --role=roles/iap.httpsResourceAccessor --condition=None >/dev/null
@@ -474,6 +480,13 @@ pathMatchers:
 $apex_matcher
   - name: ops
     defaultService: $(bs "$BE_OPS")
+    pathRules:
+      # VR headsets (docs VR_INTERFACE_ICD): no sign-in on these three paths only.
+      - paths:
+        - /vr
+        - /vr/power
+        - /vr/requests
+        service: $(bs "$BE_VR")
   - name: plan
     defaultService: $(bs "$BE_PLAN")
   - name: sim

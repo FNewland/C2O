@@ -185,13 +185,17 @@ services:
       SMO_GSG_HTTP_PORT: "8080"
       SMO_GSG_LINK_BIND: 0.0.0.0
       SMO_GSG_LINK_PORT: "9100"
+      # Public VR port (VR_INTERFACE_ICD): /vr and /vr/power over the link,
+      # /vr/requests relayed to the MCS. Behind the LB as ops.<domain>/vr*, IAP off.
+      SMO_GSG_VR_PORT: "8098"
+      SMO_GSG_VR_BIND: 0.0.0.0
       # the GSG serves /api/logbook for the instructor console it proxies
       <<: *logbook-env
     volumes:
       - ground-workspace:/opt/smo/workspace
       - ground-dumps:/opt/smo/workspace/dumps
     # Every ground process shares this namespace, so its ports are published
-    # here. Behind the GCP LB: 9090, 9091, 8080 via IAP; 9100 (/link) IAP off.
+    # here. Behind the GCP LB: 9090, 9091, 8080 via IAP; 9100 (/link) and 8098 (/vr*) IAP off.
     # Default 127.0.0.1: nothing is reachable from the network until you
     # deliberately set SMO_PUBLISH_ADDR (the VM's internal IP on GCP).
     ports:
@@ -204,6 +208,7 @@ services:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8094:8094"     # radio status (rf profile)
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8095:8095"     # documentation viewer
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8090:8090"     # welcome page (portal)
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8098:8098"     # VR headsets: /vr, /vr/power, /vr/requests (no sign-in)
     healthcheck:
       <<: *probe
       # /healthz AND the TM listener: rfsim connects to TM exactly once.

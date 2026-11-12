@@ -55,7 +55,7 @@ from .channel import (IntegrityError, SecureChannel, mac_agent, mac_gsg, new_non
                       parse_mac, parse_nonce, verify_mac)
 from .clock import STATE_STALE_S, SimClockAnchor
 from .confighash import compare as compare_config, compute as compute_config_hash
-from .httpproxy import gsg_proxy, host_allowed, hosts_from_origins
+from .httpproxy import gsg_proxy, gsg_vr_proxy, host_allowed, hosts_from_origins
 from .mux import LinkConnection
 
 logger = logging.getLogger("smo_link.gateway")
@@ -151,6 +151,11 @@ class GatewayConfig:
     dump_min_free: int = DUMP_MIN_FREE
     #: The MCS on the ground host: /api/seats* is answered from it (WP10).
     mcs_url: str = "http://127.0.0.1:9090"
+    #: Public VR port (VR_INTERFACE_ICD): /vr and /vr/power over the link, /vr/requests
+    #: relayed to the MCS. None = closed. The cloud puts it behind ops.c2o.live/vr*.
+    vr_port: int | None = None
+    vr_bind: str = "0.0.0.0"
+    vr_max_clients: int = 64
     gsg_id: str = field(default_factory=lambda: "gsg-" + secrets.token_hex(4))
 
 
@@ -411,6 +416,9 @@ class Gateway:
         await site.start()
         self._runners.append(runner)
         self.ports["http"] = site._server.sockets[0].getsockname()[1]  # type: ignore[union-attr]
+
+        if self.cfg.vr_port is not None:
+            await self._start_vr_public()
 
         link_app = web.Application(client_max_size=64 * 1024)
         link_app.router.add_get("/link", self._h_link)
@@ -717,6 +725,83 @@ class Gateway:
             logger.warning(P.kv("seats_route_error", error=type(e).__name__))
             return web.json_response({"error": "the MCS on the ground is not reachable",
                                       "code": "mcs-unreachable"}, status=502)
+
+    # -- public VR port (VR_INTERFACE_ICD) ------------------------------------
+    async def _start_vr_public(self) -> None:
+        app = web.Application(client_max_size=64 * 1024)
+        app.router.add_get("/vr", self._h_vr_stream)
+        app.router.add_get("/vr/power", self._h_vr_stream)
+        app.router.add_get("/vr/requests", self._h_vr_requests)
+        app.router.add_get("/vr/healthz", self._h_health)
+        app.router.add_get("/healthz", self._h_health)
+        runner = web.AppRunner(app, access_log=None, handle_signals=False)
+        await runner.setup()
+        site = web.TCPSite(runner, self.cfg.vr_bind, self.cfg.vr_port)
+        await site.start()
+        self._runners.append(runner)
+        self.ports["vr"] = site._server.sockets[0].getsockname()[1]  # type: ignore[union-attr]
+        self._vr_clients = 0
+        logger.info(P.kv("vr_public_port", port=self.ports["vr"]))
+
+    def _vr_admit(self) -> bool:
+        if getattr(self, "_vr_clients", 0) >= self.cfg.vr_max_clients:
+            return False
+        self._vr_clients = getattr(self, "_vr_clients", 0) + 1
+        return True
+
+    async def _h_vr_stream(self, request: web.Request) -> web.StreamResponse:
+        if not self._vr_admit():
+            return web.json_response({"error": "too many VR connections"}, status=503)
+        try:
+            return await gsg_vr_proxy(request, self.link)
+        finally:
+            self._vr_clients -= 1
+
+    async def _h_vr_requests(self, request: web.Request) -> web.StreamResponse:
+        """Relay the headset's request socket to the MCS on this host (it never crosses
+        the space link: requests are ground business, decided by the Flight Director)."""
+        import aiohttp
+        if request.headers.get("Upgrade", "").lower() != "websocket":
+            return web.json_response({"error": "/vr/requests is a WebSocket"}, status=404)
+        if not self._vr_admit():
+            return web.json_response({"error": "too many VR connections"}, status=503)
+        url = self.cfg.mcs_url.rstrip("/").replace("http", "ws", 1) + "/vr/requests"
+        peer = (request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+                or str(request.remote or ""))
+        try:
+            async with aiohttp.ClientSession() as session:
+                try:
+                    up = await session.ws_connect(url, headers={"X-Forwarded-For": peer},
+                                                  max_msg_size=64 * 1024, heartbeat=20)
+                except (aiohttp.ClientError, OSError):
+                    return web.json_response({"error": "the MCS on the ground is not reachable"},
+                                             status=502)
+                ws = web.WebSocketResponse(heartbeat=20, max_msg_size=64 * 1024)
+                await ws.prepare(request)
+
+                async def down() -> None:
+                    async for m in up:
+                        if m.type == WSMsgType.TEXT:
+                            await ws.send_str(m.data)
+                        else:
+                            break
+                    await ws.close()
+
+                task = asyncio.ensure_future(down())
+                try:
+                    async for m in ws:
+                        if m.type == WSMsgType.TEXT:
+                            await up.send_str(m.data)
+                        elif m.type == WSMsgType.BINARY:
+                            await up.send_str(m.data.decode("utf-8", "replace"))
+                        else:
+                            break
+                finally:
+                    task.cancel()
+                    await up.close()
+                return ws
+        finally:
+            self._vr_clients -= 1
 
     async def _h_link_status(self, request: web.Request) -> web.Response:
         if not host_allowed(request.headers.get("Host"), self._allowed_hosts):
@@ -1119,6 +1204,9 @@ def build_parser() -> argparse.ArgumentParser:
                         "(IP literals and localhost always; plus the allowed origins' hosts)")
     p.add_argument("--mcs-url", default=e("SMO_GSG_MCS_URL", "http://127.0.0.1:9090"),
                    help="the MCS on this ground host; /api/seats* is answered from it")
+    p.add_argument("--vr-port", type=int, default=int(e("SMO_GSG_VR_PORT", "0")) or None,
+                   help="public VR port (/vr, /vr/power, /vr/requests); default closed")
+    p.add_argument("--vr-bind", default=e("SMO_GSG_VR_BIND", "0.0.0.0"))
     p.add_argument("--tc-ttl", type=float, default=float(e("SMO_LINK_TC_TTL_S", str(TC_TTL_S))),
                    help="seconds a TC may wait in the link queue before it is discarded")
     p.add_argument("--log-level", default=e("SMO_LOG_LEVEL", "INFO"))
@@ -1156,7 +1244,8 @@ def config_from_args(args: argparse.Namespace) -> GatewayConfig:
         link_bind=args.link_bind, link_port=args.link_port,
         dump_dir=_resolve_dump_dir(args.dump_dir), config_dir=args.config_dir,
         allowed_origins=_csv(args.allowed_origins), allowed_hosts=_csv(args.allowed_hosts),
-        tc_ttl_s=args.tc_ttl, mcs_url=args.mcs_url)
+        tc_ttl_s=args.tc_ttl, mcs_url=args.mcs_url,
+        vr_port=args.vr_port, vr_bind=args.vr_bind)
 
 
 def main(argv: list[str] | None = None) -> None:
