@@ -391,7 +391,7 @@ class FrameChecker:
         if self.n == 0:
             rep.add("state frames received", False, "none")
             return
-        rate = f", {self.n / seconds:.1f} per second" if seconds else ""
+        rate = f", {(self.n - 1) / seconds:.1f} per second" if seconds else ""
         rep.add("state frames received", True)
         rep.set_detail("state frames received", f"{self.n} frames{rate}")
         bits = []
