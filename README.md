@@ -4,12 +4,16 @@ C2O is an open teaching platform for space-mission engineering. Students **desig
 
 *C2O est une plateforme pédagogique ouverte d'ingénierie des missions spatiales. Les équipes **conçoivent** une mission dans une installation de conception simultanée, puis la **pilotent** depuis un centre de contrôle face à un simulateur de satellite. Tout est disponible en anglais et en français.*
 
+**What is in each folder, with diagrams:** [docs/REPO_MAP.md](docs/REPO_MAP.md) · *[en français](docs/REPO_MAP_fr.md)*
+
 | Folder | What it is |
 |---|---|
-| [`sim/`](sim/) | **Simulate and operate.** EOSAT-1 spacecraft simulator, mission control system (MCS), planner, RF/radio bridge, space-link agent and ground-station gateway (`smo-link`), operations manual and procedures. Python. |
-| [`design/`](design/) | **Design.** SpaceCDF concurrent design facility: requirements, budgets, design agents, trade studies, ECSS documents, export to the simulator. FastAPI + React. Also the course books and the open textbook *Concurrent Spacecraft Design*. |
-| `portal/` | *(planned)* One sign-in and a home page: design a mission, fly a mission, practise. |
-| `deploy/` | *(planned)* Shared hosting for **c2o.live**. Today's deployment notes are in `sim/deploy/` and `sim/docs/web_2026-10/`. |
+| [`design/`](design/) | **Design.** SpaceCDF concurrent design facility: requirements, budgets, design agents, trade studies, ECSS documents, export to the simulator. FastAPI + React. Also the course books, the open textbook *Concurrent Spacecraft Design* and the Moodle course builder. |
+| [`sim/`](sim/) | **Simulate and operate.** EOSAT-1 spacecraft simulator, mission control system (MCS), planner, RF/radio bridge, space-link agent and ground-station gateway (`smo-link`), operations manual and procedures, the VR interface kit. Python. |
+| [`video/`](video/) | **Course videos.** Storyboards and the pipeline that records the real screens, narrates them in English and French and makes the H5P interactive versions. |
+| [`shared/`](shared/) | **One look.** Design tokens and the pictorial displays used by both the consoles and SpaceCDF. |
+| [`deploy/`](deploy/) | **c2o.live** on Google Cloud: set-up, the `c2o` command, start and stop. |
+| [`docs/`](docs/) | Cross-project plans, the UI brief, testing notes and the folder map. |
 
 ## Quick start
 
