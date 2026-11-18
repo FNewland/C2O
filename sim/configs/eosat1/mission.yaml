@@ -69,4 +69,10 @@ network:
   vr_power_ws_port: 8103
   vr_request_tcp_port: 8104
   vr_request_ws_port: 8105
+  # smo-vr/2: channels 1 and 2 again, in the spacecraft's own body axes (+Z zenith,
+  # +Y orbit normal), for teams that prefer the operations-manual frame (ICD §6c).
+  vr2_tcp_port: 8106
+  vr2_ws_port: 8107
+  vr2_power_tcp_port: 8108
+  vr2_power_ws_port: 8109
   vr_max_rate_hz: 10.0

@@ -48,6 +48,7 @@ from smo_common import attitude as att
 logger = logging.getLogger(__name__)
 
 SCHEMA = "smo-vr/1"
+SCHEMA_V2 = "smo-vr/2"     # the same frames in the SPACECRAFT's own body axes (ICD §6c)
 DEFAULT_TCP_PORT = 8100
 DEFAULT_WS_PORT = 8101
 DEFAULT_MAX_RATE_HZ = 10.0
@@ -133,6 +134,79 @@ SPACECRAFT_GEOMETRY = {
                 "not element geometry",
     },
 }
+
+
+# smo-vr/2: the simulator's own body axes, as in the operations manual (ruling Q4):
+# +X along-track, +Y = +orbit normal and the +Y wing, +Z ZENITH (away from the
+# payload), -Z nadir (imager). Offered alongside smo-vr/1 on its own ports and paths.
+SPACECRAFT_GEOMETRY_V2 = {
+    "name": "EOSAT-1",
+    "bus_size_m": [0.100, 0.226, 0.366],
+    "body_axes": {
+        "+X": "along-track (velocity) in nominal nadir pointing",
+        "+Y": "orbit normal; +Y solar wing (wings lie along +/-Y when deployed)",
+        "+Z": "zenith (away from the payload); top deck, zenith star camera and GPS antenna",
+        "-Z": "nadir (points at Earth in nominal attitude); imager boresight",
+    },
+    "solar_wings": {
+        "mount_faces": ["+Y", "-Y"],
+        "deployed_size_m": [0.418, 0.342],
+        "note": "fixed flaps for the VR model: folded down the +/-Y face when STOWED, "
+                "hinged at its +Z (top) edge, swung out level with the +Z deck when "
+                "DEPLOYED; hinge angle = 90 deg x fraction",
+    },
+    "sada": {
+        "note": "DO NOT USE for the VR project (the flaps are fixed); "
+                "deploy.sada_angle_deg is the simulator's drive angle about +Y",
+    },
+    "antenna": {
+        "suggested_model": "4 tape-spring UHF elements ~0.5 m, on the +Z "
+                           "(zenith) face corners, flush when STOWED",
+        "note": "suggestion only; the simulator models deployment state, "
+                "not element geometry",
+    },
+}
+
+_SWAP_FACES = {"px": "px", "mx": "mx", "py": "my", "my": "py", "pz": "mz", "mz": "pz"}
+
+
+def _flip_yz(v):
+    return [v[0], -v[1] + 0.0, -v[2] + 0.0] if isinstance(v, list) and len(v) == 3 else v
+
+
+def to_spacecraft_axes(body: dict) -> dict:
+    """Turn a smo-vr/1 frame body into smo-vr/2 (the spacecraft's own axes).
+
+    The two body frames differ by a 180 deg turn about X (v_v2 = diag(1,-1,-1) v_v1), so
+    body vectors flip Y and Z, q_v2 = q_v1 (x) [1,0,0,0], the +/-Y wings and faces swap,
+    and the drive angle about Y changes sign. ECI quantities are unchanged."""
+    out = json.loads(json.dumps(body))           # deep copy, plain types
+    att_ = out.get("attitude") or {}
+    q = att_.get("q_body_to_eci")
+    if isinstance(q, list) and len(q) == 4:
+        x, y, z, w = q
+        att_["q_body_to_eci"] = [w, z, -y + 0.0, -x + 0.0]
+    if "rate_body_deg_s" in att_:
+        att_["rate_body_deg_s"] = _flip_yz(att_["rate_body_deg_s"])
+    for sec in ("sun", "earth"):
+        if isinstance(out.get(sec), dict) and "dir_body" in out[sec]:
+            out[sec]["dir_body"] = _flip_yz(out[sec]["dir_body"])
+    dep = out.get("deploy")
+    if isinstance(dep, dict):
+        dep["wing_py"], dep["wing_my"] = dep.get("wing_my"), dep.get("wing_py")
+        if dep.get("sada_angle_deg") is not None:
+            dep["sada_angle_deg"] = -dep["sada_angle_deg"] + 0.0
+    pw = out.get("power")
+    if isinstance(pw, dict):
+        w = pw.get("wings")
+        if isinstance(w, dict):
+            w["wing_py"], w["wing_my"] = w.get("wing_my"), w.get("wing_py")
+            if w.get("sada_angle_deg") is not None:
+                w["sada_angle_deg"] = -w["sada_angle_deg"] + 0.0
+        f = pw.get("body_faces")
+        if isinstance(f, dict):
+            pw["body_faces"] = {k: f[_SWAP_FACES[k]] for k in _SWAP_FACES if _SWAP_FACES[k] in f}
+    return out
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -350,10 +424,12 @@ POWER_FIELDS = (
 def build_hello(source: str, max_rate_hz: float,
                 tcp_port: int | None = None,
                 ws_port: int | None = None,
-                channel: str = "state") -> dict:
+                channel: str = "state",
+                schema: str = SCHEMA) -> dict:
+    v2 = schema == SCHEMA_V2
     hello = {
         "type": "hello",
-        "schema": SCHEMA,
+        "schema": schema,
         "source": source,
         "max_rate_hz": max_rate_hz,
         "ports": {"tcp": tcp_port, "ws": ws_port},
@@ -368,12 +444,16 @@ def build_hello(source: str, max_rate_hz: float,
         },
         "status_bits": {str(k): v for k, v in STATUS_BITS.items()},
         "healthy_mask": HEALTHY_MASK,
-        "spacecraft": SPACECRAFT_GEOMETRY,
+        "spacecraft": SPACECRAFT_GEOMETRY_V2 if v2 else SPACECRAFT_GEOMETRY,
     }
-    if channel != "state":          # the state channel's hello stays exactly as issued
+    if v2:
+        hello["frames"]["body"] = ("the spacecraft's own body frame (as in the operations "
+                                   "manual): +X along-track, +Y orbit normal, +Z zenith")
+    if channel != "state" or v2:    # the smo-vr/1 state channel's hello stays exactly as issued
         hello["channel"] = channel
     if channel == "power":
-        hello["power_fields"] = POWER_FIELDS
+        hello["power_fields"] = (POWER_FIELDS.replace("smo-vr/1 body axes", "spacecraft body axes")
+                                 if v2 else POWER_FIELDS)
     return hello
 
 
@@ -469,6 +549,7 @@ class VRLinkMonitor:
     def __init__(self, tcp_port: int | None = None,
                  ws_port: int | None = None):
         self.channel = "state"
+        self.schema = SCHEMA
         self.tcp_port = tcp_port
         self.ws_port = ws_port
         self._clients: dict[int, VRClient] = {}
@@ -561,7 +642,7 @@ class VRLinkMonitor:
             overall = "NO_CLIENTS"
         return {
             "enabled": True,
-            "schema": SCHEMA,
+            "schema": self.schema,
             "tcp_port": self.tcp_port,
             "ws_port": self.ws_port,
             "n_clients": len(rows),
@@ -585,6 +666,10 @@ def merge_summaries(by_channel: dict) -> dict:
     pw = by_channel.get("power")
     if pw:
         base["power_tcp_port"], base["power_ws_port"] = pw.get("tcp_port"), pw.get("ws_port")
+    for key in ("state2", "power2"):
+        v = by_channel.get(key)
+        if v:
+            base[f"{key}_tcp_port"], base[f"{key}_ws_port"] = v.get("tcp_port"), v.get("ws_port")
     return base
 
 
@@ -611,9 +696,13 @@ class VRBridge:
                  max_rate_hz: float = DEFAULT_MAX_RATE_HZ,
                  source: str = "smo-simulator",
                  on_summary: Optional[Callable[[dict], None]] = None,
-                 channel: str = "state"):
+                 channel: str = "state",
+                 schema: str = SCHEMA):
         self._get_state = get_state
         self.channel = channel
+        self.schema = schema
+        #: the name this bridge goes by in summaries and routes: state, power, state2, power2
+        self.key = channel + ("2" if schema == SCHEMA_V2 else "")
         self._host = host
         self.tcp_port = tcp_port
         self.ws_port = ws_port
@@ -621,9 +710,10 @@ class VRBridge:
         self._source = source
         self._on_summary = on_summary
         self.monitor = VRLinkMonitor(tcp_port, ws_port)
-        self.monitor.channel = channel
-        if channel != "state":                 # ids stay unique across channels
-            self.monitor._next_id = 1001
+        self.monitor.channel = self.key
+        self.monitor.schema = schema
+        self.monitor._next_id = {"state": 1, "power": 1001,
+                                 "state2": 2001, "power2": 3001}.get(self.key, 4001)
         self._writers: dict[int, Any] = {}   # cid -> send coroutine fn
         self._seq = 0
         self._last_line: Optional[str] = None
@@ -647,6 +737,7 @@ class VRBridge:
             app = web.Application()
             app.router.add_get("/", self._handle_ws)
             app.router.add_get("/vr", self._handle_ws)
+            app.router.add_get("/vr2", self._handle_ws)
             self._ws_runner = web.AppRunner(app)
             await self._ws_runner.setup()
             site = web.TCPSite(self._ws_runner, self._host, self.ws_port)
@@ -657,7 +748,7 @@ class VRBridge:
         self._publish_summary()
         self._task = asyncio.ensure_future(self._broadcast_loop())
         logger.info("VR bridge (%s, %s channel) on %s — TCP:%s WS:%s max %.1f Hz",
-                    SCHEMA, self.channel, self._host, self.tcp_port, self.ws_port,
+                    self.schema, self.channel, self._host, self.tcp_port, self.ws_port,
                     self.max_rate_hz)
 
     async def stop(self) -> None:
@@ -678,13 +769,13 @@ class VRBridge:
 
     def _hello_line(self) -> str:
         return _dumps(build_hello(self._source, self.max_rate_hz,
-                                  self.tcp_port, self.ws_port, self.channel))
+                                  self.tcp_port, self.ws_port, self.channel, self.schema))
 
     def _next_frame_line(self, body: dict) -> str:
         self._seq += 1
         self.monitor.current_seq = self._seq
-        msg = {"type": "state", "schema": SCHEMA, "seq": self._seq}
-        msg.update(body)
+        msg = {"type": "state", "schema": self.schema, "seq": self._seq}
+        msg.update(to_spacecraft_axes(body) if self.schema == SCHEMA_V2 else body)
         return _dumps(msg)
 
     async def _broadcast_loop(self) -> None:

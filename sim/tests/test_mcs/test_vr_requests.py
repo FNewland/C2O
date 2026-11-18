@@ -176,3 +176,24 @@ def test_the_console_wires_the_drawer_tab():
     # sending goes through the console's one transport (history, authority) and arm-through
     body = js[js.index("async function vrRequestSend"):js.index("async function vrRequestDecline")]
     assert "sendPus(" in body and "needsArm(cmd)" in body and "commandAuthority(" in body
+
+
+def test_a_smo_vr_2_headset_names_wings_in_spacecraft_axes():
+    async def run():
+        desk, seen, log, clock = _desk()
+        c, out = _client(desk)
+        await desk.on_text(c, json.dumps({"type": "request", "request": "deploy_wing_py",
+                                          "team": "T2", "schema": "smo-vr/2"}))
+        ack = out[-1]
+        assert ack["schema"] == "smo-vr/2" and ack["request"] == "deploy_wing_py"
+        p = desk.proposals()[0]
+        assert p["args"] == {"wing": 0}                 # the spacecraft's +Y wing (EPS_DEPLOY_WING 0)
+        assert p["request"] == "deploy_wing_py" and "smo-vr/2" in p["label"]["en"]
+        await desk.decide(ack["id"], "sent", position="flight_director", tc_seq=7)
+        assert out[-1]["schema"] == "smo-vr/2" and out[-1]["request"] == "deploy_wing_py"
+        clock.t += 3                                     # smo-vr/1 naming is unchanged
+        await desk.on_text(c, json.dumps({"type": "request", "request": "deploy_wing_py", "team": "T2"}))
+        r2 = [q for q in desk.proposals() if q["id"] == out[-1]["id"]][0]
+        assert out[-1]["schema"] == "smo-vr/1" and r2["args"] == {"wing": 1}
+        assert vq.hello()["axes"].startswith("wing names are in smo-vr/1 axes")
+    asyncio.run(run())

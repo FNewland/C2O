@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""vr_test.py — check the EOSAT-1 VR interface (smo-vr/1, all three channels).
+"""vr_test.py — check the EOSAT-1 VR interface (smo-vr/1 and smo-vr/2, all channels).
 
 It connects like a headset would, reads what the server sends, and checks every
 message against the interface (docs/VR_INTERFACE_ICD.md). Use it to find out
@@ -10,6 +10,7 @@ whether a problem is in the link or in your headset code.
     python3 vr_test.py check --channel requests       # channel 3: hello + a harmless probe
     python3 vr_test.py check --host 192.168.1.20 --ws # the cyber-range machine, WebSocket
     python3 vr_test.py check --cloud --channel power  # wss://ops.c2o.live/vr/power
+    python3 vr_test.py check --v2 --channel all       # smo-vr/2 (spacecraft axes, +Z zenith): 8106-8109
     python3 vr_test.py watch --channel power          # one readable line per frame
     python3 vr_test.py request deploy_antenna --team T07   # ask the flight director, follow the answer
     python3 vr_test.py file sample_vr_frames.ndjson   # check a sample or a recording, list its events
@@ -29,6 +30,10 @@ panel rotation angle (deploy.sada_angle_deg, power.wings.sada_angle_deg,
 hello.spacecraft.sada). These are marked DO NOT USE for the VR project: this tool
 reports that they are present and otherwise ignores them. The flap angle it shows
 is 90 degrees x deploy fraction (0 = folded down the side, 90 = level with the top deck).
+
+Two versions of the same channels: smo-vr/1 (+Z nadir, the original) and smo-vr/2 (the
+spacecraft's own axes: +X along-track, +Y orbit normal and the +Y wing, +Z zenith, away from
+the payload). Add --v2 to check, watch or request to use smo-vr/2.
 
 Python 3.8 or newer, standard library only. Exit code 0 = no FAIL.
 """
@@ -50,11 +55,14 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 SCHEMA = "smo-vr/1"
+SCHEMA_V2 = "smo-vr/2"          # the same channels in the spacecraft's own axes (+Z zenith)
 CHANNELS = ("state", "power", "requests")
 PORTS = {"state": (8100, 8101, "/vr"), "power": (8102, 8103, "/vr"),
          "requests": (8104, 8105, "/vr/requests")}
 CLOUD = {"state": "wss://ops.c2o.live/vr", "power": "wss://ops.c2o.live/vr/power",
          "requests": "wss://ops.c2o.live/vr/requests"}
+PORTS_V2 = {"state": (8106, 8107, "/vr2"), "power": (8108, 8109, "/vr2")}
+CLOUD_V2 = {"state": "wss://ops.c2o.live/vr2", "power": "wss://ops.c2o.live/vr2/power"}
 REQUESTS = ("deploy_antenna", "deploy_wing_py", "deploy_wing_my", "deploy_both_wings")
 EARTH_R_KM = 6371.0
 DO_NOT_USE = ("deploy.sada_angle_deg", "power.wings.sada_angle_deg", "hello.spacecraft.sada")
@@ -184,13 +192,17 @@ class Report:
 #  Message checks (the interface, section by section)
 # ═════════════════════════════════════════════════════════════════════════
 
-def check_hello(rep, h, expect_channel=None):
+def check_hello(rep, h, expect_channel=None, expect_schema=None):
     rep.add("hello is the first message", isinstance(h, dict) and h.get("type") == "hello",
             f"got {h.get('type') if isinstance(h, dict) else h!r}")
     if not isinstance(h, dict) or h.get("type") != "hello":
         return None
-    schema = str(h.get("schema", ""))
-    rep.add("schema is smo-vr/1", schema.split(".")[0] == SCHEMA, f"schema {schema!r}")
+    schema = str(h.get("schema", "")).split(".")[0]
+    rep.schema = schema
+    rep.add("schema is smo-vr/1 or smo-vr/2", schema in (SCHEMA, SCHEMA_V2), f"schema {schema!r}")
+    if expect_schema:
+        rep.add("connected to the version asked for", schema == expect_schema,
+                f"asked for {expect_schema}, server says {schema}")
     channel = h.get("channel", "state")
     rep.add("hello names its channel", channel in CHANNELS, f"channel {channel!r}")
     if expect_channel:
@@ -198,7 +210,9 @@ def check_hello(rep, h, expect_channel=None):
                 f"asked for {expect_channel}, server says {channel}")
     rep.set_detail("hello names its channel",
                    f"{channel}" + (" (no channel field: the original channel-1 hello)" if "channel" not in h else ""))
-    rep.set_detail("schema is smo-vr/1", f"source {h.get('source', '?')}")
+    rep.set_detail("schema is smo-vr/1 or smo-vr/2",
+                   f"{schema}, " + ("spacecraft axes, +Z zenith" if schema == SCHEMA_V2 else "+Z nadir")
+                   + f"; source {h.get('source', '?')}")
     if channel in ("state", "power"):
         rep.add("hello: max_rate_hz", num(h.get("max_rate_hz")) and h["max_rate_hz"] > 0,
                 f"{h.get('max_rate_hz')!r}")
@@ -218,9 +232,10 @@ def check_hello(rep, h, expect_channel=None):
 class FrameChecker:
     """Checks state frames one by one and keeps what it needs across frames."""
 
-    def __init__(self, rep, channel):
+    def __init__(self, rep, channel, schema=SCHEMA):
         self.rep = rep
         self.channel = channel
+        self.schema = schema or SCHEMA
         self.last_seq = None
         self.gaps = self.repeats = self.backwards = 0
         self.unknown_top = set()
@@ -233,7 +248,8 @@ class FrameChecker:
     def frame(self, m):
         rep = self.rep
         self.n += 1
-        rep.add("state: type and schema", m.get("type") == "state" and str(m.get("schema", "")).split(".")[0] == SCHEMA,
+        rep.add("state: type and schema (as in the hello)",
+                m.get("type") == "state" and str(m.get("schema", "")).split(".")[0] == self.schema,
                 f"type {m.get('type')!r} schema {m.get('schema')!r}")
         self.unknown_top |= set(m) - self.KNOWN_TOP
 
@@ -536,9 +552,10 @@ class Conn:
 def target_for(args, channel):
     if getattr(args, "url", None):
         return args.url
+    v2 = getattr(args, "v2", False) and channel in PORTS_V2
     if args.cloud:
-        return CLOUD[channel]
-    tcp, ws, path = PORTS[channel]
+        return (CLOUD_V2 if v2 else CLOUD)[channel]
+    tcp, ws, path = (PORTS_V2 if v2 else PORTS)[channel]
     if args.ws:
         return f"ws://{args.host}:{args.port or ws}{path}"
     return f"tcp://{args.host}:{args.port or tcp}"
@@ -556,7 +573,8 @@ def parse(text):
 #  Commands
 # ═════════════════════════════════════════════════════════════════════════
 
-def run_check(target, channel, frames=10, timeout=15.0, team=None, status_word=0x000B, quiet=False):
+def run_check(target, channel, frames=10, timeout=15.0, team=None, status_word=0x000B, quiet=False,
+              schema=None):
     """Connect, check the hello and `frames` messages. Returns the verdict."""
     rep = Report(f"vr_test check: channel {channel} at {target}")
     try:
@@ -575,11 +593,11 @@ def run_check(target, channel, frames=10, timeout=15.0, team=None, status_word=0
             return rep.print() if not quiet else rep
         hello = parse(first)
         rep.add("every message is a JSON object", hello is not None, f"first line {first[:80]!r}")
-        got = check_hello(rep, hello or {}, channel)
+        got = check_hello(rep, hello or {}, channel, schema)
         if got == "requests":
             probe_requests(rep, c, timeout)
         elif got in ("state", "power"):
-            fc = FrameChecker(rep, got)
+            fc = FrameChecker(rep, got, getattr(rep, "schema", SCHEMA))
             t0 = time.monotonic()
             first_t = None
             while fc.n < frames and time.monotonic() - t0 < timeout + frames * 2:
@@ -632,7 +650,9 @@ def probe_requests(rep, c, timeout):
 
 def cmd_check(args):
     channels = CHANNELS if args.channel == "all" else (args.channel,)
-    verdicts = [run_check(target_for(args, ch), ch, args.frames, args.timeout, args.team) for ch in channels]
+    verdicts = [run_check(target_for(args, ch), ch, args.frames, args.timeout, args.team,
+                          schema=SCHEMA_V2 if args.v2 and ch != "requests" else SCHEMA)
+                for ch in channels]
     return 1 if "FAIL" in verdicts else 0
 
 
@@ -640,6 +660,7 @@ def cmd_watch(args):
     target = target_for(args, args.channel)
     c = Conn.open(target, args.timeout)
     print(f"watching {target} (Ctrl+C to stop). Flap angle = 90 x fraction; sada_angle_deg is not shown (DO NOT USE).")
+    camera = [0, 0, 1]              # smo-vr/1: the imager is +Z; smo-vr/2: -Z
     try:
         while True:
             line = c.recv(args.timeout)
@@ -652,11 +673,12 @@ def cmd_watch(args):
                 continue
             if m.get("type") == "hello":
                 print(f"hello: {m.get('source')} channel {m.get('channel', 'state')} schema {m.get('schema')}")
+                camera = [0, 0, -1] if str(m.get("schema", "")).startswith(SCHEMA_V2) else [0, 0, 1]
                 continue
             if m.get("type") != "state":
                 print(f"  {m}")
                 continue
-            q, pos, eb = get(m, "attitude.q_body_to_eci"), get(m, "orbit.pos_eci_km"), [0, 0, 1]
+            q, pos, eb = get(m, "attitude.q_body_to_eci"), get(m, "orbit.pos_eci_km"), camera
             nadir = angle_deg(rotate(q, eb), [-x for x in pos]) if is_vec(q, 4) and is_vec(pos) else float("nan")
             wp, wm = get(m, "deploy.wing_py") or {}, get(m, "deploy.wing_my") or {}
             out = (f"{m.get('seq', '?'):>6} {str(m.get('sim_time', ''))[11:19]} "
@@ -679,7 +701,7 @@ def cmd_watch(args):
     return 0
 
 
-def run_request(target, name, team, text="", wait=120.0, timeout=10.0, quiet=False):
+def run_request(target, name, team, text="", wait=120.0, timeout=10.0, quiet=False, schema=SCHEMA):
     """Send one request on channel 3 and follow it to SENT, DECLINED or EXPIRED."""
     say = (lambda *a: None) if quiet else print
     c = Conn.open(target, timeout)
@@ -688,7 +710,10 @@ def run_request(target, name, team, text="", wait=120.0, timeout=10.0, quiet=Fal
         if not hello or hello.get("channel") != "requests":
             say(f"FAIL: {target} is not the request channel (hello {hello!r:.120})")
             return None
-        c.send(json.dumps({"type": "request", "request": name, "team": team, "text": text}))
+        req = {"type": "request", "request": name, "team": team, "text": text}
+        if schema == SCHEMA_V2:     # wing names in the spacecraft's own axes
+            req["schema"] = SCHEMA_V2
+        c.send(json.dumps(req))
         say(f"sent {name} as team {team!r}; waiting up to {wait:.0f} s for the flight director (Ctrl+C withdraws)")
         end, rid = time.monotonic() + wait, None
         try:
@@ -726,7 +751,8 @@ def cmd_request(args):
     if args.name not in REQUESTS:
         print(f"unknown request {args.name!r}: one of {', '.join(REQUESTS)}")
         return 2
-    state = run_request(target_for(args, "requests"), args.name, args.team, args.text, args.wait, args.timeout)
+    state = run_request(target_for(args, "requests"), args.name, args.team, args.text, args.wait, args.timeout,
+                        schema=SCHEMA_V2 if args.v2 else SCHEMA)
     return 0 if state in ("SENT", "DECLINED") else 1
 
 
@@ -756,7 +782,8 @@ def check_file(path, quiet=False):
         if m.get("type") != "state":
             continue
         if fc is None:
-            fc = FrameChecker(rep, channel or ("power" if "power" in m else "state"))
+            fc = FrameChecker(rep, channel or ("power" if "power" in m else "state"),
+                              getattr(rep, "schema", None) or str(m.get("schema", SCHEMA)))
         fc.frame(m)
         t = m.get("met_s")
         now = {"aocs_mode": get(m, "attitude.aocs_mode"), "eclipse": get(m, "sun.in_eclipse"),
@@ -819,12 +846,14 @@ def cmd_selftest(args):
     if not os.path.exists(stub):
         print(f"vr_stub.py not found next to this file ({here})")
         return 2
-    p = free_ports(6)
+    p = free_ports(10)
     logdir = tempfile.mkdtemp(prefix="vr_test_")
     cmd = [sys.executable, stub, "--host", "127.0.0.1", "--port", str(p[0]), "--ws-port", str(p[1]),
            "--power-port", str(p[2]), "--power-ws-port", str(p[3]), "--request-port", str(p[4]),
            "--request-ws-port", str(p[5]), "--speed", "20", "--rate", "5", "--story", "once",
-           "--decide-after", "1", "--log-dir", logdir]
+           "--decide-after", "1", "--log-dir", logdir,
+           "--v2-port", str(p[6]), "--v2-ws-port", str(p[7]), "--v2-power-port", str(p[8]),
+           "--v2-power-ws-port", str(p[9])]
     proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     summary = []
     try:
@@ -832,20 +861,28 @@ def cmd_selftest(args):
         while time.monotonic() < deadline:
             try:
                 socket.create_connection(("127.0.0.1", p[5]), timeout=0.5).close()
+                socket.create_connection(("127.0.0.1", p[9]), timeout=0.5).close()
                 break
             except OSError:
                 time.sleep(0.2)
         plan = [("state", f"tcp://127.0.0.1:{p[0]}"), ("state", f"ws://127.0.0.1:{p[1]}/vr"),
                 ("power", f"tcp://127.0.0.1:{p[2]}"), ("power", f"ws://127.0.0.1:{p[3]}/vr"),
                 ("requests", f"tcp://127.0.0.1:{p[4]}"), ("requests", f"ws://127.0.0.1:{p[5]}/vr/requests")]
-        for ch, url in plan:
-            v = run_check(url, ch, frames=args.frames, timeout=10, team="selftest")
-            summary.append((f"check {ch} over {url.split(':')[0]}", v))
+        plan = [(ch, url, SCHEMA) for ch, url in plan] + [
+            ("state", f"tcp://127.0.0.1:{p[6]}", SCHEMA_V2), ("state", f"ws://127.0.0.1:{p[7]}/vr2", SCHEMA_V2),
+            ("power", f"tcp://127.0.0.1:{p[8]}", SCHEMA_V2), ("power", f"ws://127.0.0.1:{p[9]}/vr2", SCHEMA_V2)]
+        for ch, url, schema in plan:
+            v = run_check(url, ch, frames=args.frames, timeout=10, team="selftest", schema=schema)
+            summary.append((f"check {ch} {schema} over {url.split(':')[0]}", v))
         st = run_request(f"ws://127.0.0.1:{p[5]}/vr/requests", "deploy_antenna", "selftest",
                          "selftest", wait=15, quiet=True)
         summary.append(("request deploy_antenna -> SENT", "PASS" if st == "SENT" else "FAIL"))
         print(f"vr_test request: deploy_antenna -> {st}\n")
-        for name in ("sample_vr_frames.ndjson", "sample_vr_power.ndjson", "sample_vr_requests.ndjson"):
+        st2 = run_request(f"tcp://127.0.0.1:{p[4]}", "deploy_wing_py", "selftest", "selftest",
+                          wait=15, quiet=True, schema=SCHEMA_V2)
+        summary.append(("request deploy_wing_py as smo-vr/2 -> SENT", "PASS" if st2 == "SENT" else "FAIL"))
+        for name in ("sample_vr_frames.ndjson", "sample_vr_power.ndjson", "sample_vr2_power.ndjson",
+                     "sample_vr_requests.ndjson"):
             path = os.path.join(here, name)
             if os.path.exists(path):
                 rep = check_file(path, quiet=True)
@@ -866,7 +903,7 @@ def cmd_selftest(args):
 
 
 def build_parser():
-    ap = argparse.ArgumentParser(description="Check the EOSAT-1 VR interface (smo-vr/1): a live server, "
+    ap = argparse.ArgumentParser(description="Check the EOSAT-1 VR interface (smo-vr/1 and /2): a live server, "
                                              "a channel-3 request, or a recorded file.")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -878,6 +915,8 @@ def build_parser():
         p.add_argument("--ws", action="store_true", help="use the WebSocket port instead of TCP")
         p.add_argument("--cloud", action="store_true", help="use wss://ops.c2o.live (no sign-in)")
         p.add_argument("--url", help="a full address: tcp://host:port, ws://host:port/vr or wss://...")
+        p.add_argument("--v2", action="store_true",
+                       help="smo-vr/2: the spacecraft's own axes (+Z zenith), ports 8106-8109, /vr2")
         p.add_argument("--timeout", type=float, default=15.0, help="seconds of silence before giving up")
 
     p = sub.add_parser("check", help="connect and check the hello and some frames")

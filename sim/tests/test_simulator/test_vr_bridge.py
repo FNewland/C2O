@@ -372,7 +372,8 @@ class TestWiring:
         args = build_parser().parse_args([])
         assert resolve_vr_config(args, net, env={}) == {
             "tcp_port": 8100, "ws_port": 8101, "power_tcp_port": 8102,
-            "power_ws_port": 8103, "max_rate_hz": 10.0}
+            "power_ws_port": 8103, "v2_tcp_port": 8106, "v2_ws_port": 8107,
+            "v2_power_tcp_port": 8108, "v2_power_ws_port": 8109, "max_rate_hz": 10.0}
         assert resolve_vr_config(args, net, env={"SMO_VR_PORT": "9100"})[
             "tcp_port"] == 9100
         args = build_parser().parse_args(["--vr-port", "7100"])

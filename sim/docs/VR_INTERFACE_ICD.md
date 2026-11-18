@@ -1,9 +1,12 @@
-# VR Visualisation Interface — ICD `smo-vr/1`
+# VR Visualisation Interface — ICD `smo-vr/1` and `smo-vr/2`
 
-**Status:** issue 2, 2026-11-12 · **Owner:** SMO suite (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
+**Status:** issue 3, 2026-11-17 · **Owner:** SMO suite (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
 
-**Issue 2 adds two channels and the cloud addresses; channel 1 is unchanged.** A client
+**Issue 2 added two channels and the cloud addresses; channel 1 is unchanged.** A client
 written for issue 1 works as it did, on the same ports.
+**Issue 3 adds `smo-vr/2`: channels 1 and 2 again, in the spacecraft's own body axes**
+(+Z zenith, away from the payload; ±Y along the deployed wings; X completing the triad),
+on their own ports and paths (§6c). smo-vr/1 is unchanged; each team uses one or the other.
 **Users:** first-year VR headset teams (GNG) and anyone building an external 3-D viewer.
 
 ## 1. Purpose
@@ -26,6 +29,9 @@ Three channels:
 | 2 · **power** | the same frames plus a `power` block: solar wings, body faces, strings, battery, bus | §5a |
 | 3 · **requests** | a headset *asks* for the antenna or a solar wing to be deployed; the **flight director** sees the proposal in the MCS and sends it or declines it. Nothing is commanded automatically | §7a |
 
+Channels 1 and 2 each come in two versions with identical content: **smo-vr/1** (the
+original axes, +Z nadir, §6) and **smo-vr/2** (the spacecraft's own axes, +Z zenith, §6c).
+
 ```
  smo-simulator (engine tick, 1 Hz at x1)
    └─ vr_bridge ── TCP 8100 (NDJSON) ──►  Unity / Unreal / native headset app
@@ -46,6 +52,8 @@ so teams can develop without the simulator.
 | 1 · state | TCP **8100**, WebSocket **8101** `/vr` | `wss://ops.c2o.live/vr` |
 | 2 · power | TCP **8102**, WebSocket **8103** `/vr` | `wss://ops.c2o.live/vr/power` |
 | 3 · requests | TCP **8104**, WebSocket **8105** `/vr/requests` (on the MCS host) | `wss://ops.c2o.live/vr/requests` |
+| 1 · state, **smo-vr/2** | TCP **8106**, WebSocket **8107** `/vr2` | `wss://ops.c2o.live/vr2` |
+| 2 · power, **smo-vr/2** | TCP **8108**, WebSocket **8109** `/vr2` | `wss://ops.c2o.live/vr2/power` |
 
 The cloud addresses need **no sign-in** (unlike the rest of ops.c2o.live) and are
 WebSockets only: the cloud's front door passes HTTPS on port 443 and nothing else,
@@ -67,11 +75,12 @@ creates proposals that a person must accept.
   clients may connect; each gets the same stream.
 * Configuration: `configs/eosat1/mission.yaml` → `network.vr_*`; overrides
   `smo-simulator --vr-port / --vr-ws-port / --no-vr`, env `SMO_VR_PORT`,
-  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT` (simulator),
+  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT`, `SMO_VR2_PORT`,
+  `SMO_VR2_WS_PORT`, `SMO_VR2_POWER_PORT`, `SMO_VR2_POWER_WS_PORT` (simulator),
   `SMO_VR_REQUEST_PORT`, `SMO_VR_REQUEST_WS_PORT` (MCS), `SMO_VR=0` (all off).
 * **Headsets on Wi-Fi:** start the suite with `./start.sh --public` (LAN bind).
   The default local mode binds loopback only, which a headset cannot reach.
-  The machine's firewall must allow inbound 8100–8105.
+  The machine's firewall must allow inbound 8100–8109.
 * A client that cannot keep up (write blocked > 2 s) is disconnected. Reconnect.
 
 ## 3. Message flow
@@ -224,6 +233,30 @@ these fields stay in the interface but are **DO NOT USE** for the VR project. Th
 `tools/vr_stub/vr_test.py` checks a live channel or a recorded file against this ICD
 (`python3 vr_test.py selftest` checks the whole kit against the stub).
 
+### 6c. `smo-vr/2`: the same channels in the spacecraft's own axes
+
+smo-vr/2 carries exactly the same data as smo-vr/1, expressed in the spacecraft's own body
+frame, the one the simulator and the operations manual use:
+
+* **+X** along-track (velocity) in nominal pointing · **+Y** orbit normal, the +Y wing ·
+  **+Z zenith**, away from the payload (the top deck, star camera and GPS antenna) ·
+  **−Z nadir** (the imager). The deployed wings lie along ±Y.
+* The two frames differ by a 180° turn about X: `v_v2 = diag(1, −1, −1) · v_v1`. So, against
+  smo-vr/1: every body vector (`sun.dir_body`, `earth.dir_body`, `attitude.rate_body_deg_s`)
+  has Y and Z negated; `q_v2 = q_v1 ⊗ [1, 0, 0, 0]` (x, y, z, w); `wing_py` and `wing_my`
+  swap (in deploy and power), as do the `py`/`my` and `pz`/`mz` body faces; the drive angle
+  changes sign. ECI quantities (orbit, `sun.dir_eci`) and everything else are identical.
+* Messages say `"schema": "smo-vr/2"`; the `hello` always names its `channel` and its
+  `spacecraft.body_axes` describe the frame above.
+* **Fixed flaps (§6b) in these axes:** stowed along the ±Y faces, hinged at their **+Z**
+  (top) edge, swung out level with the +Z deck, cells facing +Z; hinge angle
+  = `90° × fraction`. The drive-angle fields stay **DO NOT USE**.
+* *Check:* in nominal nadir pointing, rotating body `[0, 0, −1]` (the imager) by `q` gives
+  `−pos_eci/|pos_eci|`, and `earth.dir_body` ≈ `[0, 0, −1]`.
+* Channel 3 is shared. A request that includes `"schema": "smo-vr/2"` names the wings in
+  these axes (`deploy_wing_py` = the spacecraft's +Y wing); acks and updates then carry
+  `"schema": "smo-vr/2"` and your own request name.
+
 ### Converting to engine frames
 
 | Engine | Axes | Vector `(x,y,z)` → | Quaternion `(x,y,z,w)` → |
@@ -308,6 +341,9 @@ requests. Then, client → server:
 | `deploy_antenna` | `TTC_DEPLOY_ANTENNA` |
 | `deploy_wing_py` | `EPS_DEPLOY_WING` wing = 1: the spacecraft's −Y wing, which is **your +Y wing** (smo-vr/1 axes, §6) |
 | `deploy_wing_my` | `EPS_DEPLOY_WING` wing = 0: the spacecraft's +Y wing, your −Y wing |
+
+Add `"schema": "smo-vr/2"` to a request to name the wings in the spacecraft's own axes
+(§6c): `deploy_wing_py` is then the spacecraft's +Y wing (`EPS_DEPLOY_WING` wing = 0).
 | `deploy_both_wings` | `EPS_DEPLOY_WING` wing = 2 |
 
 Server → client:
@@ -356,8 +392,9 @@ quaternion as `_x/_y/_z/_w`, booleans as 0/1. The story (compressed LEOP):
 | 4300–4800 | 25° roll slew for imaging, hold, slew back |
 | 5670 | one orbit |
 
-`vr_stub.py` serves all three channels (state 8100/8101, power 8102/8103, requests
-8104/8105, `--state-only` for issue 1 behaviour). Its "flight director" answers each
+`vr_stub.py` serves every channel (state 8100/8101, power 8102/8103, requests
+8104/8105, smo-vr/2 state 8106/8107 and power 8108/8109; `--state-only` for issue 1
+behaviour). `sample_vr2_power.ndjson/.csv` is the sample orbit in smo-vr/2. Its "flight director" answers each
 request after `--decide-after` seconds (default 5) with `SENT`, or `DECLINED` with
 `--decline`.
 

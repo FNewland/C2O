@@ -1,9 +1,12 @@
-# Interface de visualisation VR — ICD `smo-vr/1`
+# Interface de visualisation VR — ICD `smo-vr/1` et `smo-vr/2`
 
-**État :** édition 2, 2026-11-12 · **Responsable :** suite SMO (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
+**État :** édition 3, 2026-11-17 · **Responsable :** suite SMO (smo-simulator `vr_bridge.py`, smo-mcs `vr_requests.py`)
 
 **L'édition 2 ajoute deux canaux et les adresses du nuage ; le canal 1 est inchangé.** Un client
 écrit pour l'édition 1 fonctionne comme avant, sur les mêmes ports.
+**L'édition 3 ajoute `smo-vr/2` : les canaux 1 et 2 à nouveau, dans les axes propres du satellite**
+(+Z au zénith, à l'opposé de la charge utile ; ±Y le long des ailes déployées ; X complète le trièdre),
+sur leurs propres ports et chemins (§6c). smo-vr/1 est inchangé ; chaque équipe utilise l'un ou l'autre.
 **Utilisateurs :** équipes de première année travaillant sur casque VR (GNG) et toute personne qui construit un visualiseur 3D externe.
 
 ## 1. Objet
@@ -26,6 +29,9 @@ Trois canaux :
 | 2 · **power** | les mêmes trames plus un bloc `power` : ailes solaires, faces du corps, chaînes, batterie, bus | §5a |
 | 3 · **requests** | un casque *demande* le déploiement de l'antenne ou d'une aile solaire ; le **directeur de vol** voit la proposition dans le MCS et l'envoie ou la refuse. Rien n'est commandé automatiquement | §7a |
 
+Les canaux 1 et 2 existent chacun en deux versions au contenu identique : **smo-vr/1** (les axes
+d'origine, +Z au nadir, §6) et **smo-vr/2** (les axes propres du satellite, +Z au zénith, §6c).
+
 ```
  smo-simulator (pas du moteur, 1 Hz à x1)
    └─ vr_bridge ── TCP 8100 (NDJSON) ──►  Unity / Unreal / application native du casque
@@ -46,6 +52,8 @@ les équipes peuvent donc développer sans le simulateur.
 | 1 · state | TCP **8100**, WebSocket **8101** `/vr` | `wss://ops.c2o.live/vr` |
 | 2 · power | TCP **8102**, WebSocket **8103** `/vr` | `wss://ops.c2o.live/vr/power` |
 | 3 · requests | TCP **8104**, WebSocket **8105** `/vr/requests` (sur l'hôte du MCS) | `wss://ops.c2o.live/vr/requests` |
+| 1 · state, **smo-vr/2** | TCP **8106**, WebSocket **8107** `/vr2` | `wss://ops.c2o.live/vr2` |
+| 2 · power, **smo-vr/2** | TCP **8108**, WebSocket **8109** `/vr2` | `wss://ops.c2o.live/vr2/power` |
 
 Les adresses du nuage ne demandent **aucune connexion** (contrairement au reste de ops.c2o.live) et
 sont uniquement des WebSockets : la porte d'entrée du nuage ne laisse passer que le HTTPS sur le
@@ -67,11 +75,12 @@ propositions qu'une personne doit accepter.
   clients n'est pas limité ; chacun reçoit le même flux.
 * Configuration : `configs/eosat1/mission.yaml` → `network.vr_*` ; surcharges
   `smo-simulator --vr-port / --vr-ws-port / --no-vr`, variables d'environnement `SMO_VR_PORT`,
-  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT` (simulateur),
+  `SMO_VR_WS_PORT`, `SMO_VR_POWER_PORT`, `SMO_VR_POWER_WS_PORT`, `SMO_VR2_PORT`,
+  `SMO_VR2_WS_PORT`, `SMO_VR2_POWER_PORT`, `SMO_VR2_POWER_WS_PORT` (simulateur),
   `SMO_VR_REQUEST_PORT`, `SMO_VR_REQUEST_WS_PORT` (MCS), `SMO_VR=0` (tout désactivé).
 * **Casques en Wi-Fi :** lancer la suite avec `./start.sh --public` (écoute sur le réseau local).
   Le mode local par défaut n'écoute que sur l'interface de bouclage, inaccessible à un casque.
-  Le pare-feu de la machine doit autoriser les connexions entrantes sur 8100–8105.
+  Le pare-feu de la machine doit autoriser les connexions entrantes sur 8100–8109.
 * Un client qui ne suit pas le rythme (écriture bloquée plus de 2 s) est déconnecté. Il doit se reconnecter.
 
 ## 3. Enchaînement des messages
@@ -224,6 +233,31 @@ pour le projet RV. La caméra (imageur) est sur le pont nadir (+Z).
 `tools/vr_stub/vr_test.py` vérifie un canal en direct ou un fichier enregistré par rapport à cette
 ICD (`python3 vr_test.py selftest` vérifie toute la trousse avec le simulateur de remplacement).
 
+### 6c. `smo-vr/2` : les mêmes canaux dans les axes propres du satellite
+
+smo-vr/2 transporte exactement les mêmes données que smo-vr/1, exprimées dans le repère propre du
+satellite, celui qu'utilisent le simulateur et le manuel d'exploitation :
+
+* **+X** le long de la trace (vitesse) en pointage nominal · **+Y** normale à l'orbite, l'aile +Y ·
+  **+Z au zénith**, à l'opposé de la charge utile (le pont supérieur, la caméra stellaire et
+  l'antenne GPS) · **−Z au nadir** (l'imageur). Les ailes déployées sont le long de ±Y.
+* Les deux repères diffèrent d'un demi-tour (180°) autour de X : `v_v2 = diag(1, −1, −1) · v_v1`. Par
+  rapport à smo-vr/1 : chaque vecteur en axes satellite (`sun.dir_body`, `earth.dir_body`,
+  `attitude.rate_body_deg_s`) a Y et Z changés de signe ; `q_v2 = q_v1 ⊗ [1, 0, 0, 0]` (x, y, z, w) ;
+  `wing_py` et `wing_my` sont échangés (dans deploy et power), de même que les faces `py`/`my` et
+  `pz`/`mz` ; l'angle du mécanisme change de signe. Les grandeurs ECI (orbite, `sun.dir_eci`) et
+  tout le reste sont identiques.
+* Les messages indiquent `"schema": "smo-vr/2"` ; le `hello` nomme toujours son `channel` et son
+  `spacecraft.body_axes` décrit le repère ci-dessus.
+* **Volets fixes (§ 6b) dans ces axes :** repliés le long des faces ±Y, articulés à leur bord **+Z**
+  (supérieur), déployés de niveau avec le pont +Z, cellules vers +Z ; angle de charnière
+  = `90° × fraction`. Les champs d'angle du mécanisme restent **À NE PAS UTILISER**.
+* *Vérification :* en pointage nadir nominal, tourner `[0, 0, −1]` (l'imageur) par `q` donne
+  `−pos_eci/|pos_eci|`, et `earth.dir_body` ≈ `[0, 0, −1]`.
+* Le canal 3 est commun. Une demande qui contient `"schema": "smo-vr/2"` nomme les ailes dans ces
+  axes (`deploy_wing_py` = l'aile +Y du satellite) ; les accusés et mises à jour portent alors
+  `"schema": "smo-vr/2"` et votre propre nom de demande.
+
 ### Conversion vers les repères des moteurs de jeu
 
 | Moteur | Axes | Vecteur `(x,y,z)` → | Quaternion `(x,y,z,w)` → |
@@ -308,6 +342,9 @@ demandes. Ensuite, client → serveur :
 | `deploy_antenna` | `TTC_DEPLOY_ANTENNA` |
 | `deploy_wing_py` | `EPS_DEPLOY_WING` wing = 1 : l'aile −Y du satellite, qui est **votre aile +Y** (axes smo-vr/1, §6) |
 | `deploy_wing_my` | `EPS_DEPLOY_WING` wing = 0 : l'aile +Y du satellite, votre aile −Y |
+
+Ajoutez `"schema": "smo-vr/2"` à une demande pour nommer les ailes dans les axes propres du satellite
+(§ 6c) : `deploy_wing_py` est alors l'aile +Y du satellite (`EPS_DEPLOY_WING` wing = 0).
 | `deploy_both_wings` | `EPS_DEPLOY_WING` wing = 2 |
 
 Serveur → client :
@@ -356,10 +393,11 @@ quaternion sous la forme `_x/_y/_z/_w`, booléens en 0/1. Le scénario (LEOP com
 | 4300–4800 | basculement de 25° en roulis pour la prise de vue, maintien, basculement retour |
 | 5670 | une orbite |
 
-`vr_stub.py` sert les trois canaux (state 8100/8101, power 8102/8103, requests
-8104/8105 ; `--state-only` pour le comportement de l'édition 1). Son « directeur de vol » répond
+`vr_stub.py` sert tous les canaux (state 8100/8101, power 8102/8103, requests
+8104/8105, smo-vr/2 state 8106/8107 et power 8108/8109 ; `--state-only` pour le comportement de l'édition 1). Son « directeur de vol » répond
 à chaque demande après `--decide-after` secondes (5 par défaut) par `SENT`, ou par `DECLINED`
 avec `--decline`.
+`sample_vr2_power.ndjson/.csv` est l'orbite d'exemple en smo-vr/2.
 
 Enregistrer une séance réelle du simulateur avec
 `tools/vr_stub/vr_client_example.py --record run.ndjson --csv run.csv` et

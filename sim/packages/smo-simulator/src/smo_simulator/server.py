@@ -90,7 +90,7 @@ class SimulatorServer:
         and ``power`` (the same frames plus a power block, 8102/8103). Both are also served
         on this HTTP port at /vr and /vr/power, which is what the space link carries to the
         cloud (ops.c2o.live/vr...)."""
-        from smo_simulator.vr_bridge import VRBridge, merge_summaries
+        from smo_simulator.vr_bridge import SCHEMA, SCHEMA_V2, VRBridge, merge_summaries
         cfg = self._vr_cfg or {}
         summaries: dict = {}
 
@@ -102,12 +102,19 @@ class SimulatorServer:
                 self.engine.vr_link = merge_summaries(summaries)
             return publish
 
-        specs = [("state", self.engine.get_vr_state, cfg.get("tcp_port"), cfg.get("ws_port")),
-                 ("power", self.engine.get_vr_power_state, cfg.get("power_tcp_port"),
-                  cfg.get("power_ws_port"))]
+        # smo-vr/1 (as issued, +Z nadir) and smo-vr/2 (the same frames in the spacecraft's
+        # own axes, +Z zenith) side by side; teams pick one (ICD §6, §6c).
+        specs = [("state", SCHEMA, self.engine.get_vr_state, cfg.get("tcp_port"), cfg.get("ws_port")),
+                 ("power", SCHEMA, self.engine.get_vr_power_state, cfg.get("power_tcp_port"),
+                  cfg.get("power_ws_port")),
+                 ("state", SCHEMA_V2, self.engine.get_vr_state, cfg.get("v2_tcp_port"),
+                  cfg.get("v2_ws_port")),
+                 ("power", SCHEMA_V2, self.engine.get_vr_power_state, cfg.get("v2_power_tcp_port"),
+                  cfg.get("v2_power_ws_port"))]
         bridges = {}
-        for channel, get, tcp, ws in specs:
-            if tcp is None and ws is None and channel != "state":
+        for channel, schema, get, tcp, ws in specs:
+            key = channel + ("2" if schema == SCHEMA_V2 else "")
+            if tcp is None and ws is None and key != "state":
                 continue
             bridge = VRBridge(
                 get,
@@ -115,18 +122,19 @@ class SimulatorServer:
                 tcp_port=tcp,
                 ws_port=ws,
                 max_rate_hz=cfg.get("max_rate_hz", 10.0),
-                on_summary=publisher(channel),
+                on_summary=publisher(key),
                 channel=channel,
+                schema=schema,
             )
             try:
                 await bridge.start()
             except OSError as e:
                 logger.error("VR %s channel NOT started (%s). The simulator carries "
                              "on without it; free the port or pass --vr-port / "
-                             "--vr-ws-port / --no-vr.", channel, e)
+                             "--vr-ws-port / --no-vr.", key, e)
                 await bridge.stop()
                 continue
-            bridges[channel] = bridge
+            bridges[key] = bridge
         self.vr_bridge = bridges.get("state")
         self.vr_bridges = bridges
         self._app["vr_bridges"].update(bridges)    # the dict the app holds; it is frozen now
@@ -280,6 +288,10 @@ def resolve_vr_config(args, network, env: dict | None = None) -> dict | None:
                         "vr_ws_port", 8101),
         "power_tcp_port": pick(None, "SMO_VR_POWER_PORT", "vr_power_tcp_port", 8102),
         "power_ws_port": pick(None, "SMO_VR_POWER_WS_PORT", "vr_power_ws_port", 8103),
+        "v2_tcp_port": pick(None, "SMO_VR2_PORT", "vr2_tcp_port", 8106),
+        "v2_ws_port": pick(None, "SMO_VR2_WS_PORT", "vr2_ws_port", 8107),
+        "v2_power_tcp_port": pick(None, "SMO_VR2_POWER_PORT", "vr2_power_tcp_port", 8108),
+        "v2_power_ws_port": pick(None, "SMO_VR2_POWER_WS_PORT", "vr2_power_ws_port", 8109),
         "max_rate_hz": float(getattr(network, "vr_max_rate_hz", 10.0)),
     }
 

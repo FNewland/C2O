@@ -53,6 +53,17 @@ REQUESTS: dict[str, dict] = {
 }
 STATES = ("PENDING", "SENT", "DECLINED", "EXPIRED", "WITHDRAWN")
 
+# smo-vr/2 headsets use the spacecraft's own axes (ICD §6c), so their +Y wing is the
+# spacecraft's +Y wing: a request that says "schema": "smo-vr/2" names wings that way.
+SCHEMA_V2 = "smo-vr/2"
+V2_WING_SWAP = {"deploy_wing_py": "deploy_wing_my", "deploy_wing_my": "deploy_wing_py"}
+V2_LABELS = {
+    "deploy_wing_py": {"en": "Deploy solar wing +Y (smo-vr/2 headset, spacecraft axes)",
+                       "fr": "Déployer l'aile solaire +Y (casque smo-vr/2, axes du satellite)"},
+    "deploy_wing_my": {"en": "Deploy solar wing -Y (smo-vr/2 headset, spacecraft axes)",
+                       "fr": "Déployer l'aile solaire -Y (casque smo-vr/2, axes du satellite)"},
+}
+
 
 def _dumps(obj: dict) -> str:
     return json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
@@ -69,6 +80,8 @@ def hello(tcp_port: int | None = None, ws_port: int | None = None) -> dict:
         "requests": {k: v["label"]["en"] for k, v in REQUESTS.items()},
         "usage": 'send {"type":"request","request":"deploy_antenna","team":"T07","text":"why"}; '
                  "the flight director decides; you get request_ack, then request_update",
+        "axes": 'wing names are in smo-vr/1 axes; add "schema":"smo-vr/2" to a request to '
+                "name the wings in the spacecraft's own axes (+Y = orbit normal)",
     }
 
 
@@ -87,17 +100,25 @@ class Proposal:
     decided_at: Optional[float] = None
     note: str = ""
     tc_seq: Optional[int] = None
+    v2: bool = False                    # asked by a smo-vr/2 headset (spacecraft axes)
+
+    @property
+    def asked_as(self) -> str:
+        """The name the headset used (its own axes)."""
+        return V2_WING_SWAP.get(self.request, self.request) if self.v2 else self.request
 
     def public(self) -> dict:
         spec = REQUESTS[self.request]
-        return {"id": self.id, "request": self.request, "team": self.team, "text": self.text,
+        label = V2_LABELS.get(self.asked_as, spec["label"]) if self.v2 else spec["label"]
+        return {"id": self.id, "request": self.asked_as, "team": self.team, "text": self.text,
                 "peer": self.peer, "transport": self.transport, "state": self.state,
-                "command": spec["command"], "args": spec["args"], "label": spec["label"],
+                "command": spec["command"], "args": spec["args"], "label": label,
                 "created": self.created, "decided_by": self.decided_by,
                 "decided_at": self.decided_at, "note": self.note, "tc_seq": self.tc_seq}
 
     def update_msg(self) -> dict:
-        return {"type": "request_update", "schema": SCHEMA, "id": self.id, "request": self.request,
+        return {"type": "request_update", "schema": SCHEMA_V2 if self.v2 else SCHEMA, "id": self.id,
+                "request": self.asked_as,
                 "team": self.team, "state": self.state, "note": self.note, "tc_seq": self.tc_seq}
 
 
@@ -249,6 +270,9 @@ class VRRequestDesk:
             return
         name = str(msg.get("request", "")).strip().lower()
         team = _clean(msg.get("team"), 32) or client.team
+        v2 = str(msg.get("schema", "")).strip().startswith(SCHEMA_V2)
+        schema = SCHEMA_V2 if v2 else SCHEMA
+        canon = V2_WING_SWAP.get(name, name) if v2 else name     # stored in smo-vr/1 names
         if name not in REQUESTS:
             await self._send(client, {"type": "request_rejected", "request": name,
                                       "reason": "unknown request; one of " + ", ".join(REQUESTS)})
@@ -261,10 +285,10 @@ class VRRequestDesk:
         client.last_request = now
         client.team = team or client.team
         for p in self._proposals.values():          # the same ask again: point at the open one
-            if p.state == "PENDING" and p.request == name and (p.team or p.peer) == (team or client.peer):
+            if p.state == "PENDING" and p.request == canon and (p.team or p.peer) == (team or client.peer):
                 if p.id not in client.ids:
                     client.ids.append(p.id)
-                await self._send(client, {"type": "request_ack", "schema": SCHEMA, "id": p.id,
+                await self._send(client, {"type": "request_ack", "schema": schema, "id": p.id,
                                           "request": name, "state": "PENDING", "duplicate": True})
                 return
         mine = sum(1 for p in self._proposals.values() if p.client == client.cid and p.state == "PENDING")
@@ -274,13 +298,14 @@ class VRRequestDesk:
             return
         pid = f"R{self._next_id}"
         self._next_id += 1
-        p = Proposal(id=pid, request=name, team=team, text=_clean(msg.get("text"), 200),
-                     peer=client.peer, transport=client.transport, client=client.cid, created=now)
+        p = Proposal(id=pid, request=canon, team=team, text=_clean(msg.get("text"), 200),
+                     peer=client.peer, transport=client.transport, client=client.cid, created=now,
+                     v2=v2)
         self._proposals[pid] = p
         client.ids.append(pid)
-        self._say(f"VR request {pid} from {team or client.peer}: {REQUESTS[name]['label']['en']}"
+        self._say(f"VR request {pid} from {team or client.peer}: {p.public()['label']['en']}"
                   + (f" — {p.text}" if p.text else ""))
-        await self._send(client, {"type": "request_ack", "schema": SCHEMA, "id": pid,
+        await self._send(client, {"type": "request_ack", "schema": schema, "id": pid,
                                   "request": name, "state": "PENDING"})
         await self._changed()
 

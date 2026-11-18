@@ -31,6 +31,8 @@ using UnityEngine;
 [Serializable] public class EarthData { public float[] dir_body; public float gmst_deg; public float radius_km; }
 [Serializable] public class WingData { public string state; public float fraction; }
 [Serializable] public class AntennaData { public string state; public bool deployed; public string sensor; }
+// Written for smo-vr/1 (+Z nadir, ports 8100/8101). For smo-vr/2 (spacecraft axes, +Z zenith,
+// ports 8106/8107) the flaps hinge at the +Z edge and the camera looks along -Z: see ICD section 6c.
 // sada_angle_deg: DO NOT USE for the VR project. The wings are fixed flaps (ICD section 6b); it is parsed only so the JSON maps cleanly.
 [Serializable] public class DeployData { public WingData wing_py; public WingData wing_my; public float sada_angle_deg; public AntennaData antenna; }
 [Serializable] public class MissionData { public string sc_mode; public string phase; public bool in_contact; public string ground_station; }

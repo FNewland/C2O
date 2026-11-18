@@ -481,10 +481,13 @@ $apex_matcher
   - name: ops
     defaultService: $(bs "$BE_OPS")
     pathRules:
-      # VR headsets (docs VR_INTERFACE_ICD): no sign-in on these three paths only.
+      # VR headsets (docs VR_INTERFACE_ICD): no sign-in on these paths only
+      # (smo-vr/1 at /vr..., the same in spacecraft axes, smo-vr/2, at /vr2...).
       - paths:
         - /vr
         - /vr/power
+        - /vr2
+        - /vr2/power
         - /vr/requests
         service: $(bs "$BE_VR")
   - name: plan

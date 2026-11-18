@@ -60,6 +60,7 @@ from datetime import datetime, timedelta, timezone
 # ═════════════════════════════════════════════════════════════════════════
 
 SCHEMA = "smo-vr/1"
+SCHEMA_V2 = "smo-vr/2"     # the same channels in the spacecraft's own axes (ICD §6c)
 DEFAULT_TCP_PORT = 8100
 DEFAULT_WS_PORT = 8101
 DEFAULT_MAX_RATE_HZ = 10.0
@@ -67,6 +68,10 @@ DEFAULT_POWER_TCP_PORT = 8102      # the same frames plus a "power" block (ICD �
 DEFAULT_POWER_WS_PORT = 8103
 DEFAULT_REQUEST_TCP_PORT = 8104    # command requests (ICD §7a)
 DEFAULT_REQUEST_WS_PORT = 8105
+DEFAULT_V2_TCP_PORT = 8106         # smo-vr/2 state (spacecraft axes, +Z zenith)
+DEFAULT_V2_WS_PORT = 8107
+DEFAULT_V2_POWER_TCP_PORT = 8108   # smo-vr/2 power
+DEFAULT_V2_POWER_WS_PORT = 8109
 REQUESTS = {   # name -> what the flight director would be asked to send (spacecraft axes)
     "deploy_antenna": "Deploy the antenna",
     "deploy_wing_py": "Deploy solar wing -Y (the headset's +Y wing)",
@@ -125,12 +130,82 @@ SPACECRAFT_GEOMETRY = {
 }
 
 
+# smo-vr/2: the spacecraft's own body axes, as in the operations manual.
+SPACECRAFT_GEOMETRY_V2 = {
+    "name": "EOSAT-1",
+    "bus_size_m": [0.100, 0.226, 0.366],
+    "body_axes": {
+        "+X": "along-track (velocity) in nominal nadir pointing",
+        "+Y": "orbit normal; +Y solar wing (wings lie along +/-Y when deployed)",
+        "+Z": "zenith (away from the payload); top deck, zenith star camera and GPS antenna",
+        "-Z": "nadir (points at Earth in nominal attitude); imager boresight",
+    },
+    "solar_wings": {
+        "mount_faces": ["+Y", "-Y"],
+        "deployed_size_m": [0.418, 0.342],
+        "note": "fixed flaps for the VR model: folded down the +/-Y face when STOWED, "
+                "hinged at its +Z (top) edge, swung out level with the +Z deck when "
+                "DEPLOYED; hinge angle = 90 deg x fraction",
+    },
+    "sada": {
+        "note": "DO NOT USE for the VR project (the flaps are fixed); "
+                "deploy.sada_angle_deg is the simulator's drive angle about +Y",
+    },
+    "antenna": {
+        "suggested_model": "4 tape-spring UHF elements ~0.5 m, on the +Z "
+                           "(zenith) face corners, flush when STOWED",
+        "note": "suggestion only; the simulator models deployment state, "
+                "not element geometry",
+    },
+}
+
+_SWAP_FACES = {"px": "px", "mx": "mx", "py": "my", "my": "py", "pz": "mz", "mz": "pz"}
+
+
+def _flip_yz(v):
+    return [v[0], -v[1] + 0.0, -v[2] + 0.0] if isinstance(v, list) and len(v) == 3 else v
+
+
+def to_spacecraft_axes(body):
+    """A smo-vr/1 frame body in smo-vr/2 axes (the spacecraft's own): a 180 deg turn about X.
+    Body vectors flip Y and Z, q_v2 = q_v1 (x) [1,0,0,0], the +/-Y wings and faces swap,
+    the drive angle changes sign. The same function as the simulator's vr_bridge."""
+    out = json.loads(json.dumps(body))
+    att = out.get("attitude") or {}
+    q = att.get("q_body_to_eci")
+    if isinstance(q, list) and len(q) == 4:
+        x, y, z, w = q
+        att["q_body_to_eci"] = [w, z, -y + 0.0, -x + 0.0]
+    if "rate_body_deg_s" in att:
+        att["rate_body_deg_s"] = _flip_yz(att["rate_body_deg_s"])
+    for sec in ("sun", "earth"):
+        if isinstance(out.get(sec), dict) and "dir_body" in out[sec]:
+            out[sec]["dir_body"] = _flip_yz(out[sec]["dir_body"])
+    dep = out.get("deploy")
+    if isinstance(dep, dict):
+        dep["wing_py"], dep["wing_my"] = dep.get("wing_my"), dep.get("wing_py")
+        if dep.get("sada_angle_deg") is not None:
+            dep["sada_angle_deg"] = -dep["sada_angle_deg"] + 0.0
+    pw = out.get("power")
+    if isinstance(pw, dict):
+        w = pw.get("wings")
+        if isinstance(w, dict):
+            w["wing_py"], w["wing_my"] = w.get("wing_my"), w.get("wing_py")
+            if w.get("sada_angle_deg") is not None:
+                w["sada_angle_deg"] = -w["sada_angle_deg"] + 0.0
+        f = pw.get("body_faces")
+        if isinstance(f, dict):
+            pw["body_faces"] = {k: f[_SWAP_FACES[k]] for k in _SWAP_FACES if _SWAP_FACES[k] in f}
+    return out
+
+
 def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None,
-                channel="state"):
+                channel="state", schema=SCHEMA):
     """The ``hello`` message a server sends once, right after you connect."""
+    v2 = schema == SCHEMA_V2
     hello = {
         "type": "hello",
-        "schema": SCHEMA,
+        "schema": schema,
         "source": source,
         "max_rate_hz": max_rate_hz,
         "ports": {"tcp": tcp_port, "ws": ws_port},
@@ -145,12 +220,16 @@ def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None,
         },
         "status_bits": {str(k): v for k, v in STATUS_BITS.items()},
         "healthy_mask": HEALTHY_MASK,
-        "spacecraft": SPACECRAFT_GEOMETRY,
+        "spacecraft": SPACECRAFT_GEOMETRY_V2 if v2 else SPACECRAFT_GEOMETRY,
     }
-    if channel != "state":          # the state channel's hello stays exactly as issued
+    if v2:
+        hello["frames"]["body"] = ("the spacecraft's own body frame (as in the operations "
+                                   "manual): +X along-track, +Y orbit normal, +Z zenith")
+    if channel != "state" or v2:    # the smo-vr/1 state channel's hello stays exactly as issued
         hello["channel"] = channel
     if channel == "power":
-        hello["power_fields"] = POWER_FIELDS
+        hello["power_fields"] = (POWER_FIELDS.replace("smo-vr/1 body axes", "spacecraft body axes")
+                                 if v2 else POWER_FIELDS)
     return hello
 
 
@@ -739,10 +818,11 @@ def dumps(obj):
     return json.dumps(obj, separators=(",", ":"))
 
 
-def state_message(seq, body):
-    """Wrap a body in the ``state`` envelope (type, schema, seq first)."""
-    msg = {"type": "state", "schema": SCHEMA, "seq": seq}
-    msg.update(body)
+def state_message(seq, body, schema=SCHEMA):
+    """Wrap a body in the ``state`` envelope (type, schema, seq first); smo-vr/2 re-expresses
+    the body in the spacecraft's own axes."""
+    msg = {"type": "state", "schema": schema, "seq": seq}
+    msg.update(to_spacecraft_axes(body) if schema == SCHEMA_V2 else body)
     return msg
 
 
@@ -794,7 +874,8 @@ def write_sample(directory, step=5.0, story="once"):
 
 def write_issue2_samples(directory, step=5.0, story="once"):
     """Sample files for the issue-2 channels: sample_vr_power.ndjson/.csv (the same orbit
-    as sample_vr_frames, each frame with its "power" block, as channel 2 sends it) and
+    as sample_vr_frames, each frame with its "power" block, as channel 2 sends it),
+    sample_vr2_power.ndjson/.csv (the same again in smo-vr/2, the spacecraft's own axes) and
     sample_vr_requests.ndjson (a channel-3 conversation: one line per message, wrapped as
     {"t_s": seconds, "from": "headset" | "server", "message": {...}}). Returns the paths."""
     st = Story(story)
@@ -846,11 +927,27 @@ def write_issue2_samples(directory, step=5.0, story="once"):
                           "request": "deploy_both_wings", "team": "T07", "state": "DECLINED",
                           "note": "not in contact; ask again in the next pass", "tc_seq": None}),
     ]
+    nd2 = os.path.join(directory, "sample_vr2_power.ndjson")      # smo-vr/2: spacecraft axes
+    cs2 = os.path.join(directory, "sample_vr2_power.csv")
+    hello2 = build_hello("vr-stub", DEFAULT_MAX_RATE_HZ, DEFAULT_V2_POWER_TCP_PORT,
+                         DEFAULT_V2_POWER_WS_PORT, "power", SCHEMA_V2)
+    frames2 = [state_message(fr["seq"], {k: v for k, v in fr.items()
+                                         if k not in ("type", "schema", "seq")}, SCHEMA_V2)
+               for fr in frames]
+    with open(nd2, "w", encoding="utf-8", newline="\n") as f:
+        f.write(dumps(hello2) + "\n")
+        for fr in frames2:
+            f.write(dumps(fr) + "\n")
+    rows2 = [flatten(fr) for fr in frames2]
+    with open(cs2, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows2[0]))
+        w.writeheader()
+        w.writerows(rows2)
     rq = os.path.join(directory, "sample_vr_requests.ndjson")
     with open(rq, "w", encoding="utf-8", newline="\n") as f:
         for t, who, msg in talk:
             f.write(dumps({"t_s": t, "from": who, "message": msg}) + "\n")
-    return nd, cs, rq
+    return nd, cs, nd2, cs2, rq
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -949,9 +1046,10 @@ class StubServer:
     """Serves frames to every connected client over TCP and WebSocket."""
 
     def __init__(self, feed, host, tcp_port, ws_port, rate_hz, chaos=False,
-                 status_log=None, channel="state"):
+                 status_log=None, channel="state", schema=SCHEMA):
         self.feed = feed
         self.channel = channel
+        self.schema = schema
         self.host = host
         self.tcp_port, self.ws_port = tcp_port, ws_port
         self.rate_hz = max(0.5, min(float(rate_hz), DEFAULT_MAX_RATE_HZ))
@@ -966,7 +1064,7 @@ class StubServer:
 
     def hello_line(self):
         return dumps(build_hello("vr-stub", self.rate_hz, self.tcp_port,
-                                 self.ws_port, self.channel))
+                                 self.ws_port, self.channel, self.schema))
 
     def frame_body(self):
         body = self.feed.current()
@@ -988,7 +1086,7 @@ class StubServer:
         while True:
             await asyncio.sleep(period)
             self.seq += 1
-            line = dumps(state_message(self.seq, self.frame_body()))
+            line = dumps(state_message(self.seq, self.frame_body(), self.schema))
             if self.chaos:
                 line = await self.misbehave(line)
                 if line is None:
@@ -1085,7 +1183,8 @@ class StubServer:
                 k, v = h.split(":", 1)
                 headers[k.strip().lower()] = v.strip()
         key = headers.get("sec-websocket-key")
-        if path.split("?")[0] not in ("/", "/vr", "/vr/power", "/vr/requests") or not key:
+        if path.split("?")[0] not in ("/", "/vr", "/vr/power", "/vr2", "/vr2/power",
+                                      "/vr/requests") or not key:
             writer.write(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n")
             await writer.drain()
             writer.close()
@@ -1224,13 +1323,14 @@ class RequestStub(StubServer):
         pid = f"R{self.next_id}"
         self.next_id += 1
         team = str(msg.get("team") or "")[:32]
+        schema = SCHEMA_V2 if str(msg.get("schema", "")).startswith(SCHEMA_V2) else SCHEMA
         print(f"  {peer} {team}: {name} -> {pid} PENDING")
-        await self.reply(peer, {"type": "request_ack", "schema": SCHEMA, "id": pid,
+        await self.reply(peer, {"type": "request_ack", "schema": schema, "id": pid,
                                 "request": name, "state": "PENDING"})
         await asyncio.sleep(self.decide_after)
         state = "DECLINED" if self.decline else "SENT"
         print(f"  {pid} {state}")
-        await self.reply(peer, {"type": "request_update", "schema": SCHEMA, "id": pid,
+        await self.reply(peer, {"type": "request_update", "schema": schema, "id": pid,
                                 "request": name, "team": team, "state": state,
                                 "note": "stub flight director" if self.decline else "",
                                 "tc_seq": None if self.decline else 1000 + int(pid[1:])})
@@ -1264,6 +1364,14 @@ def build_parser():
                    help="command-request TCP port (default %(default)s)")
     p.add_argument("--request-ws-port", type=int, default=DEFAULT_REQUEST_WS_PORT,
                    help="command-request WebSocket port (default %(default)s)")
+    p.add_argument("--v2-port", type=int, default=DEFAULT_V2_TCP_PORT,
+                   help="smo-vr/2 (spacecraft axes) state TCP port (default %(default)s)")
+    p.add_argument("--v2-ws-port", type=int, default=DEFAULT_V2_WS_PORT,
+                   help="smo-vr/2 state WebSocket port (default %(default)s)")
+    p.add_argument("--v2-power-port", type=int, default=DEFAULT_V2_POWER_TCP_PORT,
+                   help="smo-vr/2 power TCP port (default %(default)s)")
+    p.add_argument("--v2-power-ws-port", type=int, default=DEFAULT_V2_POWER_WS_PORT,
+                   help="smo-vr/2 power WebSocket port (default %(default)s)")
     p.add_argument("--state-only", action="store_true",
                    help="serve only the state channel (8100/8101), as issue 1 did")
     p.add_argument("--decide-after", type=float, default=5.0,
@@ -1312,6 +1420,12 @@ def main(argv=None):
         servers.append(StubServer(feed, args.host, args.power_port,
                                   None if args.no_ws else args.power_ws_port, args.rate,
                                   chaos=args.chaos, channel="power"))
+        servers.append(StubServer(feed, args.host, args.v2_port,
+                                  None if args.no_ws else args.v2_ws_port, args.rate,
+                                  chaos=args.chaos, schema=SCHEMA_V2))
+        servers.append(StubServer(feed, args.host, args.v2_power_port,
+                                  None if args.no_ws else args.v2_power_ws_port, args.rate,
+                                  chaos=args.chaos, channel="power", schema=SCHEMA_V2))
         servers.append(RequestStub(args.host, args.request_port,
                                    None if args.no_ws else args.request_ws_port,
                                    args.decide_after, args.decline))

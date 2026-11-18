@@ -142,6 +142,10 @@ class NetworkConfig(StrictModel):
     vr_power_ws_port: int = 8103
     vr_request_tcp_port: int = 8104   # command requests (served by the MCS)
     vr_request_ws_port: int = 8105
+    vr2_tcp_port: int = 8106          # smo-vr/2: the same channels in the spacecraft's own axes
+    vr2_ws_port: int = 8107
+    vr2_power_tcp_port: int = 8108
+    vr2_power_ws_port: int = 8109
     vr_max_rate_hz: float = 10.0
 
 class GroundStationConfig(StrictModel):

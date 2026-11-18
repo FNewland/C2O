@@ -731,6 +731,8 @@ class Gateway:
         app = web.Application(client_max_size=64 * 1024)
         app.router.add_get("/vr", self._h_vr_stream)
         app.router.add_get("/vr/power", self._h_vr_stream)
+        app.router.add_get("/vr2", self._h_vr_stream)            # smo-vr/2, spacecraft axes
+        app.router.add_get("/vr2/power", self._h_vr_stream)
         app.router.add_get("/vr/requests", self._h_vr_requests)
         app.router.add_get("/vr/healthz", self._h_health)
         app.router.add_get("/healthz", self._h_health)

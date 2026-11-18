@@ -12,16 +12,33 @@ that works here works on demo day.
 | `sample_vr_frames.ndjson` | Flat file: one orbit, 5 s steps, exactly as sent on the socket |
 | `sample_vr_frames.csv` | The same data as a spreadsheet-friendly CSV |
 | `sample_vr_power.ndjson`, `.csv` | The same orbit as channel 2 sends it: every frame with its `power` block |
+| `sample_vr2_power.ndjson`, `.csv` | The same orbit in **smo-vr/2** (the spacecraft's own axes, +Z zenith) |
 | `sample_vr_requests.ndjson` | A channel-3 conversation, one message per line: `{"t_s", "from": "headset" or "server", "message"}` |
 | `vr_test.py` | Test tool: checks a live channel, a request round trip or a file against the ICD; `selftest` checks the whole kit |
 | `unity/VRLinkClient.cs` | Unity starter script: socket thread, frame conversion, status line |
 
+## Two versions: smo-vr/1 and smo-vr/2
+The same data comes in two sets of body axes; pick one and stay with it.
+
+| | smo-vr/1 (original) | smo-vr/2 (spacecraft axes) |
+|---|---|---|
+| +Z | nadir (the camera) | **zenith**, away from the payload (the top deck) |
+| ±Y | wings; VR +Y = the spacecraft's −Y | wings, as on the spacecraft (+Y = orbit normal) |
+| +X | along-track | along-track |
+| Ports (state, power) | 8100/8101, 8102/8103, `/vr` | 8106/8107, 8108/8109, `/vr2` |
+| Cloud | `wss://ops.c2o.live/vr`, `/vr/power` | `wss://ops.c2o.live/vr2`, `/vr2/power` |
+
+Requests (channel 3) are shared: add `"schema": "smo-vr/2"` to a request to name the wings
+in the spacecraft's axes. Details: ICD §6c.
+
 ## The solar wings are fixed flaps
-Draw each wing as a flap hinged at the top (−Z, zenith) edge of a long side (±Y face):
+Draw each wing as a flap hinged at the top (zenith) edge of a long side (±Y face); the top
+is −Z in smo-vr/1 and +Z in smo-vr/2:
 folded down the side when stowed, swung out level with the top deck when deployed, hinge
 angle = 90° × `deploy.wing_*.fraction`. It never rotates. The panel rotation angle in the
 stream (`deploy.sada_angle_deg`, `power.wings.sada_angle_deg`, `hello.spacecraft.sada`) is
-**DO NOT USE** for the VR project. The camera is on the nadir deck (+Z).
+**DO NOT USE** for the VR project. The camera is on the nadir deck (+Z in smo-vr/1, −Z in
+smo-vr/2).
 
 ## Check the link with vr_test.py
 ```bash
@@ -29,6 +46,7 @@ python3 vr_test.py selftest                       # the kit works on this machin
 python3 vr_test.py check --host <ip>              # channel 1 (state), TCP 8100
 python3 vr_test.py check --host <ip> --channel power --ws
 python3 vr_test.py check --cloud --channel all    # wss://ops.c2o.live/vr, /vr/power, /vr/requests
+python3 vr_test.py check --v2 --host <ip> --channel all   # smo-vr/2, ports 8106-8109
 python3 vr_test.py watch --host <ip> --channel power
 python3 vr_test.py request deploy_antenna --team T07 --host <ip>
 python3 vr_test.py file sample_vr_frames.ndjson   # or your own recording

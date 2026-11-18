@@ -70,7 +70,7 @@ WS_EXACT = frozenset({"/ws"})
 #: The VR streams (docs/VR_INTERFACE_ICD.md): simulation truth for visualisation,
 #: read-only. Reached through the instructor host like /ws, and through the GSG's
 #: public VR port (gsg_vr_proxy), which serves nothing else.
-VR_WS_EXACT = frozenset({"/vr", "/vr/power"})
+VR_WS_EXACT = frozenset({"/vr", "/vr/power", "/vr2", "/vr2/power"})   # smo-vr/1 and /2
 
 READ_METHODS = frozenset({"GET", "HEAD"})
 _QUERY_RE = re.compile(r"[\x21-\x22\x24-\x7e]*", re.ASCII)   # printable ASCII, no '#', no space
@@ -324,7 +324,8 @@ async def gsg_vr_proxy(request: web.Request, link: Any) -> web.StreamResponse:
              and request.method == "GET")
     norm = normalise_path(request.raw_path)
     if not is_ws or norm not in VR_WS_EXACT:
-        return web.json_response({"error": "VR streams are WebSockets at /vr and /vr/power"},
+        return web.json_response({"error": "VR streams are WebSockets at /vr, /vr/power, "
+                                           "/vr2 and /vr2/power"},
                                  status=404)
     if link is None or link.closed:
         return web.json_response({"error": "space link down"}, status=503)

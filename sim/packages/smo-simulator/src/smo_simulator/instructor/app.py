@@ -86,6 +86,8 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     # The VR streams on this port too, for the space link (ops.c2o.live/vr, /vr/power).
     app.router.add_get("/vr", handle_vr_stream)
     app.router.add_get("/vr/power", handle_vr_stream)
+    app.router.add_get("/vr2", handle_vr_stream)          # smo-vr/2, spacecraft axes
+    app.router.add_get("/vr2/power", handle_vr_stream)
     app.router.add_post("/api/command", handle_command)
     app.router.add_get("/api/scenarios", handle_scenarios)
     app.router.add_get("/api/scenario/debrief", handle_scenario_debrief)
@@ -417,7 +419,9 @@ async def handle_vr(request):
 
 async def handle_vr_stream(request):
     """The smo-vr/1 WebSocket stream of one channel (``/vr`` state, ``/vr/power``)."""
-    channel = "power" if request.path.rstrip("/").endswith("/power") else "state"
+    path = request.path.rstrip("/")
+    channel = ("power" if path.endswith("/power") else "state") + \
+        ("2" if path.startswith("/vr2") else "")
     bridge = request.app["vr_bridges"].get(channel)
     if bridge is None:
         return web.json_response({"error": f"VR {channel} channel is not running"}, status=503)
