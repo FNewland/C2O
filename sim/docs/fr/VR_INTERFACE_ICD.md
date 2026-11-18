@@ -398,6 +398,7 @@ quaternion sous la forme `_x/_y/_z/_w`, booléens en 0/1. Le scénario (LEOP com
 à chaque demande après `--decide-after` secondes (5 par défaut) par `SENT`, ou par `DECLINED`
 avec `--decline`.
 `sample_vr2_power.ndjson/.csv` est l'orbite d'exemple en smo-vr/2.
+Sur le canal power, le simulateur de remplacement fait tourner un petit modèle de batterie (100 Wh, charge au soleil, environ 11 % perdus pendant l'éclipse, charges qui suivent le scénario) ; `--battery-start` et `--battery-wh` la rendent plus petite ou plus vide, jusqu'au délestage.
 
 Enregistrer une séance réelle du simulateur avec
 `tools/vr_stub/vr_client_example.py --record run.ndjson --csv run.csv` et

@@ -11,11 +11,19 @@ that works here works on demo day.
 | `vr_client_example.py` | Reference client (no graphics); also records real sessions to files |
 | `sample_vr_frames.ndjson` | Flat file: one orbit, 5 s steps, exactly as sent on the socket |
 | `sample_vr_frames.csv` | The same data as a spreadsheet-friendly CSV |
-| `sample_vr_power.ndjson`, `.csv` | The same orbit as channel 2 sends it: every frame with its `power` block |
+| `sample_vr_power.ndjson`, `.csv` | The same orbit as channel 2 sends it: every frame with its `power` block; the battery charges in sunlight (to about 95 %) and loses about 11 % across the eclipse |
 | `sample_vr2_power.ndjson`, `.csv` | The same orbit in **smo-vr/2** (the spacecraft's own axes, +Z zenith) |
 | `sample_vr_requests.ndjson` | A channel-3 conversation, one message per line: `{"t_s", "from": "headset" or "server", "message"}` |
 | `vr_test.py` | Test tool: checks a live channel, a request round trip or a file against the ICD; `selftest` checks the whole kit |
 | `unity/VRLinkClient.cs` | Unity starter script: socket thread, frame conversion, status line |
+
+## The stub's battery
+The stub's power channel runs a small battery model along the story: 100 Wh, charging in
+sunlight once the flaps are out (tapering above 90 %), discharging in eclipse, with the load
+rising for detumbling, slews, imaging and passes, and the battery warming and cooling. It
+starts at 88 %. To test a low-battery display, start it smaller and emptier:
+`python3 vr_stub.py --battery-start 40 --battery-wh 25` reaches load-shed stages 1 and 2 in
+the eclipse. It is a teaching stand-in; the simulator's own power model drives the real stream.
 
 ## Two versions: smo-vr/1 and smo-vr/2
 The same data comes in two sets of body axes; pick one and stay with it.

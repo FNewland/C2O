@@ -394,7 +394,10 @@ quaternion as `_x/_y/_z/_w`, booleans as 0/1. The story (compressed LEOP):
 
 `vr_stub.py` serves every channel (state 8100/8101, power 8102/8103, requests
 8104/8105, smo-vr/2 state 8106/8107 and power 8108/8109; `--state-only` for issue 1
-behaviour). `sample_vr2_power.ndjson/.csv` is the sample orbit in smo-vr/2. Its "flight director" answers each
+behaviour). `sample_vr2_power.ndjson/.csv` is the sample orbit in smo-vr/2. On the
+power channel the stub runs a small battery model (100 Wh, charging in sunlight, about 11 %
+lost across the eclipse, loads following the story); `--battery-start` and `--battery-wh`
+make it smaller or emptier, down to load shedding. Its "flight director" answers each
 request after `--decide-after` seconds (default 5) with `SENT`, or `DECLINED` with
 `--decline`.
 

@@ -233,41 +233,111 @@ def build_hello(source, max_rate_hz, tcp_port=None, ws_port=None,
     return hello
 
 
-def stub_power(body):
-    """A plausible "power" block for a stub frame. The simulator's comes from its power
-    model; these figures are scaled to match it in a nominal orbit (about 30 W from each
-    deployed wing in sunlight, up to 15 W from a sunlit body face, about 20 W of load,
-    a 33.4 V bus). The battery charge is a fixed figure here."""
+class PowerModel:
+    """A small battery model for the stub's power channel, so a display can be tested while
+    the battery charges in sunlight and discharges in eclipse.
+
+    Scaled to the simulator in a nominal orbit: a 100 Wh battery, about 30 W from each
+    deployed wing and up to 15 W from a sunlit body face, about 17-35 W of load (more while
+    detumbling, slewing, imaging or transmitting, a battery heater in eclipse), a charge
+    regulator that tapers above 90 % and sheds the surplus, and a battery that warms in sun
+    and cools in eclipse. It integrates along mission elapsed time (``met_s``), so it follows
+    the story at any --speed; a jump back in time (the story looping) starts it afresh.
+    It is a teaching stand-in, not the simulator's power model."""
+
+    CAPACITY_WH = 100.0
+    START_SOC = 88.0
+    MAX_CHARGE_W = 30.0
+
+    def __init__(self, soc=START_SOC, capacity_wh=CAPACITY_WH):
+        self.start_soc = max(0.0, min(100.0, float(soc)))
+        self.capacity_wh = max(1.0, float(capacity_wh))
+        self.reset()
+
+    def reset(self):
+        self.soc = self.start_soc
+        self.temp_c = 7.0
+        self.last_met = None
+
+    def stage(self):
+        """Load-shed stage from the charge (as the simulator: more loads off as it falls)."""
+        return 3 if self.soc < 15 else 2 if self.soc < 25 else 1 if self.soc < 35 else 0
+
+    def load_w(self, body, lit):
+        att = body.get("attitude") or {}
+        mode, pointing = att.get("aocs_mode"), att.get("pointing")
+        w = 9.0 if mode == "OFF" else 15.0                        # avionics, receivers
+        w += {"DETUMBLE": 4.0, "NOMINAL": 3.0, "SLEW": 6.0, "FINE_POINT": 4.0}.get(mode, 0.0)
+        if pointing == "TARGET_TRACK":
+            w += 12.0                                              # imager and its storage
+        if (body.get("mission") or {}).get("in_contact"):
+            w += 6.0                                               # transmitter
+        if lit <= 0.0:
+            w += 2.5                                               # battery heater
+        return max(6.0, w - 3.0 * self.stage())                    # shedding switches loads off
+
+    def step(self, body, gen_w):
+        """Advance to this frame's time; return (load_w, battery_w) (+ = charging)."""
+        sun = body.get("sun") or {}
+        lit = 0.0 if sun.get("in_eclipse") else float(sun.get("sun_fraction", 1.0))
+        load = self.load_w(body, lit)
+        met = float(body.get("met_s", 0.0) or 0.0)
+        if self.last_met is not None and met < self.last_met:
+            self.reset()
+        dt = 0.0 if self.last_met is None else min(met - self.last_met, 600.0)
+        self.last_met = met
+        surplus = gen_w - load
+        if surplus > 0:                       # charge, tapering from 90 % to full
+            taper = max(0.0, min(1.0, (100.0 - self.soc) / 10.0))
+            bat_w = min(surplus, self.MAX_CHARGE_W) * taper
+        else:
+            bat_w = surplus if self.soc > 0.0 else 0.0
+        self.soc = max(0.0, min(100.0, self.soc + bat_w * dt / 3600.0 / self.capacity_wh * 100.0))
+        target = 10.0 if lit > 0 else 4.0     # degC, first-order with a 15-minute time constant
+        self.temp_c += (target - self.temp_c) * (1.0 - math.exp(-dt / 900.0)) if dt > 0 else 0.0
+        return load, bat_w
+
+
+_DEFAULT_POWER = PowerModel()
+#: (start charge %, capacity Wh) for the servers' batteries; set from --battery-start/-wh.
+POWER_START = (PowerModel.START_SOC, PowerModel.CAPACITY_WH)
+
+
+def stub_power(body, model=None):
+    """The "power" block for a stub frame (ICD section 5a), from ``model`` (a PowerModel that
+    keeps the battery state between frames; one shared default when none is given)."""
+    model = model or _DEFAULT_POWER
     sun = body.get("sun") or {}
     lit = 0.0 if sun.get("in_eclipse") else float(sun.get("sun_fraction", 1.0))
     d = sun.get("dir_body") or [0.0, 0.0, 0.0]
     dep = body.get("deploy") or {}
-    bus_v = 33.4
     faces = {}
     for name, axis, sign in (("px", 0, 1), ("mx", 0, -1), ("py", 1, 1), ("my", 1, -1),
                              ("pz", 2, 1), ("mz", 2, -1)):
-        w = round(max(0.0, sign * d[axis]) * 15.5 * lit, 2)
-        faces[name] = {"current_a": round(w / bus_v, 3), "power_w": w}
-    wings = {}
-    for wing in ("wing_py", "wing_my"):
-        frac = float((dep.get(wing) or {}).get("fraction", 0.0))
-        w = round(frac * 30.1 * lit, 2)
-        wings[wing] = {"current_a": round(w / bus_v, 3), "power_w": w,
-                       "deployed": (dep.get(wing) or {}).get("state") == "DEPLOYED"}
-    wings["sada_angle_deg"] = dep.get("sada_angle_deg", 0.0)
-    gen = round(sum(f["power_w"] for f in faces.values())
-                + wings["wing_py"]["power_w"] + wings["wing_my"]["power_w"], 2)
-    cons = 20.0
-    net = round(gen - cons, 2)
+        faces[name] = round(max(0.0, sign * d[axis]) * 15.5 * lit, 2)
+    wing_w = {w: round(float((dep.get(w) or {}).get("fraction", 0.0)) * 30.1 * lit, 2)
+              for w in ("wing_py", "wing_my")}
+    gen = round(sum(faces.values()) + sum(wing_w.values()), 2)
+    load, bat_w = model.step(body, gen)
+    soc = model.soc
+    bat_v = round(31.0 + 2.6 * soc / 100.0 + 0.05 * bat_w / 32.0, 3)
+    bus_v = round(max(bat_v, 33.4) if lit > 0 else bat_v, 3)
+    bat_i = round(bat_w / bat_v, 3)
+    stage = model.stage()
     on = lit > 0
     return {
-        "bus_voltage_v": bus_v, "generated_w": gen, "consumed_w": cons, "net_w": net,
-        "wings": wings, "body_faces": faces,
+        "bus_voltage_v": bus_v, "generated_w": gen, "consumed_w": round(load, 2),
+        "net_w": round(gen - load, 2),
+        "wings": dict({w: {"current_a": round(p / bus_v, 3), "power_w": p,
+                           "deployed": (dep.get(w) or {}).get("state") == "DEPLOYED"}
+                       for w, p in wing_w.items()},
+                      sada_angle_deg=dep.get("sada_angle_deg", 0.0)),
+        "body_faces": {k: {"current_a": round(v / bus_v, 3), "power_w": v} for k, v in faces.items()},
         "strings": {"a": {"voltage_v": 32.4 if on else 0.0, "current_a": round(gen / 2 / 32.4, 3), "enabled": True},
                     "b": {"voltage_v": 32.4 if on else 0.0, "current_a": round(gen / 2 / 32.4, 3), "enabled": True}},
-        "battery": {"soc_pct": 95.0, "voltage_v": 33.4, "current_a": round(net / 33.4, 3),
-                    "charging": net / 33.4 > 0.05, "temp_c": 6.0},
-        "load_shed_stage": 0,
+        "battery": {"soc_pct": round(soc, 2), "voltage_v": bat_v, "current_a": bat_i,
+                    "charging": bat_i > 0.05, "temp_c": round(model.temp_c, 2)},
+        "load_shed_stage": stage,
     }
 
 
@@ -879,11 +949,12 @@ def write_issue2_samples(directory, step=5.0, story="once"):
     sample_vr_requests.ndjson (a channel-3 conversation: one line per message, wrapped as
     {"t_s": seconds, "from": "headset" | "server", "message": {...}}). Returns the paths."""
     st = Story(story)
+    model = PowerModel()
     frames = []
     for i in range(int(math.ceil(PERIOD_S / step))):
         t = i * step
         body = st.body(t, int(t))
-        frames.append(state_message(i + 1, dict(body, power=stub_power(body))))
+        frames.append(state_message(i + 1, dict(body, power=stub_power(body, model))))
     os.makedirs(directory, exist_ok=True)
     nd = os.path.join(directory, "sample_vr_power.ndjson")
     cs = os.path.join(directory, "sample_vr_power.csv")
@@ -1050,6 +1121,7 @@ class StubServer:
         self.feed = feed
         self.channel = channel
         self.schema = schema
+        self.power_model = PowerModel(*POWER_START)   # this channel's battery, charging and discharging
         self.host = host
         self.tcp_port, self.ws_port = tcp_port, ws_port
         self.rate_hz = max(0.5, min(float(rate_hz), DEFAULT_MAX_RATE_HZ))
@@ -1069,7 +1141,7 @@ class StubServer:
     def frame_body(self):
         body = self.feed.current()
         if self.channel == "power":
-            body = dict(body, power=stub_power(body))
+            body = dict(body, power=stub_power(body, self.power_model))
         return body
 
     async def send_all(self, line):
@@ -1372,6 +1444,11 @@ def build_parser():
                    help="smo-vr/2 power TCP port (default %(default)s)")
     p.add_argument("--v2-power-ws-port", type=int, default=DEFAULT_V2_POWER_WS_PORT,
                    help="smo-vr/2 power WebSocket port (default %(default)s)")
+    p.add_argument("--battery-start", type=float, default=PowerModel.START_SOC,
+                   help="power channel: battery charge at the start, %% (default %(default)s)")
+    p.add_argument("--battery-wh", type=float, default=PowerModel.CAPACITY_WH,
+                   help="power channel: battery capacity in Wh (default %(default)s); try "
+                        "--battery-start 40 --battery-wh 25 to see load shedding in eclipse")
     p.add_argument("--state-only", action="store_true",
                    help="serve only the state channel (8100/8101), as issue 1 did")
     p.add_argument("--decide-after", type=float, default=5.0,
@@ -1402,6 +1479,8 @@ def build_parser():
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
+    global POWER_START
+    POWER_START = (args.battery_start, args.battery_wh)
     if args.write_sample:
         nd, cs = write_sample(args.write_sample, args.sample_step)
         print(f"wrote {nd}\nwrote {cs}")

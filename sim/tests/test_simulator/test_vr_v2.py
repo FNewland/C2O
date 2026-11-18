@@ -222,3 +222,28 @@ def test_a_class_of_headsets_connects_at_once(engine):
         finally:
             await b.stop()
     asyncio.run(run())
+
+
+def test_the_stub_battery_charges_in_sun_and_discharges_in_eclipse():
+    import importlib.util
+    import sys
+    spec = importlib.util.spec_from_file_location("_vr_stub_pm", ROOT / "tools" / "vr_stub" / "vr_stub.py")
+    stub = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = stub
+    spec.loader.exec_module(stub)
+    lines = (ROOT / "tools" / "vr_stub" / "sample_vr_power.ndjson").read_text("utf-8").splitlines()[1:]
+    frames = [json.loads(x) for x in lines]
+    ecl = [f for f in frames if f["sun"]["in_eclipse"]]
+    soc = [f["power"]["battery"]["soc_pct"] for f in ecl]
+    assert soc[0] - soc[-1] > 8                                       # about 11 % across the eclipse
+    assert all(f["power"]["battery"]["current_a"] < 0 for f in ecl)  # discharging throughout
+    after = [f for f in frames if not f["sun"]["in_eclipse"] and f["met_s"] > ecl[-1]["met_s"]]
+    assert after[-1]["power"]["battery"]["soc_pct"] > soc[-1] + 8     # recharged after eclipse
+    assert ecl[0]["power"]["battery"]["temp_c"] > ecl[-1]["power"]["battery"]["temp_c"]
+    loads = {f["power"]["consumed_w"] for f in frames}
+    assert len(loads) >= 5                                            # the load follows the story
+    # a small, half-empty battery reaches load shedding in eclipse
+    st, pm, stages = stub.Story("once"), stub.PowerModel(40, 25), set()
+    for t in range(0, 5670, 10):
+        stages.add(stub.stub_power(st.body(float(t), t), pm)["load_shed_stage"])
+    assert {1, 2} <= stages
