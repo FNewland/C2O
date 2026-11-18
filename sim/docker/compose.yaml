@@ -209,6 +209,7 @@ services:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8095:8095"     # documentation viewer
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8090:8090"     # welcome page (portal)
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8098:8098"     # VR headsets: /vr, /vr/power, /vr/requests (no sign-in)
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8099:8099"     # wall display, read-only (no sign-in)
     healthcheck:
       <<: *probe
       # /healthz AND the TM listener: rfsim connects to TM exactly once.
@@ -338,6 +339,20 @@ services:
       <<: *logbook-env
     volumes:
       - ground-workspace:/opt/smo/workspace      # logbook only
+
+  # The planner's wall display, public and read-only (wall.<domain>, IAP off): an
+  # allowlist of the page, its files and its read feeds; nothing else is reachable.
+  wall:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_started
+    command: ["python", "tools/wall.py", "--host", "0.0.0.0", "--port", "8099"]
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8099/healthz', timeout=4); sys.exit(0)"]
 
   # Welcome page (https://<domain> on GCP): every screen with a live status.
   # It probes the ground services on 127.0.0.1 (this namespace), SpaceCDF

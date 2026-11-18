@@ -594,6 +594,11 @@ echo "==> Starting Documentation viewer on port 8095..."
 python "$SCRIPT_DIR/tools/doc_viewer.py" --port 8095 --docs "$SMO_CONFIG_DIR" &
 DOC_PID=$!
 
+# The planner's wall display, read-only, for room screens and VR headsets (HTTP:8099).
+echo "==> Starting the wall display on port 8099..."
+python "$SCRIPT_DIR/tools/wall.py" --host "$SMO_BIND" --port 8099 &
+WALL_PID=$!
+
 # Start the welcome page (HTTP:8090): every screen with its live status. Its
 # instructor-console entry is the simulator here (all) or the GSG proxy
 # (ground); the probes go where this script bound each service.
@@ -637,6 +642,7 @@ if [ "$SMO_PROFILE" != "space" ]; then
 check_optional "Delayed TM viewer"   8092 "$DTM_PID"
 if [ -n "${ORB_PID:-}" ]; then check_optional "Orbit Tools" 8093 "$ORB_PID"; fi
 check_optional "Documentation viewer" 8095 "$DOC_PID"
+check_optional "Wall display"         8099 "$WALL_PID"
 check_optional "Welcome page"         8090 "$PORTAL_PID"
 fi
 if [ "$SMO_PROFILE" != "ground" ]; then
@@ -673,6 +679,7 @@ else
 echo "  Orbit Tools:      NOT RUNNING (sgp4/numpy/aiohttp unavailable)"
 fi
 echo "  Documentation:    http://$ACCESS_HOST:8095"
+echo "  Wall display:     http://$ACCESS_HOST:8099   (read-only, for room screens and VR headsets)"
 echo "  Scenario Gen:     http://$ACCESS_HOST:8096"
 echo "  ADCS Failure Sim: http://$ACCESS_HOST:8097"
 echo "  Dump store:       $DUMP_DIR"
@@ -738,6 +745,7 @@ else
 echo "  Orbit Tools:      NOT RUNNING (sgp4/numpy/aiohttp unavailable)"
 fi
 echo "  Documentation:    http://$ACCESS_HOST:8095"
+echo "  Wall display:     http://$ACCESS_HOST:8099   (read-only, for room screens and VR headsets)"
 echo "  Dump store:       $DUMP_DIR  (written by the GSG)"
 echo "  Time source:      $SMO_TIME_SOURCE  (sim_state_url=$SMO_SIM_STATE_URL)"
 if [ -n "$RFSIM_MSG" ]; then

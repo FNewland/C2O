@@ -42,6 +42,16 @@ then a mutual challenge, then a MAC on every frame). The VPC firewall lets in on
 ranges (and the sim VM on port 9100), plus IAP on port 22. One private rule lets the ground VM reach
 the sim VM's tool ports 8096-8097, so the welcome page can say whether they are up.
 
+**Without sign-in, read-only.** Besides `/link`, three things are open to anyone: the VR streams
+(`ops.c2o.live/vr`, `/vr/power`, `/vr2`, `/vr2/power`), the VR request socket (`/vr/requests`,
+proposals the Flight Director must accept), and the **wall display** at `wall.c2o.live`: the
+planner's `/wide` wall screen for room screens and VR headsets. `wall.c2o.live` is served by
+`sim/tools/wall.py`, which is itself the allowlist: GET only; the page, its own scripts, styles,
+fonts and translations; the nine planner feeds it polls; the MCS state cut down to its `derived`
+block and the radio's last five pass summaries. Queries are rebuilt (no visitor text reaches the
+planner), answers are cached a few seconds and shared, and every planner route that changes
+anything answers 404. Cloud Armor's per-address limits apply as everywhere.
+
 **Files in this folder**
 
 | File | What it is |
@@ -278,8 +288,8 @@ At <https://account.squarespace.com/domains> → **c2o.live → DNS**, first **d
 on these names that point elsewhere. Look for the A, AAAA and CNAME records on `@`, `ops`, `plan`, `sim`
 and `link`. A domain moved from Google Domains or set up by Squarespace may carry preset records
 (*Squarespace Defaults*, parked-page A records, a `www` CNAME). `www` itself may stay. Also turn off any
-domain forwarding on the bare domain. Then **Add record** for each name below (twelve in all; the
-last seven are the tool pages and SpaceCDF):
+domain forwarding on the bare domain. Then **Add record** for each name below (thirteen in all; the
+last eight are the tool pages, the wall display and SpaceCDF):
 
 | Name (host) | Type | Data | TTL |
 |---|---|---|---|
@@ -288,7 +298,7 @@ last seven are the tool pages and SpaceCDF):
 | `plan` | A | *LB IP* | same |
 | `sim` | A | *LB IP* | same |
 | `link` | A | *LB IP* | same |
-| `tm`, `orbit`, `radio`, `docs`, `design` | A | *LB IP* | same (one record each) |
+| `tm`, `orbit`, `radio`, `docs`, `wall`, `design` | A | *LB IP* | same (one record each) |
 | `scenarios`, `adcs` | A | *LB IP* | same (one record each) |
 
 Keep the TTL the same on all of them; Squarespace asks for that on its Google-hosted DNS. Do **not** add

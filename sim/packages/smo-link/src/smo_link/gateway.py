@@ -155,7 +155,7 @@ class GatewayConfig:
     #: relayed to the MCS. None = closed. The cloud puts it behind ops.c2o.live/vr*.
     vr_port: int | None = None
     vr_bind: str = "0.0.0.0"
-    vr_max_clients: int = 64
+    vr_max_clients: int = 200     # all public VR sockets together (streams + requests)
     gsg_id: str = field(default_factory=lambda: "gsg-" + secrets.token_hex(4))
 
 
@@ -1209,6 +1209,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--vr-port", type=int, default=int(e("SMO_GSG_VR_PORT", "0")) or None,
                    help="public VR port (/vr, /vr/power, /vr/requests); default closed")
     p.add_argument("--vr-bind", default=e("SMO_GSG_VR_BIND", "0.0.0.0"))
+    p.add_argument("--vr-max-clients", type=int, default=int(e("SMO_GSG_VR_MAX_CLIENTS", "200")),
+                   help="most public VR sockets open at once, streams and requests together")
     p.add_argument("--tc-ttl", type=float, default=float(e("SMO_LINK_TC_TTL_S", str(TC_TTL_S))),
                    help="seconds a TC may wait in the link queue before it is discarded")
     p.add_argument("--log-level", default=e("SMO_LOG_LEVEL", "INFO"))
@@ -1247,7 +1249,8 @@ def config_from_args(args: argparse.Namespace) -> GatewayConfig:
         dump_dir=_resolve_dump_dir(args.dump_dir), config_dir=args.config_dir,
         allowed_origins=_csv(args.allowed_origins), allowed_hosts=_csv(args.allowed_hosts),
         tc_ttl_s=args.tc_ttl, mcs_url=args.mcs_url,
-        vr_port=args.vr_port, vr_bind=args.vr_bind)
+        vr_port=args.vr_port, vr_bind=args.vr_bind,
+        vr_max_clients=max(1, args.vr_max_clients))
 
 
 def main(argv: list[str] | None = None) -> None:

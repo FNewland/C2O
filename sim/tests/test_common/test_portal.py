@@ -88,7 +88,7 @@ def test_cloud_links_are_subdomains():
     cfg = pt.Config.from_env({"SMO_PORTAL_DOMAIN": "c2o.live"})
     assert {s.key: cfg.link(s, "c2o.live") for s in pt.SERVICES} == {
         k: f"https://{k}.c2o.live/" for k in
-        ("ops", "plan", "design", "tm", "orbit", "radio", "docs", "sim", "scenarios", "adcs")}
+        ("ops", "plan", "design", "tm", "orbit", "radio", "docs", "wall", "sim", "scenarios", "adcs")}
     assert cfg.sim_host == "10.20.0.11"               # the cloud sim VM
     by = {s.key: s for s in pt.SERVICES}
     assert cfg.targets(by["scenarios"]) == [("10.20.0.11", 8096)]
@@ -265,7 +265,7 @@ async def test_status_reports_each_screen_link_mode_and_pass(monkeypatch):
         d = await r.json()
         st = {k: v["state"] for k, v in d["services"].items()}
         assert st == {"ops": "up", "plan": "up", "design": "down", "tm": "up",
-                      "orbit": "starting", "radio": "down", "docs": "up", "sim": "up",
+                      "orbit": "starting", "radio": "down", "docs": "up", "wall": "down", "sim": "up",
                       "scenarios": "down", "adcs": "down"}
         assert d["link"]["state"] == "UP"
         assert d["mode"] == {"mode": "SAFE", "source": "TM obdh.mode 0x0300",

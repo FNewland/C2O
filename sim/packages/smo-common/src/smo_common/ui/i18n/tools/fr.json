@@ -504,5 +504,7 @@
   "Answer: {{a}}": "Réponse : {{a}}",
   "Note": "Note",
   "Loading…": "Chargement…",
-  "Welcome page": "Page d’accueil"
+  "Welcome page": "Page d’accueil",
+  "Wall display": "Affichage mural",
+  "The planner's wall screen, read-only and open without sign-in, for room screens and VR headsets.": "L'écran mural du planificateur, en lecture seule et ouvert sans connexion, pour les écrans de salle et les casques RV."
 }

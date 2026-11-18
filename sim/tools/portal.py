@@ -118,6 +118,9 @@ SERVICES: tuple[Service, ...] = (
             T("Follow the RF link: carrier, bit and frame lock, error rates."), (8094,)),
     Service("docs", "analyse", T("Documentation"),
             T("Mission manual, procedures and command reference."), (8095,)),
+    Service("wall", "operate", T("Wall display"),
+            T("The planner's wall screen, read-only and open without sign-in, for room screens and VR headsets."),  # noqa: E501
+            (8099,)),
     Service("sim", "instructor", T("Instructor console"),
             T("Run the simulator: scenarios, failures, time and speed."), (8080,),
             instructors_only=True),

@@ -95,7 +95,7 @@ log "Firewall (nothing else reaches the VMs: the VPC denies all other ingress)"
 # Google front ends and health checkers -> the published ground ports
 # (MCS, planner, instructor proxy, link, welcome page 8090, tool viewers
 # 8092-8095, SpaceCDF 8000).
-fw "$FW_LB" tcp:8080,tcp:8090,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8098,tcp:8000 "$TAG_GROUND" \
+fw "$FW_LB" tcp:8080,tcp:8090,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8098,tcp:8099,tcp:8000 "$TAG_GROUND" \
     --source-ranges=130.211.0.0/22,35.191.0.0/16
 # ... and -> the instructor tools next to the cloud simulator.
 if [ "$CREATE_SIM_VM" = yes ]; then
@@ -377,7 +377,8 @@ tool_be() {
 tools_each tool_be
 
 log "IAP on the welcome page, ops, plan, sim and the tool pages (Google-managed OAuth client: @$DOMAIN accounts only)"
-tool_be_name() { printf '%s-be-%s\n' "$PREFIX" "$1"; }
+tool_be_name() { [ "$5" = public ] || printf '%s-be-%s\n' "$PREFIX" "$1"; }
+tool_public_be() { [ "$5" = public ] && printf '%s-be-%s\n' "$PREFIX" "$1"; return 0; }
 for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" $(tools_each tool_be_name); do
     # No oauth2-client-id: IAP uses the Google-managed client.
     gcloud compute backend-services update "$b" --global --iap=enabled >/dev/null
@@ -385,7 +386,8 @@ done
 # /link must NOT be behind IAP: the agent is not a browser; its HMAC proves it.
 # Nor /vr*: headset apps cannot sign in. That back end serves only the read-only VR
 # streams and the request socket (proposals the Flight Director must accept).
-for b in "$BE_LINK" "$BE_VR"; do
+# Nor the public tool pages (wall.$DOMAIN): read-only, their server is an allowlist.
+for b in "$BE_LINK" "$BE_VR" $(tools_each tool_public_be); do
     if [ "$(gcloud compute backend-services describe "$b" --global --format='value(iap.enabled)')" = "True" ]; then
         gcloud compute backend-services update "$b" --global --iap=disabled >/dev/null
     fi
@@ -403,6 +405,7 @@ iap_grant "$BE_PLAN" "$STUDENTS_GROUP"
 iap_grant "$BE_PLAN" "$INSTRUCTORS_GROUP"
 iap_grant "$BE_SIM"  "$INSTRUCTORS_GROUP"
 tool_iap() {
+    [ "$5" = public ] && return 0
     [ "$5" = all ] && iap_grant "$PREFIX-be-$1" "$STUDENTS_GROUP"
     iap_grant "$PREFIX-be-$1" "$INSTRUCTORS_GROUP"
 }

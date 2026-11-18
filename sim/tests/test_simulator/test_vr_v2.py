@@ -180,3 +180,45 @@ def test_the_stub_turns_frames_exactly_as_the_simulator_does(engine):
     pos = np.asarray(first["orbit"]["pos_eci_km"])
     assert np.allclose(_rot(first["attitude"]["q_body_to_eci"], first["earth"]["dir_body"]),
                        -pos / np.linalg.norm(pos), atol=1e-4)
+
+
+def test_a_class_of_headsets_connects_at_once(engine):
+    """40 headsets (20 TCP, 20 WebSocket) connect in the same instant; every one gets the
+    hello and fresh frames, and the instructor summary lists them all."""
+    async def run():
+        import aiohttp
+        b = vb.VRBridge(engine.get_vr_state, host="127.0.0.1", tcp_port=0, ws_port=0,
+                        max_rate_hz=5.0)
+        await b.start()
+        try:
+            async def tcp_headset(i):
+                r, w = await asyncio.open_connection("127.0.0.1", b.tcp_port)
+                hello = json.loads(await asyncio.wait_for(r.readline(), 5))
+                frames = [json.loads(await asyncio.wait_for(r.readline(), 5)) for _ in range(3)]
+                w.write((json.dumps({"type": "status", "team": f"T{i}", "status_word": 15}) + "\n").encode())
+                await w.drain()
+                return hello, frames, w
+
+            async def ws_headset(session, i):
+                ws = await session.ws_connect(f"http://127.0.0.1:{b.ws_port}/vr")
+                hello = json.loads((await ws.receive(timeout=5)).data)
+                frames = [json.loads((await ws.receive(timeout=5)).data) for _ in range(3)]
+                return hello, frames, ws
+
+            async with aiohttp.ClientSession() as session:
+                results = await asyncio.gather(*[tcp_headset(i) for i in range(20)],
+                                               *[ws_headset(session, i) for i in range(20)])
+                for hello, frames, _ in results:
+                    assert hello["type"] == "hello" and all(f["type"] == "state" for f in frames)
+                await asyncio.sleep(1.2)
+                summary = b.monitor.summary()
+                assert summary["n_clients"] == 40
+                assert len({c["id"] for c in summary["clients"]}) == 40
+                for _, _, conn in results:
+                    if hasattr(conn, "close") and not hasattr(conn, "send_str"):
+                        conn.close()
+                    else:
+                        await conn.close()
+        finally:
+            await b.stop()
+    asyncio.run(run())

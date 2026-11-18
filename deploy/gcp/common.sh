@@ -155,8 +155,9 @@ CERT_DOMAINS="$HOST_OPS,$HOST_PLAN,$HOST_SIM,$HOST_LINK"
 
 # Tool pages, one host each (the tools use root-relative URLs, so each needs
 # its own host rather than a path prefix). Fields:
-#   key  host-label  port  where(ground|sim)  who(all|instructors)  title
-# "all" = students + instructors. Ground tools run on the ground VM; the
+#   key  host-label  port  where(ground|sim)  who(all|instructors|public)  title
+# "all" = students + instructors. "public" = no sign-in at all (IAP off): only for a
+# read-only page whose server is its own allowlist (wall: tools/wall.py). Ground tools run on the ground VM; the
 # instructor tools run next to the simulator on the sim VM (the scenario
 # generator must write where the simulator reads).
 TOOLS="
@@ -164,6 +165,7 @@ tm        tm         8092 ground all         Delayed-TM viewer
 orbit     orbit      8093 ground all         Orbit tools
 radio     radio      8094 ground all         Radio view (RF bridge)
 docs      docs       8095 ground all         Documentation
+wall      wall       8099 ground public      Wall display (read-only, no sign-in)
 design    design     8000 ground all         SpaceCDF design tool
 scenarios scenarios  8096 sim    instructors Scenario generator
 adcs      adcs       8097 sim    instructors ADCS failure viewer
