@@ -990,3 +990,48 @@ def test_bootstrap_on_a_laptop_says_what_to_run(tmp_path):
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     r = subprocess.run(["bash", str(BOOTSTRAP), "update"], capture_output=True, text=True, env=env, timeout=30)
     assert r.returncode == 2 and "c2o update" in r.stderr
+
+
+# A fake curl answering like a correctly deployed site; WALL_BODY swaps the wall page.
+FAKE_CURL = r"""#!/bin/bash
+# fake curl: decide by URL
+out=""; hdr=""; m=GET; url=""
+while [ $# -gt 0 ]; do case "$1" in -o) out="$2"; shift;; -D) hdr="$2"; shift;; -X) m="$2"; shift;; -w|--max-time|-d|--resolve) shift;; -*) ;; *) url="$1";; esac; shift; done
+code=302; loc="https://accounts.google.com/o/oauth2"; body=""
+case "$m:$url" in
+  GET:https://wall.*/) code=200; loc=""; body="${WALL_BODY:-<script src=/static/modern/wide.js>}";;
+  POST:https://wall.*) code=405; loc="";;
+  GET:http://wall.*) code=301; loc="https://wall.c2o.live/";;
+  GET:https://wall.*) code=404; loc="";;
+  GET:https://ops.*/vr*) code=400; loc="";;
+  GET:https://c2o-check-unknown*) code=302; loc="https://c2o.live/";;
+esac
+printf '%s' "$body" > "$out"; { echo "HTTP/1.1 $code"; [ -n "$loc" ] && printf 'Location: %s\r\n' "$loc"; } > "$hdr"
+printf '%s' "$code"
+"""
+
+
+def _check(tmp_path, **extra):
+    (tmp_path / "curl").write_text(FAKE_CURL)
+    (tmp_path / "gcloud").write_text("#!/bin/sh\ncase \"$*\" in *'addresses describe'*) echo 34.1.2.3;; esac\n")
+    for f in ("curl", "gcloud"):
+        (tmp_path / f).chmod(0o755)
+    cfg = tmp_path / "c2o.env"
+    cfg.write_text((GCP / "c2o.env.example").read_text().replace("PROJECT=", "PROJECT=c2o-test #", 1))
+    env = dict(os.environ, PATH=f"{tmp_path}{os.pathsep}{os.environ['PATH']}", C2O_ENV=str(cfg), **extra)
+    return subprocess.run(["bash", str(GCP / "c2o"), "check"], capture_output=True, text=True, env=env, timeout=60)
+
+
+def test_check_passes_on_a_correct_site(tmp_path):
+    r = _check(tmp_path)
+    assert r.returncode == 0, _out(r)
+    assert "RESULT: PASS" in r.stdout and "FAIL" not in r.stdout
+    for host in ("ops.", "plan.", "sim.", "design.", "scenarios."):
+        assert f"PASS  {host}" in r.stdout
+    assert "wall page" in r.stdout and "redirected to the welcome page" in r.stdout
+
+
+def test_check_fails_when_the_wall_shows_mission_control(tmp_path):
+    r = _check(tmp_path, WALL_BODY="<script src=/static/modern/mcs.js>")
+    assert r.returncode == 1
+    assert "serves mission-control content" in r.stdout and "c2o down --all" in r.stdout

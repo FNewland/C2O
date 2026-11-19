@@ -461,9 +461,19 @@ fi
 tool_hostrule() { printf '  - hosts:\n    - %s.%s\n    pathMatcher: %s\n' "$2" "$DOMAIN" "$1"; }
 tool_matcher()  { printf '  - name: %s\n    defaultService: %s\n' "$1" "$(bs "$PREFIX-be-$1")"; }
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+# A host this map does not name (a stray DNS record, the bare IP) is redirected to the welcome
+# page, never served: before 2026-11-19 it fell through to mission control, so a public name
+# added to DNS before its rule existed showed the MCS (behind IAP, but a signed-in browser
+# would not notice). `c2o check` verifies this from outside.
+default_host="$DOMAIN"; [ "$INCLUDE_APEX" = "yes" ] || default_host="$HOST_OPS"
 cat > "$tmp/urlmap.yaml" <<EOF
 name: $URLMAP
-defaultService: $(bs "$BE_OPS")
+defaultUrlRedirect:
+  hostRedirect: $default_host
+  pathRedirect: /
+  httpsRedirect: true
+  redirectResponseCode: FOUND
+  stripQuery: true
 hostRules:
 $apex_rule
   - hosts:
@@ -507,6 +517,7 @@ $apex_matcher
 $(tools_each tool_matcher)
 EOF
 gcloud compute url-maps import "$URLMAP" --global --source="$tmp/urlmap.yaml" --quiet >/dev/null
+info "URL map: unknown hosts redirect to https://$default_host/; run 'c2o check' once the certificate is active"
 
 cat > "$tmp/redirect.yaml" <<EOF
 name: $REDIRECT_MAP

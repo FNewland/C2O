@@ -52,6 +52,14 @@ block and the radio's last five pass summaries. Queries are rebuilt (no visitor 
 planner), answers are cached a few seconds and shared, and every planner route that changes
 anything answers 404. Cloud Armor's per-address limits apply as everywhere.
 
+Any address the load balancer does not know (a typo, or a name whose rule is missing) is
+redirected to the welcome page, never to a screen. **After every `setup.sh` and every
+`c2o update`, run `c2o check`**: it visits every address with no sign-in, the way a stranger
+would, and fails if any screen answers without the sign-in, if `wall.c2o.live` shows anything
+but the wall page, or if a write gets through. Check by hand in a private window too: a browser
+already signed in to c2o.live is let through without a prompt, so your own browser cannot tell
+you what is public.
+
 **Files in this folder**
 
 | File | What it is |

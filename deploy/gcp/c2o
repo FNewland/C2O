@@ -46,6 +46,7 @@ Everyday
   c2o status                     what runs, what is up, what it costs per day now
   c2o up [--sim=cloud|laptop]    class on: the VMs (or ground only + your laptop)
   c2o down [--all]               class off: stop the VMs; --all also takes the site offline
+  c2o check                      probe every address as a stranger: nothing open but wall + VR
   c2o schedule set "Mon-Fri 08:00-18:00"   start/stop the VMs automatically
   c2o schedule show | clear
 
@@ -73,6 +74,25 @@ Setup (README steps 4-8)
 
 Add --yes to skip the "are you sure?" questions.
 Install:  echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.zshrc   (Cloud Shell: ~/.bashrc)
+EOF
+}
+
+help_check() {
+    cat <<'EOF'
+c2o check
+
+Visits every C2O address over the internet with no sign-in and no cookies, the way a
+stranger would, and checks that the site exposes only what it should:
+
+  * every screen (welcome page, ops, plan, sim and the tool pages) asks for the c2o.live
+    sign-in, never shows a page;
+  * wall.<domain> shows the planner's wall page and nothing else: MCS and planner action
+    routes answer 404, a write answers 405, plain http redirects to https;
+  * the VR addresses on ops.<domain> answer headsets without sign-in but serve no page;
+  * a name the load balancer does not know is redirected to the welcome page.
+
+Run it after every setup.sh and every code update, with the VMs up. Exits 1 if any check
+fails; then take the site offline with: c2o down --all
 EOF
 }
 
@@ -231,6 +251,102 @@ vm_usd_h() {  # vm_usd_h MACHINE_TYPE -> USD/h (e2-standard-N scaled; else the e
         e2-standard-*) calc "$VM_USD_H / 2 * ${1#e2-standard-}" ;;
         *) printf '%s' "$VM_USD_H" ;;
     esac
+}
+
+# ── check: what a stranger can reach ──────────────────────────────────────
+cmd_check() {
+    command -v curl >/dev/null || die "curl is needed for c2o check"
+    local fails=0 tmp code loc body ip h
+    tmp="$(mktemp -d)"
+    probe() {  # probe METHOD URL [extra curl args]: sets code, loc, body (first 4 kB)
+        local m="$1" u="$2"; shift 2
+        code="$(curl -s -o "$tmp/b" -D "$tmp/h" -w '%{http_code}' --max-time 15 -X "$m" "$@" "$u" || true)"
+        loc="$(tr -d '\r' < "$tmp/h" 2>/dev/null | awk 'tolower($1)=="location:"{print $2; exit}')"
+        body="$(head -c 4096 "$tmp/b" 2>/dev/null || true)"
+    }
+    verdict() {  # verdict OK|FAIL TEXT
+        if [ "$1" = OK ]; then printf '  PASS  %s\n' "$2"; else printf '  FAIL  %s\n' "$2"; fails=$((fails + 1)); fi
+    }
+    signin() {  # signin HOST: the page must be IAP's sign-in redirect, never content
+        probe GET "https://$1/"
+        case "$code:$loc" in
+            30[12]:*accounts.google.com*|30[12]:*/_gcp_iap/*|401:*|403:*)
+                verdict OK "$1 asks for sign-in ($code)" ;;
+            000:*) verdict FAIL "$1 did not answer (VMs down, DNS, or certificate not active yet?)" ;;
+            *) verdict FAIL "$1 answered $code without sign-in${loc:+ -> $loc}" ;;
+        esac
+    }
+    printf 'c2o check: what a visitor with no sign-in can reach on %s\n' "$DOMAIN"
+    if [ "$INCLUDE_APEX" = yes ]; then signin "$DOMAIN"; fi
+    for h in "$HOST_OPS" "$HOST_PLAN" "$HOST_SIM"; do signin "$h"; done
+    tools_each() {  # same rows as setup.sh: the sim-side tools only when the sim VM exists
+        local key label port where who title
+        while read -r key label port where who title; do
+            [ -n "$key" ] || continue
+            [ "$where" = sim ] && [ "${CREATE_SIM_VM:-yes}" != yes ] && continue
+            "$1" "$key" "$label" "$port" "$where" "$who" "$title"
+        done <<<"$TOOLS"
+    }
+    tool_signin() { [ "$5" = public ] || signin "$2.$DOMAIN"; return 0; }
+    tools_each tool_signin
+
+    # The public wall page: the planner's wall screen and nothing more.
+    tool_wall() {
+        [ "$5" = public ] || return 0
+        local w="$2.$DOMAIN" p
+        probe GET "https://$w/"
+        if [ "$code" = 200 ] && printf '%s' "$body" | grep -q 'wide.js'; then
+            verdict OK "$w shows the planner's wall page"
+        else
+            verdict FAIL "$w: expected the wall page, got $code${loc:+ -> $loc}"
+        fi
+        if printf '%s' "$body" | grep -qi 'mcs.js\|command builder'; then
+            verdict FAIL "$w serves mission-control content"
+        fi
+        for p in /api/activities /api/schedule/clear /api/tc /api/commands /static/modern/mcs.js /static/modern/planner.js; do
+            probe GET "https://$w$p"
+            if [ "$code" = 404 ]; then verdict OK "$w$p refused (404)"; else verdict FAIL "$w$p answered $code"; fi
+        done
+        probe POST "https://$w/api/schedule" -d '{}'
+        if [ "$code" = 405 ]; then verdict OK "$w refuses writes (405)"; else verdict FAIL "$w POST answered $code"; fi
+        probe GET "http://$w/"
+        case "$code:$loc" in
+            301:https://*|308:https://*) verdict OK "http://$w redirects to https" ;;
+            *) verdict FAIL "http://$w answered $code${loc:+ -> $loc}" ;;
+        esac
+        return 0
+    }
+    tools_each tool_wall
+
+    # VR streams: open to headsets, but WebSocket only (a plain GET never gets a page).
+    for h in /vr /vr/power /vr2 /vr2/power; do
+        probe GET "https://$HOST_OPS$h"
+        case "$code:$loc" in
+            30[12]:*accounts.google.com*) verdict FAIL "$HOST_OPS$h asks for sign-in (VR routes missing: rerun setup.sh)" ;;
+            200:*) verdict FAIL "$HOST_OPS$h served a page to a plain GET" ;;
+            000:*) verdict FAIL "$HOST_OPS$h did not answer" ;;
+            *) verdict OK "$HOST_OPS$h open to headsets, no page ($code)" ;;
+        esac
+    done
+
+    # A name the load balancer does not know must not reach any screen.
+    ip="$(gcloud compute addresses describe "$LB_IP" --global --format='value(address)' 2>/dev/null || true)"
+    if [ -n "$ip" ]; then
+        probe GET "https://c2o-check-unknown.$DOMAIN/" -k --resolve "c2o-check-unknown.$DOMAIN:443:$ip"
+        case "$code:$loc" in
+            30[12]:https://"$DOMAIN"/*|30[12]:https://"$HOST_OPS"/*)
+                verdict OK "an unknown name is redirected to the welcome page" ;;
+            *) verdict FAIL "an unknown name answered $code${loc:+ -> $loc} (rerun setup.sh for the default redirect)" ;;
+        esac
+    else
+        printf '  ....  unknown-name check skipped (no gcloud access to the load balancer address)\n'
+    fi
+    rm -rf "$tmp"
+    if [ "$fails" -gt 0 ]; then
+        printf '\nRESULT: FAIL (%s). Take the site offline with: c2o down --all\n' "$fails"
+        return 1
+    fi
+    printf '\nRESULT: PASS\n'
 }
 
 cmd_status() {
@@ -1284,14 +1400,14 @@ main() {
     esac
     if [ "$want_help" = yes ]; then
         case "$cmd" in
-            status) help_status ;; up) help_up ;; down) help_down ;;
+            status) help_status ;; up) help_up ;; down) help_down ;; check) help_check ;;
             schedule) help_schedule ;; data) help_data ;; users) help_users ;;
             *) help_main ;;
         esac
         return 0
     fi
     case "$cmd" in
-        status|up|down|schedule|data|users|videos|update) ;;
+        status|up|down|schedule|data|users|videos|update|check) ;;
         *) printf 'c2o: unknown command "%s"\n\n' "$cmd" >&2; help_main >&2; return 2 ;;
     esac
     # up/down hand over to start.sh / stop.sh, which load the settings themselves.
@@ -1309,6 +1425,7 @@ main() {
         users)    cmd_users ${args[@]+"${args[@]}"} ;;
         videos)   cmd_videos ${args[@]+"${args[@]}"} ;;
         update)   cmd_update ${args[@]+"${args[@]}"} ;;
+        check)    cmd_check ${args[@]+"${args[@]}"} ;;
     esac
 }
 
