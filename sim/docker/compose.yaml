@@ -111,7 +111,10 @@ services:
     environment:
       SMO_BIND: 0.0.0.0
       SMO_SIM_HTTP_PORT: "8080"
-      SMO_VR: "0"
+      # VR bridge on: the headset streams (ops.<domain>/vr, /vr/power, /vr2, /vr2/power)
+      # reach it through the space link on this HTTP port. Its own 8100-8109 ports stay
+      # inside the container (nothing publishes them).
+      SMO_VR: "1"
       # Scenarios saved by the scenario generator (below) are loaded from
       # here as well as from the built-in folder, at simulator start.
       SMO_EXTRA_SCENARIO_DIR: /opt/smo/workspace/scenarios

@@ -607,3 +607,15 @@ def test_stub_request_channel_acks_then_decides(stub):
         w.close()
         task.cancel()
     asyncio.run(run())
+
+
+def test_the_cloud_simulator_runs_the_vr_bridge():
+    """ops.<domain>/vr reaches the simulator's /vr route through the space link; with the
+    bridge off there it answered 503 "VR state channel is not running" (2026-11-23)."""
+    import yaml
+    from pathlib import Path
+    compose = Path(__file__).resolve().parents[2] / "docker" / "compose.yaml"
+    sim = yaml.safe_load(compose.read_text(encoding="utf-8"))["services"]["sim"]
+    assert str(sim["environment"].get("SMO_VR", "1")) != "0"
+    published = " ".join(str(p) for p in sim.get("ports", []))
+    assert not any(f":{port}" in published for port in range(8100, 8110))
